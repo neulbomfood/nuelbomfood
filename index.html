@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>늘봄 건강 퀴즈</title>
+  <link rel="stylesheet" href="style.css" />
+  <link rel="manifest" href="manifest.json" />
+</head>
+<body>
+  <div class="container">
+    <img src="assets/img/logo.png" alt="늘봄 로고" class="logo">
+    <div class="start-screen">
+      <h1>나를 돌보는 가장 작은 시작, 늘봄</h1>
+      <p>오늘도 내 몸을 위한 작은 점검, 시작해볼까요?</p>
+      <div class="quiz-info">
+        <div class="info-card">
+          <span class="emoji">🌱</span>
+          <h3>건강한 루틴</h3>
+          <p>매일 조금씩 성장하는 건강 습관</p>
+        </div>
+        <div class="info-card">
+          <span class="emoji">💝</span>
+          <h3>나를 위한 선물</h3>
+          <p>퀴즈를 통해 배우는 건강한 삶</p>
+        </div>
+        <div class="info-card">
+          <span class="emoji">✨</span>
+          <h3>작은 실천</h3>
+          <p>포인트로 돌아오는 건강 투자</p>
+        </div>
+      </div>
+      <div class="start-actions">
+        <button onclick="window.location.href='quiz.html'" class="primary-button">
+          오늘의 건강 루틴 시작하기
+          <span class="button-arrow">→</span>
+        </button>
+        <p class="points-info">현재 보유 포인트: <span id="current-points">0</span>P</p>
+      </div>
+      <p class="footer-text">작은 습관이, 결국 가장 멀리 갑니다.</p>
+    </div>
+  </div>
+  <script>
+    // 저장된 포인트 표시
+    document.getElementById('current-points').textContent = 
+      localStorage.getItem('points') || '0';
+      
+    // 배경 이미지 랜덤 적용
+    const bgList = [
+      "assets/img/background/close-up-white-flowering-plant-against-wall.jpg",
+      "assets/img/background/still-life-minimalist-lifestyle.jpg",
+      "assets/img/background/white-rose-blooming-against-wall.jpg",
+      "assets/img/background/view-rose-flowers-condensed-glass.jpg",
+      "assets/img/background/modern-minimalist-living-room.jpg"
+    ];
+    const selectedBg = bgList[Math.floor(Math.random() * bgList.length)];
+    document.body.style.backgroundImage = `url('${selectedBg}')`;
+  </script>
+</body>
+</html>
