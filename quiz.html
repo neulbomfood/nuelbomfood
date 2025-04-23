@@ -9,6 +9,9 @@
 <body>
   <div class="container">
     <img src="assets/img/logo.png" alt="늘봄 로고" class="logo-small">
+    <button class="home-button" onclick="window.location.href='index.html'">
+      ⬅ 홈으로 돌아가기
+    </button>
     <div class="quiz-box">
       <div class="quiz-header">
         <div class="points">
@@ -29,6 +32,15 @@
         <ul id="answers"></ul>
         <div id="explanation"></div>
         <p class="emotion-message">잘 모르셔도 괜찮아요. 오늘도 함께해요.</p>
+      </div>
+
+      <div id="explanation-popup" class="popup">
+        <div class="popup-content">
+          <div id="popup-emoji" class="popup-emoji"></div>
+          <div id="popup-result" class="popup-result"></div>
+          <div id="popup-explanation" class="popup-explanation"></div>
+          <div id="popup-points" class="popup-points"></div>
+        </div>
       </div>
 
       <div id="quiz-complete" class="quiz-complete" style="display: none;">

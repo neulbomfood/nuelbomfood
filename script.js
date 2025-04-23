@@ -161,7 +161,12 @@ function handleAnswer(selected, question) {
     soundClick.play().catch(() => {});
   } catch (e) {}
 
-  const explanationBox = document.getElementById("explanation");
+  const popup = document.getElementById("explanation-popup");
+  const popupEmoji = document.getElementById("popup-emoji");
+  const popupResult = document.getElementById("popup-result");
+  const popupExplanation = document.getElementById("popup-explanation");
+  const popupPoints = document.getElementById("popup-points");
+  
   const answers = document.querySelectorAll("#answers li");
   
   answers.forEach(li => {
@@ -178,14 +183,16 @@ function handleAnswer(selected, question) {
     points += 15;
     if (points < 0) points = 0;
     localStorage.setItem("points", points);
-    const msg = feedbackTexts.correct[Math.floor(Math.random() * feedbackTexts.correct.length)];
-    explanationBox.innerHTML = `
-      <div style="font-size: 3em; margin-bottom: 10px">🎉</div>
-      <div style="font-weight: bold; color: #28a745; margin-bottom: 10px">${msg}</div>
-      <div class="point-animation">+15P</div>
-      <div>${question.explanation}</div>
-      <div class="points-total">지금까지 총 ${points}점! 건강 습관이 자산이 되고 있어요</div>
+    
+    popupEmoji.textContent = "🎉";
+    popupResult.textContent = "정답이에요!";
+    popupExplanation.textContent = question.explanation;
+    popupPoints.innerHTML = `
+      <div class="point-change">+15P</div>
+      <div class="total-points">현재 총 ${points}P</div>
     `;
+    popupPoints.style.color = "#28a745";
+    
     try {
       soundCorrect.play().catch(() => {});
     } catch (e) {}
@@ -193,28 +200,31 @@ function handleAnswer(selected, question) {
     points -= 5;
     if (points < 0) points = 0;
     localStorage.setItem("points", points);
-    const msg = feedbackTexts.wrong[Math.floor(Math.random() * feedbackTexts.wrong.length)];
-    explanationBox.innerHTML = `
-      <div style="font-size: 3em; margin-bottom: 10px">💪</div>
-      <div style="font-weight: bold; color: #dc3545; margin-bottom: 10px">${msg}</div>
-      <div class="point-animation point-minus">-5P</div>
-      <div>정답: ${question.correct}</div>
-      <div>${question.explanation}</div>
-      <div class="points-total">지금까지 총 ${points}점! 포기하지 말고 계속해요</div>
+    
+    popupEmoji.textContent = "💪";
+    popupResult.textContent = "아쉽지만 틀렸어요";
+    popupExplanation.textContent = `정답: ${question.correct}\n${question.explanation}`;
+    popupPoints.innerHTML = `
+      <div class="point-change">-5P</div>
+      <div class="total-points">현재 총 ${points}P</div>
     `;
+    popupPoints.style.color = "#dc3545";
+    
     try {
       soundWrong.play().catch(() => {});
     } catch (e) {}
   }
 
-  explanationBox.classList.add("show");
+  popup.classList.add("show");
   updatePoints();
 
-  currentIndex++;
+  // 3초 후 팝업 닫고 다음 문제로
   setTimeout(() => {
+    popup.classList.remove("show");
+    currentIndex++;
     isAnswering = false;
     showQuestion();
-  }, 2500);
+  }, 3000);
 }
 
 function updatePoints() {
@@ -303,4 +313,15 @@ function requestExchange() {
   if (confirm(`${amount}P를 적립금으로 전환하시겠습니까?`)) {
     alert('전환 신청이 접수되었습니다.\n관리자 확인 후 적립금으로 지급됩니다.');
   }
+}
+
+function showExplanation(isCorrect, explanation) {
+  const explanationEl = document.getElementById('explanation');
+  explanationEl.textContent = explanation;
+  explanationEl.style.display = 'block';
+  
+  // 자동으로 설명이 보이도록 스크롤
+  setTimeout(() => {
+    explanationEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }, 100);
 }
