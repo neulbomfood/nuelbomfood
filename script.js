@@ -1,3 +1,6 @@
+// 개발 중 포인트 리셋 (주석 해제하여 사용)
+// localStorage.removeItem('points');
+
 let currentIndex = 0;
 let points = parseInt(localStorage.getItem('points')) || 0;
 let questions = [];
@@ -6,6 +9,16 @@ let timeLeft = 10;
 let isAnswering = false;
 let startTime;
 let correctAnswers = 0;
+
+// 효과음 초기화
+const soundClick = new Audio('assets/sounds/click.mp3');
+const soundCorrect = new Audio('assets/sounds/correct.mp3');
+const soundWrong = new Audio('assets/sounds/wrong.mp3');
+
+// 사용자 상호작용 후 효과음 활성화
+document.body.addEventListener('click', () => {
+  soundClick.play().catch(() => {}); // 보안 정책 우회
+}, { once: true });
 
 // 배경 이미지 랜덤 적용
 const bgList = [
@@ -32,15 +45,12 @@ const feedbackTexts = {
   ]
 };
 
-// 사운드 파일이 없어서 주석 처리
-// const soundCorrect = new Audio("assets/sounds/correct.mp3");
-// const soundWrong = new Audio("assets/sounds/wrong.mp3");
-// const soundClick = new Audio("assets/sounds/click.mp3");
-
 document.addEventListener("DOMContentLoaded", () => {
   // 배경 이미지 랜덤 적용
   const selectedBg = bgList[Math.floor(Math.random() * bgList.length)];
   document.body.style.backgroundImage = `url('${selectedBg}')`;
+  document.body.style.backgroundPosition = 'center';
+  document.body.style.backgroundSize = 'cover';
   
   startTime = Date.now();
   showLoading(true);
@@ -59,6 +69,20 @@ document.addEventListener("DOMContentLoaded", () => {
       document.getElementById('question').textContent = '문제를 불러오는 중 오류가 발생했습니다.';
       showLoading(false);
     });
+
+  // 리셋 버튼 추가 (개발용)
+  const resetButton = document.createElement('button');
+  resetButton.textContent = '포인트 초기화';
+  resetButton.className = 'reset-button';
+  resetButton.onclick = () => {
+    if (confirm('포인트를 초기화하시겠습니까?')) {
+      localStorage.removeItem('points');
+      points = 0;
+      updatePoints();
+      alert('포인트가 초기화되었습니다.');
+    }
+  };
+  document.querySelector('.container').appendChild(resetButton);
 });
 
 function showLoading(show) {
@@ -133,6 +157,10 @@ function handleAnswer(selected, question) {
   isAnswering = true;
   clearInterval(timer);
 
+  try {
+    soundClick.play().catch(() => {});
+  } catch (e) {}
+
   const explanationBox = document.getElementById("explanation");
   const answers = document.querySelectorAll("#answers li");
   
@@ -148,7 +176,7 @@ function handleAnswer(selected, question) {
   if (selected === question.correct) {
     correctAnswers++;
     points += 15;
-    if (points < 0) points = 0; // 음수 방지
+    if (points < 0) points = 0;
     localStorage.setItem("points", points);
     const msg = feedbackTexts.correct[Math.floor(Math.random() * feedbackTexts.correct.length)];
     explanationBox.innerHTML = `
@@ -158,10 +186,12 @@ function handleAnswer(selected, question) {
       <div>${question.explanation}</div>
       <div class="points-total">지금까지 총 ${points}점! 건강 습관이 자산이 되고 있어요</div>
     `;
-    // soundCorrect.play();
+    try {
+      soundCorrect.play().catch(() => {});
+    } catch (e) {}
   } else {
     points -= 5;
-    if (points < 0) points = 0; // 음수 방지
+    if (points < 0) points = 0;
     localStorage.setItem("points", points);
     const msg = feedbackTexts.wrong[Math.floor(Math.random() * feedbackTexts.wrong.length)];
     explanationBox.innerHTML = `
@@ -172,7 +202,9 @@ function handleAnswer(selected, question) {
       <div>${question.explanation}</div>
       <div class="points-total">지금까지 총 ${points}점! 포기하지 말고 계속해요</div>
     `;
-    // soundWrong.play();
+    try {
+      soundWrong.play().catch(() => {});
+    } catch (e) {}
   }
 
   explanationBox.classList.add("show");
