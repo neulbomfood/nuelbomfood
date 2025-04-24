@@ -5,7 +5,7 @@ let currentIndex = 0;
 let points = parseInt(localStorage.getItem('points')) || 0;
 let questions = [];
 let timer;
-let timeLeft = 10;
+let timeLeft = 15;
 let isAnswering = false;
 let startTime;
 let correctAnswers = 0;
@@ -71,9 +71,14 @@ document.addEventListener("DOMContentLoaded", () => {
     .then(responses => Promise.all(responses.map(res => res.json())))
     .then(quizSets => {
       // 모든 퀴즈 세트를 하나의 배열로 합침
-      questions = quizSets.flat();
-      // 퀴즈 문제 랜덤 섞기
+      let allQuestions = quizSets.flat();
+      
+      // 중복 제거 (question을 기준으로)
+      questions = Array.from(new Map(allQuestions.map(q => [q.question, q])).values());
+      
+      // 문제 랜덤 섞기
       questions = questions.sort(() => Math.random() - 0.5);
+      
       showLoading(false);
       showQuestion();
       updatePoints();
@@ -125,7 +130,7 @@ function showQuestion() {
   if (isAnswering) return;
   
   clearInterval(timer);
-  timeLeft = 10;
+  timeLeft = 15;
   document.getElementById("timer-fill").style.width = "100%";
 
   const q = questions[currentIndex];
@@ -159,7 +164,7 @@ function showQuestion() {
 
   timer = setInterval(() => {
     timeLeft--;
-    document.getElementById("timer-fill").style.width = (timeLeft * 10) + "%";
+    document.getElementById("timer-fill").style.width = (timeLeft * 6.67) + "%";
     if (timeLeft <= 0) {
       clearInterval(timer);
       handleAnswer(null, q);
@@ -282,11 +287,20 @@ function finishQuiz() {
   const quizBox = document.getElementById('quiz-box');
   const quizComplete = document.getElementById('quiz-complete');
   const timeTaken = Math.floor((Date.now() - startTime) / 1000);
-  const accuracy = Math.round((correctAnswers / questions.length) * 100);
+  const accuracy = Math.round((correctAnswers / currentIndex) * 100);
   
   document.getElementById('final-points').textContent = points;
   document.getElementById('accuracy').textContent = accuracy;
   document.getElementById('time-taken').textContent = timeTaken;
+  
+  // 계속하기 버튼 추가
+  quizComplete.innerHTML += `
+    <div style="margin-top: 20px">
+      <button onclick="continueQuiz()" class="primary-button">
+        계속해서 풀기
+      </button>
+    </div>
+  `;
   
   quizBox.style.display = 'none';
   quizComplete.style.display = 'block';
@@ -339,4 +353,22 @@ function showExplanation(isCorrect, explanation) {
   setTimeout(() => {
     explanationEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
   }, 100);
+}
+
+// 계속해서 문제 풀기 함수 추가
+function continueQuiz() {
+  const quizBox = document.getElementById('quiz-box');
+  const quizComplete = document.getElementById('quiz-complete');
+  
+  // 문제 다시 섞기
+  questions = questions.sort(() => Math.random() - 0.5);
+  currentIndex = 0;
+  startTime = Date.now();
+  correctAnswers = 0;
+  
+  quizComplete.style.display = 'none';
+  quizBox.style.display = 'block';
+  
+  showQuestion();
+  updateProgress();
 }

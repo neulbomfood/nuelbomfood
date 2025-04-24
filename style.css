@@ -367,8 +367,83 @@ h1 {
 @media (max-width: 480px) {
   .container {
     padding: 16px;
+    min-height: 100vh;
+    height: 100vh;
+    overflow: hidden;
   }
   
+  .start-screen {
+    height: calc(100vh - 32px);
+    overflow: auto;
+    padding: 20px 16px;
+    margin: 0;
+  }
+
+  .card-grid {
+    grid-template-columns: 1fr;
+    gap: 16px;
+    margin-bottom: 24px;
+  }
+
+  .info-card {
+    padding: 12px;
+    margin-bottom: 0;
+  }
+
+  .info-card h3 {
+    font-size: 16px;
+    margin-bottom: 4px;
+  }
+
+  .info-card p {
+    font-size: 13px;
+    line-height: 1.4;
+  }
+
+  .points-info {
+    padding: 20px;
+    margin: 16px 0;
+  }
+
+  .main-title {
+    font-size: 22px;
+    margin-bottom: 12px;
+  }
+
+  .sub-title {
+    font-size: 15px;
+    margin-bottom: 24px;
+  }
+
+  .logo {
+    width: 60px;
+    margin-bottom: 16px;
+  }
+
+  .points-guide {
+    padding: 16px;
+  }
+
+  .points-guide h4 {
+    font-size: 15px;
+    margin-bottom: 12px;
+  }
+
+  .points-guide p {
+    font-size: 13px;
+    margin-bottom: 12px;
+  }
+
+  .footer-quote {
+    margin-top: 24px;
+    font-size: 13px;
+  }
+
+  .primary-button, .secondary-button {
+    padding: 14px 20px;
+    font-size: 15px;
+  }
+
   .quiz-stats {
     grid-template-columns: 1fr;
   }
@@ -379,10 +454,6 @@ h1 {
   
   #question {
     font-size: 16px;
-  }
-  
-  .info-card {
-    padding: 16px;
   }
 }
 
@@ -706,29 +777,4 @@ h1 {
   margin-top: 40px;
   font-size: 15px;
   opacity: 0.8;
-}
-
-/* 반응형 스타일 */
-@media (max-width: 480px) {
-  .main-title {
-    font-size: 24px;
-  }
-  
-  .sub-title {
-    font-size: 16px;
-  }
-  
-  .points-info {
-    padding: 24px;
-  }
-  
-  .points-guide {
-    padding: 20px;
-  }
-  
-  .home-button {
-    top: auto;
-    bottom: 20px;
-    right: 20px;
-  }
 }
