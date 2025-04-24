@@ -55,10 +55,25 @@ document.addEventListener("DOMContentLoaded", () => {
   startTime = Date.now();
   showLoading(true);
   
-  fetch("questions.json")
-    .then(res => res.json())
-    .then(data => {
-      questions = data;
+  // 여러 퀴즈 세트 로드
+  Promise.all([
+    fetch("health_quiz_set_01.json"),
+    fetch("health_quiz_set_02.json"),
+    fetch("health_quiz_set_03.json"),
+    fetch("health_quiz_set_04.json"),
+    fetch("health_quiz_set_05.json"),
+    fetch("health_quiz_set_06.json"),
+    fetch("health_quiz_set_07.json"),
+    fetch("health_quiz_set_08.json"),
+    fetch("health_quiz_set_09.json"),
+    fetch("health_quiz_set_10.json")
+  ])
+    .then(responses => Promise.all(responses.map(res => res.json())))
+    .then(quizSets => {
+      // 모든 퀴즈 세트를 하나의 배열로 합침
+      questions = quizSets.flat();
+      // 퀴즈 문제 랜덤 섞기
+      questions = questions.sort(() => Math.random() - 0.5);
       showLoading(false);
       showQuestion();
       updatePoints();
