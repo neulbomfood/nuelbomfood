@@ -17,6 +17,14 @@
         <div class="points">
           현재 포인트: <span id="points">0</span>P
         </div>
+        <div id="points-action" style="display: none;">
+          <button onclick="requestExchange()" id="exchange-button" class="secondary-button" style="display: none;">
+            ✨ 포인트 전환 신청하기
+          </button>
+          <div id="points-insufficient" class="points-notice" style="display: none;">
+            포인트가 부족합니다 😢
+          </div>
+        </div>
         <div class="quiz-progress">
           <span id="progress-text">1/20</span>
           <div class="progress-bar">
@@ -61,8 +69,8 @@
         </div>
         <div id="exchange-box" style="display: none;">
           🎉 축하합니다! 5000P 이상 달성했습니다!<br />
-          <button onclick="alert('쿠폰 신청이 접수되었습니다!')" class="primary-button">
-            쿠폰 신청하기
+          <button onclick="requestExchange()" class="primary-button">
+            적립금으로 전환하기
           </button>
         </div>
         <button onclick="goHome()" class="primary-button">

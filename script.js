@@ -48,49 +48,55 @@ const feedbackTexts = {
 };
 
 document.addEventListener("DOMContentLoaded", () => {
-  // 배경 이미지 랜덤 적용
-  const selectedBg = bgList[Math.floor(Math.random() * bgList.length)];
-  document.body.style.backgroundImage = `url('${selectedBg}')`;
-  document.body.style.backgroundPosition = 'center';
-  document.body.style.backgroundSize = 'cover';
-  
-  startTime = Date.now();
-  showLoading(true);
-  
-  // 여러 퀴즈 세트 로드
-  Promise.all([
-    fetch("health_quiz_set_01.json"),
-    fetch("health_quiz_set_02.json"),
-    fetch("health_quiz_set_03.json"),
-    fetch("health_quiz_set_04.json"),
-    fetch("health_quiz_set_05.json"),
-    fetch("health_quiz_set_06.json"),
-    fetch("health_quiz_set_07.json"),
-    fetch("health_quiz_set_08.json"),
-    fetch("health_quiz_set_09.json"),
-    fetch("health_quiz_set_10.json")
-  ])
-    .then(responses => Promise.all(responses.map(res => res.json())))
-    .then(quizSets => {
-      // 모든 퀴즈 세트를 하나의 배열로 합침
-      allQuestions = quizSets.flat();
-      
-      // 중복 제거 (question을 기준으로)
-      allQuestions = Array.from(new Map(allQuestions.map(q => [q.question, q])).values());
-      
-      // 새로운 문제 선택
-      selectNewQuestions();
-      
-      showLoading(false);
-      showQuestion();
-      updatePoints();
-      updateProgress();
-    })
-    .catch(error => {
-      console.error('Error loading questions:', error);
-      document.getElementById('question').textContent = '문제를 불러오는 중 오류가 발생했습니다.';
-      showLoading(false);
-    });
+  // 현재 페이지가 quiz.html인 경우에만 퀴즈 관련 코드 실행
+  if (window.location.pathname.includes('quiz.html')) {
+    // 배경 이미지 랜덤 적용
+    const selectedBg = bgList[Math.floor(Math.random() * bgList.length)];
+    document.body.style.backgroundImage = `url('${selectedBg}')`;
+    document.body.style.backgroundPosition = 'center';
+    document.body.style.backgroundSize = 'cover';
+    
+    startTime = Date.now();
+    showLoading(true);
+    
+    // 여러 퀴즈 세트 로드
+    Promise.all([
+      fetch("health_quiz_set_01.json").then(res => res.json()).catch(() => []),
+      fetch("health_quiz_set_02.json").then(res => res.json()).catch(() => []),
+      fetch("health_quiz_set_03.json").then(res => res.json()).catch(() => []),
+      fetch("health_quiz_set_04.json").then(res => res.json()).catch(() => []),
+      fetch("health_quiz_set_05.json").then(res => res.json()).catch(() => []),
+      fetch("health_quiz_set_06.json").then(res => res.json()).catch(() => []),
+      fetch("health_quiz_set_07.json").then(res => res.json()).catch(() => []),
+      fetch("health_quiz_set_08.json").then(res => res.json()).catch(() => []),
+      fetch("health_quiz_set_09.json").then(res => res.json()).catch(() => []),
+      fetch("health_quiz_set_10.json").then(res => res.json()).catch(() => [])
+    ])
+      .then(quizSets => {
+        // 모든 퀴즈 세트를 하나의 배열로 합침
+        allQuestions = quizSets.flat().filter(q => q && q.question && q.correct && q.wrong);
+        
+        if (allQuestions.length === 0) {
+          throw new Error('퀴즈 문제를 불러올 수 없습니다.');
+        }
+        
+        // 중복 제거 (question을 기준으로)
+        allQuestions = Array.from(new Map(allQuestions.map(q => [q.question, q])).values());
+        
+        // 새로운 문제 선택
+        selectNewQuestions();
+        
+        showLoading(false);
+        showQuestion();
+        updatePoints();
+        updateProgress();
+      })
+      .catch(error => {
+        console.error('Error loading questions:', error);
+        document.getElementById('question').textContent = '문제를 불러오는 중 오류가 발생했습니다. 페이지를 새로고침 해주세요.';
+        showLoading(false);
+      });
+  }
 });
 
 function showLoading(show) {
@@ -240,6 +246,8 @@ function handleAnswer(selected, question) {
 
 function updatePoints() {
   const pointsDisplay = document.getElementById("points");
+  if (!pointsDisplay) return;  // points 요소가 없으면 함수 종료
+  
   const oldPoints = parseInt(pointsDisplay.textContent);
   const diff = points - oldPoints;
   
@@ -249,9 +257,25 @@ function updatePoints() {
     pointsDisplay.textContent = points;
   }
 
-  const exchangeBox = document.getElementById("exchange-box");
-  if (points >= 5000 && exchangeBox.style.display === "none") {
-    exchangeBox.style.display = "block";
+  // 현재 페이지가 quiz.html인 경우에만 exchange 버튼 업데이트
+  if (window.location.pathname.includes('quiz.html')) {
+    const pointsAction = document.getElementById("points-action");
+    const exchangeButton = document.getElementById("exchange-button");
+    const pointsInsufficient = document.getElementById("points-insufficient");
+    
+    if (pointsAction) {
+      pointsAction.style.display = "block";
+      
+      if (exchangeButton && pointsInsufficient) {
+        if (points >= 5000) {
+          exchangeButton.style.display = "block";
+          pointsInsufficient.style.display = "none";
+        } else {
+          exchangeButton.style.display = "none";
+          pointsInsufficient.style.display = "block";
+        }
+      }
+    }
   }
 }
 

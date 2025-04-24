@@ -200,8 +200,11 @@ h1 {
   font-size: 18px;
   color: var(--text-color);
   margin-bottom: 24px;
-  line-height: 1.5;
-  text-align: center;
+  line-height: 1.8;
+  text-align: left;
+  word-break: keep-all;
+  white-space: pre-line;
+  padding: 0 8px;
 }
 
 #timer-bar {
@@ -230,7 +233,7 @@ h1 {
 #answers li {
   background: white;
   margin: 12px 0;
-  padding: 20px 16px;
+  padding: 20px;
   border-radius: 12px;
   font-size: 16px;
   cursor: pointer;
@@ -240,6 +243,9 @@ h1 {
   min-height: 60px;
   display: flex;
   align-items: center;
+  line-height: 1.6;
+  word-break: keep-all;
+  white-space: pre-line;
 }
 
 #answers li:hover, #answers li:active {
@@ -263,13 +269,15 @@ h1 {
 /* 설명 박스 */
 #explanation {
   background: rgba(255, 255, 255, 0.9);
-  padding: 1rem;
+  padding: 1.5rem;
   border-radius: 12px;
   border-left: 4px solid #FF9999;
-  margin-top: 1rem;
+  margin-top: 1.5rem;
   font-size: 0.95rem;
-  line-height: 1.5;
+  line-height: 1.8;
   color: #555;
+  word-break: keep-all;
+  white-space: pre-line;
 }
 
 /* 버튼 스타일 */
@@ -604,9 +612,11 @@ h1 {
 
 .popup-explanation {
   font-size: 1rem;
-  line-height: 1.6;
+  line-height: 1.8;
   color: var(--text-light);
-  margin-bottom: 1rem;
+  margin: 1.5rem 0;
+  word-break: keep-all;
+  white-space: pre-line;
 }
 
 .popup-points {
@@ -693,6 +703,12 @@ h1 {
   font-family: 'Arita-buri-SemiBold';
 }
 
+.point-value {
+  font-size: 24px;
+  color: #388e3c;
+  font-weight: bold;
+}
+
 .points-guide {
   background: rgba(255, 255, 255, 0.8);
   padding: 24px;
@@ -701,21 +717,48 @@ h1 {
   text-align: center;
 }
 
-.point-target {
-  font-size: 18px;
+.point-main-text {
+  font-size: 16px;
   line-height: 1.6;
-  color: var(--text-color);
+  color: #444;
+  margin-bottom: 16px;
+}
+
+.point-sub-text {
+  font-size: 14px;
+  line-height: 1.6;
+  color: #555;
 }
 
 .point-highlight {
-  font-size: 32px;
+  font-size: 20px;
   font-weight: bold;
   color: #388e3c;
   font-family: 'Arita-buri-SemiBold';
 }
 
+.point-emphasis {
+  color: #2e7d32;
+  font-weight: bold;
+}
+
+#points-action {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.points-notice {
+  text-align: center;
+  color: #666;
+  font-size: 14px;
+  padding: 12px;
+  background: #f5f5f5;
+  border-radius: 8px;
+  margin-top: 8px;
+}
+
 #exchange-button {
-  margin-top: 12px;
   background: #388e3c;
   color: white;
   font-weight: 500;
@@ -725,6 +768,17 @@ h1 {
 #exchange-button:hover {
   background: #2d7230;
   transform: translateY(-2px);
+}
+
+.primary-button.inactive {
+  background: #e0e0e0;
+  cursor: not-allowed;
+  opacity: 0.8;
+}
+
+.primary-button.inactive:hover {
+  transform: none;
+  box-shadow: none;
 }
 
 /* 버튼 스타일 */
