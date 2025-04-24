@@ -4,6 +4,8 @@
 let currentIndex = 0;
 let points = parseInt(localStorage.getItem('points')) || 0;
 let questions = [];
+let usedQuestions = new Set(); // 풀었던 문제들을 기록할 Set
+let allQuestions = []; // 전체 문제 풀을 저장할 배열
 let timer;
 let timeLeft = 15;
 let isAnswering = false;
@@ -71,13 +73,13 @@ document.addEventListener("DOMContentLoaded", () => {
     .then(responses => Promise.all(responses.map(res => res.json())))
     .then(quizSets => {
       // 모든 퀴즈 세트를 하나의 배열로 합침
-      let allQuestions = quizSets.flat();
+      allQuestions = quizSets.flat();
       
       // 중복 제거 (question을 기준으로)
-      questions = Array.from(new Map(allQuestions.map(q => [q.question, q])).values());
+      allQuestions = Array.from(new Map(allQuestions.map(q => [q.question, q])).values());
       
-      // 문제 랜덤 섞기
-      questions = questions.sort(() => Math.random() - 0.5);
+      // 새로운 문제 선택
+      selectNewQuestions();
       
       showLoading(false);
       showQuestion();
@@ -89,20 +91,6 @@ document.addEventListener("DOMContentLoaded", () => {
       document.getElementById('question').textContent = '문제를 불러오는 중 오류가 발생했습니다.';
       showLoading(false);
     });
-
-  // 리셋 버튼 추가 (개발용)
-  const resetButton = document.createElement('button');
-  resetButton.textContent = '포인트 초기화';
-  resetButton.className = 'reset-button';
-  resetButton.onclick = () => {
-    if (confirm('포인트를 초기화하시겠습니까?')) {
-      localStorage.removeItem('points');
-      points = 0;
-      updatePoints();
-      alert('포인트가 초기화되었습니다.');
-    }
-  };
-  document.querySelector('.container').appendChild(resetButton);
 });
 
 function showLoading(show) {
@@ -138,6 +126,9 @@ function showQuestion() {
     finishQuiz();
     return;
   }
+
+  // 현재 문제를 usedQuestions에 추가
+  usedQuestions.add(q.question);
 
   updateProgress();
   
@@ -355,13 +346,28 @@ function showExplanation(isCorrect, explanation) {
   }, 100);
 }
 
-// 계속해서 문제 풀기 함수 추가
+// 새로운 문제 선택 함수
+function selectNewQuestions() {
+  // 아직 풀지 않은 문제들만 필터링
+  const availableQuestions = allQuestions.filter(q => !usedQuestions.has(q.question));
+  
+  // 모든 문제를 다 풀었다면 usedQuestions를 초기화
+  if (availableQuestions.length === 0) {
+    usedQuestions.clear();
+    questions = allQuestions.sort(() => Math.random() - 0.5);
+  } else {
+    // 아직 풀지 않은 문제들 중에서 랜덤으로 선택
+    questions = availableQuestions.sort(() => Math.random() - 0.5);
+  }
+}
+
+// 계속 풀기 함수 수정
 function continueQuiz() {
   const quizBox = document.getElementById('quiz-box');
   const quizComplete = document.getElementById('quiz-complete');
   
-  // 문제 다시 섞기
-  questions = questions.sort(() => Math.random() - 0.5);
+  // 새로운 문제 선택
+  selectNewQuestions();
   currentIndex = 0;
   startTime = Date.now();
   correctAnswers = 0;
@@ -371,4 +377,9 @@ function continueQuiz() {
   
   showQuestion();
   updateProgress();
+}
+
+// 홈으로 돌아가기 함수 추가
+function goHome() {
+  window.location.href = 'index.html';
 }
