@@ -59,23 +59,11 @@ document.addEventListener("DOMContentLoaded", () => {
     startTime = Date.now();
     showLoading(true);
     
-    // 여러 퀴즈 세트 로드
-    Promise.all([
-      fetch("health_quiz_set_01.json").then(res => res.json()).catch(() => []),
-      fetch("health_quiz_set_02.json").then(res => res.json()).catch(() => []),
-      fetch("health_quiz_set_03.json").then(res => res.json()).catch(() => []),
-      fetch("health_quiz_set_04.json").then(res => res.json()).catch(() => []),
-      fetch("health_quiz_set_05.json").then(res => res.json()).catch(() => []),
-      fetch("health_quiz_set_06.json").then(res => res.json()).catch(() => []),
-      fetch("health_quiz_set_07.json").then(res => res.json()).catch(() => []),
-      fetch("health_quiz_set_08.json").then(res => res.json()).catch(() => []),
-      fetch("health_quiz_set_09.json").then(res => res.json()).catch(() => []),
-      fetch("health_quiz_set_10.json").then(res => res.json()).catch(() => []),
-      fetch("health_quiz_set_11.json").then(res => res.json()).catch(() => [])
-    ])
-      .then(quizSets => {
-        // 모든 퀴즈 세트를 하나의 배열로 합침
-        allQuestions = quizSets.flat().filter(q => q && q.question && q.correct && q.wrong);
+    // 하나의 통합 퀴즈 파일만 로드
+    fetch("health_quiz_set_all.json")
+      .then(res => res.json())
+      .then(quizList => {
+        allQuestions = quizList.filter(q => q && q.question && q.correct && q.wrong);
         
         if (allQuestions.length === 0) {
           throw new Error('퀴즈 문제를 불러올 수 없습니다.');
