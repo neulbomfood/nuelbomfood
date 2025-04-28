@@ -70,7 +70,8 @@ document.addEventListener("DOMContentLoaded", () => {
       fetch("health_quiz_set_07.json").then(res => res.json()).catch(() => []),
       fetch("health_quiz_set_08.json").then(res => res.json()).catch(() => []),
       fetch("health_quiz_set_09.json").then(res => res.json()).catch(() => []),
-      fetch("health_quiz_set_10.json").then(res => res.json()).catch(() => [])
+      fetch("health_quiz_set_10.json").then(res => res.json()).catch(() => []),
+      fetch("health_quiz_set_11.json").then(res => res.json()).catch(() => [])
     ])
       .then(quizSets => {
         // 모든 퀴즈 세트를 하나의 배열로 합침
