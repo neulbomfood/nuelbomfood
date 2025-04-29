@@ -16,7 +16,9 @@ def is_duplicate(q1, q2):
     """두 문제가 동일한지 비교합니다."""
     n1 = normalize_question(q1)
     n2 = normalize_question(q2)
-    return (n1['question'] == n2['question'])  # 질문만 비교하도록 수정
+    return (n1['question'] == n2['question'] and 
+            n1['correct'] == n2['correct'] and 
+            n1['wrong'] == n2['wrong'])
 
 def update_quiz_files():
     # 기존 문제 파일 읽기
