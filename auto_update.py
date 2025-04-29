@@ -3,6 +3,23 @@ import subprocess
 import os
 from datetime import datetime
 
+def normalize_question(q):
+    """문제 객체를 정규화하여 비교 가능한 형태로 만듭니다."""
+    return {
+        'question': q['question'].strip(),
+        'correct': q['correct'].strip(),
+        'wrong': sorted([w.strip() for w in q['wrong']]),
+        'explanation': q['explanation'].strip() if 'explanation' in q else ''
+    }
+
+def is_duplicate(q1, q2):
+    """두 문제가 동일한지 비교합니다."""
+    n1 = normalize_question(q1)
+    n2 = normalize_question(q2)
+    return (n1['question'] == n2['question'] and 
+            n1['correct'] == n2['correct'] and 
+            n1['wrong'] == n2['wrong'])
+
 def update_quiz_files():
     # 기존 문제 파일 읽기
     all_questions = []
@@ -33,15 +50,18 @@ def update_quiz_files():
         else:
             print(f'{file} 파일이 존재하지 않습니다.')
 
-    # 중복 제거를 위해 문제를 문자열로 변환하여 집합으로 만듦
-    existing_questions = {json.dumps(q, ensure_ascii=False) for q in all_questions}
+    print(f'새로운 문제 파일들에서 총 {len(new_questions)}개의 문제를 읽었습니다.')
+
+    # 중복 제거하면서 새로운 문제 추가
     added_count = 0
-    
-    for q in new_questions:
-        q_str = json.dumps(q, ensure_ascii=False)
-        if q_str not in existing_questions:
-            all_questions.append(q)
-            existing_questions.add(q_str)
+    for new_q in new_questions:
+        is_dup = False
+        for existing_q in all_questions:
+            if is_duplicate(new_q, existing_q):
+                is_dup = True
+                break
+        if not is_dup:
+            all_questions.append(new_q)
             added_count += 1
 
     # 결과 저장
