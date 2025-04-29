@@ -38,11 +38,12 @@ def update_quiz_files():
             with open(file, 'r', encoding='utf-8') as f:
                 try:
                     data = json.load(f)
-                    if isinstance(data, dict) and 'questions' in data:
-                        new_questions.extend(data['questions'])
+                    questions = data.get('questions', data)  # questions 키가 있으면 그 값을, 없으면 data 자체를 사용
+                    if isinstance(questions, list):
+                        new_questions.extend(questions)
+                        print(f'{file}에서 {len(questions)}개의 문제를 읽었습니다.')
                     else:
-                        new_questions.extend(data)
-                    print(f'{file}에서 {len(data if isinstance(data, list) else data["questions"])}개의 문제를 읽었습니다.')
+                        print(f'{file}의 형식이 올바르지 않습니다.')
                 except json.JSONDecodeError as e:
                     print(f'{file} 파일을 읽는 중 오류 발생: {e}')
                 except Exception as e:
