@@ -59,32 +59,20 @@ document.addEventListener("DOMContentLoaded", () => {
     startTime = Date.now();
     showLoading(true);
     
-    // 하나의 통합 퀴즈 파일만 로드
-    fetch("health_quiz_set_all.json")
-      .then(res => res.json())
-      .then(quizList => {
-        allQuestions = quizList.filter(q => q && q.question && q.correct && q.wrong);
-        
-        if (allQuestions.length === 0) {
-          throw new Error('퀴즈 문제를 불러올 수 없습니다.');
-        }
-        
-        // 중복 제거 (question을 기준으로)
-        allQuestions = Array.from(new Map(allQuestions.map(q => [q.question, q])).values());
-        
-        // 새로운 문제 선택
-        selectNewQuestions();
-        
-        showLoading(false);
-        showQuestion();
-        updatePoints();
-        updateProgress();
-      })
-      .catch(error => {
-        console.error('Error loading questions:', error);
-        document.getElementById('question').textContent = '문제를 불러오는 중 오류가 발생했습니다. 페이지를 새로고침 해주세요.';
-        showLoading(false);
-      });
+    // 두 개의 퀴즈 파일을 모두 불러와 합치기
+    Promise.all([
+      fetch("health_quiz_set_all.json").then(res => res.json()),
+      fetch("quiz1.json").then(res => res.json())
+    ]).then(([allList, quiz1List]) => {
+      const merged = [...allList, ...quiz1List];
+      const uniqueQuestions = Array.from(new Map(merged.map(q => [q.question, q])).values());
+      allQuestions = uniqueQuestions;
+      questions = uniqueQuestions;
+      showLoading(false);
+      showQuestion();
+      updatePoints();
+      updateProgress();
+    });
   }
 });
 
@@ -361,17 +349,8 @@ function showExplanation(isCorrect, explanation) {
 
 // 새로운 문제 선택 함수
 function selectNewQuestions() {
-  // 아직 풀지 않은 문제들만 필터링
-  const availableQuestions = allQuestions.filter(q => !usedQuestions.has(q.question));
-  
-  // 모든 문제를 다 풀었다면 usedQuestions를 초기화
-  if (availableQuestions.length === 0) {
-    usedQuestions.clear();
-    questions = allQuestions.sort(() => Math.random() - 0.5);
-  } else {
-    // 아직 풀지 않은 문제들 중에서 랜덤으로 선택
-    questions = availableQuestions.sort(() => Math.random() - 0.5);
-  }
+  // 모든 문제를 랜덤으로 섞기
+  questions = allQuestions.sort(() => Math.random() - 0.5);
 }
 
 // 계속 풀기 함수 수정
