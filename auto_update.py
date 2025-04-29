@@ -37,8 +37,7 @@ def update_quiz_files():
         'health_quiz_set_new.json',
         'health_quiz_set_02.json',
         'health_quiz_set_03.json',
-        'health_quiz_set_04.json',
-        'health_quiz_set_11_converted.json'
+        'health_quiz_set_04.json'
     ]
     new_questions = []
 
@@ -100,21 +99,5 @@ def git_push():
         print(f'Git 푸시 중 오류가 발생했습니다: {e}')
 
 if __name__ == '__main__':
-    # 기존 파일 백업
-    if os.path.exists('health_quiz_set_all.json'):
-        backup_name = f'health_quiz_set_all_backup_{datetime.now().strftime("%Y%m%d_%H%M%S")}.json'
-        os.rename('health_quiz_set_all.json', backup_name)
-        print(f'기존 파일을 {backup_name}으로 백업했습니다.')
-    
-    # 기존 파일 복원
-    if os.path.exists(backup_name):
-        with open(backup_name, 'r', encoding='utf-8') as f:
-            data = json.load(f)
-            if isinstance(data, list):
-                all_questions = data
-            else:
-                all_questions = data.get('questions', [])
-            print(f'기존 문제 수: {len(all_questions)}개')
-    
     update_quiz_files()
     git_push() 
