@@ -38,7 +38,12 @@ def update_quiz_files():
             with open(file, 'r', encoding='utf-8') as f:
                 try:
                     data = json.load(f)
-                    questions = data.get('questions', data)  # questions 키가 있으면 그 값을, 없으면 data 자체를 사용
+                    # 파일이 리스트인 경우와 객체인 경우를 모두 처리
+                    if isinstance(data, list):
+                        questions = data
+                    else:
+                        questions = data.get('questions', [])
+                    
                     if isinstance(questions, list):
                         new_questions.extend(questions)
                         print(f'{file}에서 {len(questions)}개의 문제를 읽었습니다.')
