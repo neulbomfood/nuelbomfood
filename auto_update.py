@@ -17,16 +17,26 @@ def update_quiz_files():
 
     for file in new_files:
         if os.path.exists(file):
+            print(f'{file} 파일을 읽는 중...')
             with open(file, 'r', encoding='utf-8') as f:
-                data = json.load(f)
-                if isinstance(data, dict) and 'questions' in data:
-                    new_questions.extend(data['questions'])
-                else:
-                    new_questions.extend(data)
+                try:
+                    data = json.load(f)
+                    if isinstance(data, dict) and 'questions' in data:
+                        new_questions.extend(data['questions'])
+                    else:
+                        new_questions.extend(data)
+                    print(f'{file}에서 {len(data if isinstance(data, list) else data["questions"])}개의 문제를 읽었습니다.')
+                except json.JSONDecodeError as e:
+                    print(f'{file} 파일을 읽는 중 오류 발생: {e}')
+                except Exception as e:
+                    print(f'{file} 파일 처리 중 오류 발생: {e}')
+        else:
+            print(f'{file} 파일이 존재하지 않습니다.')
 
     # 중복 제거를 위해 문제를 문자열로 변환하여 집합으로 만듦
     existing_questions = {json.dumps(q, ensure_ascii=False) for q in all_questions}
     added_count = 0
+    
     for q in new_questions:
         q_str = json.dumps(q, ensure_ascii=False)
         if q_str not in existing_questions:
