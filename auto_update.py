@@ -6,26 +6,28 @@ from datetime import datetime
 def normalize_question(q):
     """문제 객체를 정규화하여 비교 가능한 형태로 만듭니다."""
     return {
-        'question': q['question'].strip(),
-        'correct': q['correct'].strip(),
-        'wrong': sorted([w.strip() for w in q['wrong']]),
-        'explanation': q['explanation'].strip() if 'explanation' in q else ''
+        'question': q.get('question', '').strip(),
+        'correct': q.get('correct', '').strip(),
+        'wrong': sorted([w.strip() for w in q.get('wrong', [])]),
+        'explanation': q.get('explanation', '').strip()
     }
 
 def is_duplicate(q1, q2):
     """두 문제가 동일한지 비교합니다."""
     n1 = normalize_question(q1)
     n2 = normalize_question(q2)
-    return (n1['question'] == n2['question'] and 
-            n1['correct'] == n2['correct'] and 
-            n1['wrong'] == n2['wrong'])
+    return (n1['question'] == n2['question'])  # 질문만 비교하도록 수정
 
 def update_quiz_files():
     # 기존 문제 파일 읽기
     all_questions = []
     if os.path.exists('health_quiz_set_all.json'):
         with open('health_quiz_set_all.json', 'r', encoding='utf-8') as f:
-            all_questions = json.load(f)
+            data = json.load(f)
+            if isinstance(data, list):
+                all_questions = data
+            else:
+                all_questions = data.get('questions', [])
             print(f'기존 문제 수: {len(all_questions)}개')
     
     # 새로운 문제 파일들 읽기
@@ -65,10 +67,12 @@ def update_quiz_files():
         for existing_q in all_questions:
             if is_duplicate(new_q, existing_q):
                 is_dup = True
+                print(f'중복 문제 발견: {new_q["question"]}')
                 break
         if not is_dup:
             all_questions.append(new_q)
             added_count += 1
+            print(f'새로운 문제 추가: {new_q["question"]}')
 
     # 결과 저장
     with open('health_quiz_set_all.json', 'w', encoding='utf-8') as f:
