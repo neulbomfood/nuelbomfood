@@ -68,8 +68,9 @@ document.addEventListener("DOMContentLoaded", () => {
     ]).then(([allList, quiz1List, quiz2List, quiz3List]) => {
       const merged = [...allList, ...quiz1List, ...quiz2List, ...quiz3List];
       const uniqueQuestions = Array.from(new Map(merged.map(q => [q.question, q])).values());
-      allQuestions = uniqueQuestions;
-      questions = uniqueQuestions;
+      // 문제를 랜덤으로 섞기
+      allQuestions = uniqueQuestions.sort(() => Math.random() - 0.5);
+      questions = allQuestions;
       showLoading(false);
       showQuestion();
       updatePoints();
