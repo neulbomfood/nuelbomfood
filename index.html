@@ -6,6 +6,54 @@
   <title>늘봄 건강 퀴즈</title>
   <link rel="stylesheet" href="style.css" />
   <link rel="manifest" href="manifest.json" />
+  <style>
+    .link-copy-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      width: 100%;
+      max-width: 320px;
+      height: 60px;
+      margin: 24px auto 0 auto;
+      background-color: #e0ede3;
+      border-radius: 999px;
+      color: #356c55;
+      font-size: 16px;
+      font-weight: 600;
+      border: none;
+      cursor: pointer;
+      transition: background-color 0.2s ease, box-shadow 0.2s;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+    }
+    .link-copy-btn:hover {
+      background-color: #d0e5d6;
+      box-shadow: 0 4px 12px rgba(53,108,85,0.08);
+    }
+    .link-copy-btn img {
+      width: 22px;
+      height: 22px;
+      vertical-align: middle;
+    }
+    @media (max-width: 480px) {
+      .link-copy-btn {
+        max-width: 95vw;
+        height: 48px;
+        font-size: 15px;
+      }
+      .link-copy-btn img {
+        width: 18px;
+        height: 18px;
+      }
+    }
+    #copy-msg {
+      display:none;
+      color:#2e7d32;
+      font-weight:bold;
+      font-size:1.1em;
+      margin-top:10px;
+    }
+  </style>
 </head>
 <body>
   <div class="container">
@@ -14,6 +62,14 @@
     <div class="start-screen">
       <h1 class="main-title">나를 위한 작은 습관의 변화, 늘봄</h1>
       <p class="sub-title">오늘도 나를 돌보는 가장 쉬운 방법, 시작해볼까요?</p>
+
+      <div style="text-align:center;">
+        <button class="link-copy-btn" onclick="copyLink()">
+          <img src="assets/img/link-icon.png" alt="링크 아이콘" />
+          같이 하러 가기 💬
+        </button>
+        <div id="copy-msg">복사되었습니다!</div>
+      </div>
 
       <div class="points-info">
         <p class="current-points">
@@ -36,6 +92,9 @@
           </button>
           <button onclick="requestExchange()" id="exchange-button" class="secondary-button" style="display: none;">
             ✨ 포인트 전환 신청하기
+          </button>
+          <button onclick="window.open('https://smartstore.naver.com/jinjjamall', '_blank')" class="secondary-button" style="margin-top:10px;">
+            🛒 늘봄식품 바로가기
           </button>
           <div id="points-insufficient" class="points-notice" style="display: none;">
             포인트가 부족합니다 😢
@@ -88,6 +147,33 @@
     
     const selectedBg = bgList[Math.floor(Math.random() * bgList.length)];
     document.body.style.backgroundImage = `url('${selectedBg}')`;
+
+    function copyLink() {
+      navigator.clipboard.writeText(window.location.href)
+        .then(() => {
+          const msg = document.getElementById('copy-msg');
+          msg.style.display = 'block';
+          setTimeout(() => { msg.style.display = 'none'; }, 2000);
+        })
+        .catch(() => alert("복사에 실패했어요 😥"));
+    }
+
+    function requestExchange() {
+      const confirmMessage = '⚠️ 정말 포인트를 전환하시겠습니까?\n\n확인을 누르시면 현재 보유 중인 모든 포인트가 소멸되며,\n전환 신청 페이지로 이동합니다.\n\n이 작업은 되돌릴 수 없습니다.';
+      
+      if (window.confirm(confirmMessage)) {
+        // 포인트 초기화
+        localStorage.setItem('points', '0');
+        // 포인트 표시 업데이트
+        document.getElementById('points').textContent = '0';
+        // 전환 버튼 숨기기
+        document.getElementById('exchange-button').style.display = 'none';
+        // 구글 폼으로 이동
+        setTimeout(() => {
+          window.location.href = 'https://docs.google.com/forms/d/e/1FAIpQLSf79U4uayn49L_SMV3KgjnAp8vlP7gx-XJ-v6AnBxveqlIPxg/viewform?usp=header';
+        }, 100);
+      }
+    }
   </script>
 </body>
 </html>

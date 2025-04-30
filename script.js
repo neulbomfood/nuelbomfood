@@ -59,12 +59,14 @@ document.addEventListener("DOMContentLoaded", () => {
     startTime = Date.now();
     showLoading(true);
     
-    // 두 개의 퀴즈 파일을 모두 불러와 합치기
+    // 세 개의 퀴즈 파일을 모두 불러와 합치기
     Promise.all([
       fetch("health_quiz_set_all.json").then(res => res.json()),
-      fetch("quiz1.json").then(res => res.json())
-    ]).then(([allList, quiz1List]) => {
-      const merged = [...allList, ...quiz1List];
+      fetch("quiz1.json").then(res => res.json()),
+      fetch("quiz2.json").then(res => res.json()),
+      fetch("quiz3.json").then(res => res.json())
+    ]).then(([allList, quiz1List, quiz2List, quiz3List]) => {
+      const merged = [...allList, ...quiz1List, ...quiz2List, ...quiz3List];
       const uniqueQuestions = Array.from(new Map(merged.map(q => [q.question, q])).values());
       allQuestions = uniqueQuestions;
       questions = uniqueQuestions;
