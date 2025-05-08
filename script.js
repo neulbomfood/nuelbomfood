@@ -58,14 +58,11 @@ document.addEventListener("DOMContentLoaded", () => {
     startTime = Date.now();
     showLoading(true);
     
-    // 현재 경로 기준으로 JSON 파일 경로 만들기
-    const basePath = window.location.pathname.replace(/\/[^\/]*$/, "/");
-    
     Promise.all([
-      fetch(`${basePath}health_quiz_set_all.json`).then(res => res.json()),
-      fetch(`${basePath}quiz1.json`).then(res => res.json()),
-      fetch(`${basePath}quiz2.json`).then(res => res.json()),
-      fetch(`${basePath}quiz3.json`).then(res => res.json())
+      fetch("health_quiz_set_all.json").then(res => res.json()),
+      fetch("quiz1.json").then(res => res.json()),
+      fetch("quiz2.json").then(res => res.json()),
+      fetch("quiz3.json").then(res => res.json())
     ])
     .then(([allList, quiz1List, quiz2List, quiz3List]) => {
       const merged = [...allList, ...quiz1List, ...quiz2List, ...quiz3List];
