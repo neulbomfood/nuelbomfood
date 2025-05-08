@@ -126,55 +126,6 @@
 
   <a href="health_quiz_set_all.json" download style="display:block;margin:20px 0;font-size:1.1em;color:#007bff;">문제 전체 JSON 다운로드 (로컬 테스트용)</a>
 
-  <script>
-    // 포인트 로드 및 표시
-    const points = parseInt(localStorage.getItem('points')) || 0;
-    document.getElementById('points').textContent = points;
-    
-    // 5000포인트 이상이면 전환 버튼 표시
-    if (points >= 5000) {
-      document.getElementById('exchange-button').style.display = 'block';
-    }
-    
-    // 배경 이미지 랜덤 적용
-    const bgList = [
-      "assets/img/background/close-up-white-flowering-plant-against-wall.jpg",
-      "assets/img/background/still-life-minimalist-lifestyle.jpg",
-      "assets/img/background/white-rose-blooming-against-wall.jpg",
-      "assets/img/background/view-rose-flowers-condensed-glass.jpg",
-      "assets/img/background/modern-minimalist-living-room.jpg"
-    ];
-    
-    const selectedBg = bgList[Math.floor(Math.random() * bgList.length)];
-    document.body.style.backgroundImage = `url('${selectedBg}')`;
-
-    function copyLink() {
-      navigator.clipboard.writeText(window.location.href)
-        .then(() => {
-          const msg = document.getElementById('copy-msg');
-          msg.style.display = 'block';
-          setTimeout(() => { msg.style.display = 'none'; }, 2000);
-        })
-        .catch(() => alert("복사에 실패했어요 😥"));
-    }
-
-    function requestExchange() {
-      const confirmMessage = '⚠️ 정말 포인트를 전환하시겠습니까?\n\n확인을 누르시면 현재 보유 중인 모든 포인트가 소멸되며,\n전환 신청 페이지로 이동합니다.\n\n이 작업은 되돌릴 수 없습니다.';
-      
-      if (window.confirm(confirmMessage)) {
-        // 포인트 초기화
-        localStorage.setItem('points', '0');
-        // 포인트 표시 업데이트
-        document.getElementById('points').textContent = '0';
-        // 전환 버튼 숨기기
-        document.getElementById('exchange-button').style.display = 'none';
-        // 구글 폼으로 이동
-        setTimeout(() => {
-          window.location.href = 'https://docs.google.com/forms/d/e/1FAIpQLSf79U4uayn49L_SMV3KgjnAp8vlP7gx-XJ-v6AnBxveqlIPxg/viewform?usp=header';
-        }, 100);
-      }
-    }
-  </script>
   <script src="script.js"></script>
 </body>
 </html>
