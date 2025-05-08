@@ -1,3 +1,11 @@
+const bgList = [
+  "assets/img/background/close-up-white-flowering-plant-against-wall.jpg",
+  "assets/img/background/still-life-minimalist-lifestyle.jpg",
+  "assets/img/background/white-rose-blooming-against-wall.jpg",
+  "assets/img/background/view-rose-flowers-condensed-glass.jpg",
+  "assets/img/background/modern-minimalist-living-room.jpg"
+];
+
 // 개발 중 포인트 리셋 (주석 해제하여 사용)
 // localStorage.removeItem('points');
 
@@ -53,16 +61,15 @@ document.addEventListener("DOMContentLoaded", () => {
     // 현재 경로 기준으로 JSON 파일 경로 만들기
     const basePath = window.location.pathname.replace(/\/[^\/]*$/, "/");
     
-    // 세 개의 퀴즈 파일을 모두 불러와 합치기
     Promise.all([
       fetch(`${basePath}health_quiz_set_all.json`).then(res => res.json()),
       fetch(`${basePath}quiz1.json`).then(res => res.json()),
       fetch(`${basePath}quiz2.json`).then(res => res.json()),
       fetch(`${basePath}quiz3.json`).then(res => res.json())
-    ]).then(([allList, quiz1List, quiz2List, quiz3List]) => {
+    ])
+    .then(([allList, quiz1List, quiz2List, quiz3List]) => {
       const merged = [...allList, ...quiz1List, ...quiz2List, ...quiz3List];
       const uniqueQuestions = Array.from(new Map(merged.map(q => [q.question, q])).values());
-      // 문제를 랜덤으로 섞기
       allQuestions = uniqueQuestions.sort(() => Math.random() - 0.5);
       questions = allQuestions;
       showLoading(false);
