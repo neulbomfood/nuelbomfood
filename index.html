@@ -190,84 +190,79 @@
 <body>
   <div class="container">
     <img src="assets/img/logo.png" alt="늘봄 로고" class="logo">
-    
-    <div class="start-screen">
-      <h1 class="main-title">나를 위한 작은 습관의 변화, 늘봄</h1>
-      <p class="sub-title">오늘도 나를 돌보는 가장 쉬운 방법, 시작해볼까요?</p>
-
-      <div style="text-align:center;">
-        <div class="share-section">
-          <h3 class="share-title">친구와 함께 건강한 습관 만들기</h3>
-          <div class="social-share-buttons-wrapper">
-            <div class="social-share-buttons">
-              <button onclick="shareAppInstall()" class="social-btn install-btn">
-                <span class="install-icon-wrap"><img src="assets/img/icon-512.png" alt="앱설치" class="install-icon" /></span>
-                <span class="install-btn-text">앱 설치 링크 공유</span>
-              </button>
+    <div id="main-section">
+      <div class="start-screen">
+        <h1 class="main-title">나를 위한 작은 습관의 변화, 늘봄</h1>
+        <p class="sub-title">오늘도 나를 돌보는 가장 쉬운 방법, 시작해볼까요?</p>
+        <div style="text-align:center;">
+          <div class="share-section">
+            <h3 class="share-title">친구와 함께 건강한 습관 만들기</h3>
+            <div class="social-share-buttons-wrapper">
+              <div class="social-share-buttons">
+                <button onclick="shareAppInstall()" class="social-btn install-btn">
+                  <span class="install-icon-wrap"><img src="assets/img/icon-512.png" alt="앱설치" class="install-icon" /></span>
+                  <span class="install-btn-text">앱 설치 링크 공유</span>
+                </button>
+              </div>
+            </div>
+            <p class="share-reward">공유하면 200P가 적립됩니다! 💚</p>
+          </div>
+        </div>
+        <div class="points-info">
+          <p class="current-points">
+            💚 현재 나의 습관 포인트: <strong class="point-value" id="points">0</strong>P
+          </p>
+          <div class="points-guide">
+            <p class="point-main-text">
+              📌 <strong class="point-highlight">5,000포인트</strong>를 달성하면
+              <strong>늘봄몰 적립금으로 전환</strong>할 수 있어요!
+            </p>
+            <p class="point-sub-text">
+              환전 신청 버튼은 <strong class="point-emphasis">5,000P 이상</strong>일 때 자동으로 활성화됩니다
+            </p>
+          </div>
+          <div id="points-action">
+            <button onclick="location.href='quiz.html'" class="primary-button">
+              오늘의 건강 루틴 시작하기 →
+            </button>
+            <button onclick="requestExchange()" id="exchange-button" class="secondary-button" style="display: none;">
+              ✨ 포인트 전환 신청하기
+            </button>
+            <button onclick="window.open('https://smartstore.naver.com/jinjjamall', '_blank')" class="secondary-button" style="margin-top:10px;">
+              🛒 늘봄식품 바로가기
+            </button>
+            <button onclick="goToShorts()" class="secondary-button" style="margin-top:10px;">
+              🎥 1분 건강 숏츠 보러가기
+            </button>
+            <div id="points-insufficient" class="points-notice" style="display: none;">
+              포인트가 부족합니다 😢
             </div>
           </div>
-          <p class="share-reward">공유하면 200P가 적립됩니다! 💚</p>
         </div>
-      </div>
-
-      <div class="points-info">
-        <p class="current-points">
-          💚 현재 나의 습관 포인트: <strong class="point-value" id="points">0</strong>P
-        </p>
-        
-        <div class="points-guide">
-          <p class="point-main-text">
-            📌 <strong class="point-highlight">5,000포인트</strong>를 달성하면
-            <strong>늘봄몰 적립금으로 전환</strong>할 수 있어요!
-          </p>
-          <p class="point-sub-text">
-            환전 신청 버튼은 <strong class="point-emphasis">5,000P 이상</strong>일 때 자동으로 활성화됩니다
-          </p>
-        </div>
-
-        <div id="points-action">
-          <button onclick="location.href='quiz.html'" class="primary-button">
-            오늘의 건강 루틴 시작하기 →
-          </button>
-          <button onclick="requestExchange()" id="exchange-button" class="secondary-button" style="display: none;">
-            ✨ 포인트 전환 신청하기
-          </button>
-          <button onclick="window.open('https://smartstore.naver.com/jinjjamall', '_blank')" class="secondary-button" style="margin-top:10px;">
-            🛒 늘봄식품 바로가기
-          </button>
-          <button onclick="showShortsSection()" class="secondary-button" style="margin-top:10px;">
-            🎥 1분 건강 숏츠 보러가기
-          </button>
-          <div id="points-insufficient" class="points-notice" style="display: none;">
-            포인트가 부족합니다 😢
+        <div class="card-grid">
+          <div class="info-card">
+            <span class="emoji">✨</span>
+            <h3>작은 실천</h3>
+            <p>실천할수록 쌓이는 습관 포인트<br>오늘의 나를 위한 작은 투자</p>
+          </div>
+          <div class="info-card">
+            <span class="emoji">🌱</span>
+            <h3>건강한 루틴</h3>
+            <p>잠깐의 여유, 나를 챙기는 습관<br>하루 한 번쯤, 나를 위한 체크타임!</p>
+          </div>
+          <div class="info-card">
+            <span class="emoji">🎁</span>
+            <h3>나를 위한 선물</h3>
+            <p>건강 퀴즈로 알아보는 내 몸 사용 설명서<br>알면 지키게 되는 건강 상식!</p>
           </div>
         </div>
+        <p class="footer-quote">작은 습관이, 결국 가장 멀리 갑니다</p>
       </div>
-
-      <div class="card-grid">
-        <div class="info-card">
-          <span class="emoji">✨</span>
-          <h3>작은 실천</h3>
-          <p>실천할수록 쌓이는 습관 포인트<br>오늘의 나를 위한 작은 투자</p>
-        </div>
-        <div class="info-card">
-          <span class="emoji">🌱</span>
-          <h3>건강한 루틴</h3>
-          <p>잠깐의 여유, 나를 챙기는 습관<br>하루 한 번쯤, 나를 위한 체크타임!</p>
-        </div>
-        <div class="info-card">
-          <span class="emoji">🎁</span>
-          <h3>나를 위한 선물</h3>
-          <p>건강 퀴즈로 알아보는 내 몸 사용 설명서<br>알면 지키게 되는 건강 상식!</p>
-        </div>
-      </div>
-
-      <div class="video-section" id="shorts-section" style="display:none;">
-        <h3 class="video-title">🎥 1분 건강 숏츠</h3>
-        <ul id="videoList" class="video-list"></ul>
-      </div>
-
-      <p class="footer-quote">작은 습관이, 결국 가장 멀리 갑니다</p>
+    </div>
+    <div class="video-section" id="shorts-section" style="display:none;">
+      <h3 class="video-title">🎥 1분 건강 숏츠</h3>
+      <ul id="videoList" class="video-list"></ul>
+      <button onclick="goBackMain()" class="secondary-button" style="margin-top:20px;">← 뒤로가기</button>
     </div>
   </div>
 

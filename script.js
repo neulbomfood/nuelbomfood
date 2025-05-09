@@ -621,4 +621,23 @@ function showShortsSection() {
     section.style.display = 'block';
     section.scrollIntoView({behavior: 'smooth'});
   }
-} 
+}
+
+function goToShorts() {
+  document.getElementById('main-section').style.display = 'none';
+  document.getElementById('shorts-section').style.display = 'block';
+  history.pushState({page: 'shorts'}, '', '?shorts=1');
+}
+
+function goBackMain() {
+  document.getElementById('main-section').style.display = 'block';
+  document.getElementById('shorts-section').style.display = 'none';
+  history.back();
+}
+
+window.addEventListener('popstate', function(event) {
+  if (!location.search.includes('shorts=1')) {
+    document.getElementById('main-section').style.display = 'block';
+    document.getElementById('shorts-section').style.display = 'none';
+  }
+}); 
