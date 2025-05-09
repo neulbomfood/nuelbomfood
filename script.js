@@ -606,4 +606,11 @@ function showDailyQuizReminder() {
     showToast(msg);
     localStorage.setItem('lastReminderDate', today);
   }
+}
+
+function addPoints(amount) {
+  points += amount;
+  if (points < 0) points = 0;
+  localStorage.setItem("points", points);
+  if (typeof updatePoints === 'function') updatePoints();
 } 

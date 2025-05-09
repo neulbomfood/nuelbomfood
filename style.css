@@ -840,9 +840,9 @@ h1 {
 
 .emotion-bar {
   width: 100%;
-  background: #ff4d4f;
+  background: transparent;
   border-radius: 8px;
-  padding: 10px 0;
+  padding: 0;
   margin-bottom: 8px;
   display: flex;
   justify-content: center;
@@ -850,10 +850,12 @@ h1 {
 }
 
 .emotion-bar .emotion-message {
-  color: #fff;
+  color: #ff4d4f;
   font-size: 1.08em;
   font-weight: 600;
   letter-spacing: -0.5px;
+  background: none;
+  padding: 0;
 }
 
 .install-icon {
@@ -862,31 +864,67 @@ h1 {
   margin-right: 10px;
 }
 
-.social-share-buttons {
+.social-share-buttons-wrapper {
+  display: flex;
   justify-content: center;
+  align-items: center;
+  width: 100%;
+}
+
+.social-share-buttons {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
 }
 
 .install-btn {
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 12px;
+  gap: 8px;
   background-color: #356c55;
   color: #fff;
   font-size: 18px;
   font-weight: 700;
-  padding: 20px 32px;
+  padding: 0;
   border-radius: 16px;
   border: none;
   box-shadow: 0 4px 12px rgba(0,0,0,0.10);
   transition: background 0.2s, box-shadow 0.2s;
-  width: 100%;
-  max-width: 320px;
+  width: 160px;
+  height: 80px;
+  max-width: 100%;
 }
 
 .install-btn:hover {
   background: #28513e;
   box-shadow: 0 6px 18px rgba(53,108,85,0.13);
+}
+
+.install-icon-wrap {
+  width: 48px;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 2px;
+}
+
+.install-icon {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  border-radius: 8px;
+}
+
+.install-btn-text {
+  display: block;
+  font-size: 1.05em;
+  font-weight: 700;
+  text-align: center;
+  line-height: 1.2;
 }
 
 /* 출석 포인트 애니메이션 */
