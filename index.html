@@ -6,6 +6,10 @@
   <title>늘봄 건강 퀴즈</title>
   <link rel="stylesheet" href="style.css" />
   <link rel="manifest" href="manifest.json" />
+  <script src="https://developers.kakao.com/sdk/js/kakao.min.js"></script>
+  <script>
+    Kakao.init('YOUR_KAKAO_JS_KEY'); // 실제 키로 교체 필요
+  </script>
   <style>
     .link-copy-btn {
       display: flex;
@@ -53,6 +57,129 @@
       font-size:1.1em;
       margin-top:10px;
     }
+    .social-share-buttons {
+      display: flex;
+      gap: 12px;
+      justify-content: center;
+      margin-top: 16px;
+    }
+    
+    .social-btn {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 12px 20px;
+      border-radius: 8px;
+      border: none;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: opacity 0.2s;
+    }
+    
+    .social-btn:hover {
+      opacity: 0.9;
+    }
+    
+    .social-btn img {
+      width: 20px;
+      height: 20px;
+    }
+    
+    .kakao-btn {
+      background-color: #FEE500;
+      color: #000000;
+    }
+    
+    .facebook-btn {
+      background-color: #1877F2;
+      color: #FFFFFF;
+    }
+
+    .share-section {
+      background: rgba(255, 255, 255, 0.9);
+      padding: 24px;
+      border-radius: 16px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+      margin: 24px auto;
+      max-width: 600px;
+    }
+
+    .share-title {
+      color: #356c55;
+      font-size: 18px;
+      margin-bottom: 16px;
+      font-weight: 600;
+    }
+
+    .social-share-buttons {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+    
+    .social-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 16px;
+      border-radius: 12px;
+      border: none;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    
+    .social-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+    
+    .social-btn img {
+      width: 24px;
+      height: 24px;
+    }
+    
+    .kakao-btn {
+      background-color: #FEE500;
+      color: #000000;
+    }
+    
+    .facebook-btn {
+      background-color: #1877F2;
+      color: #FFFFFF;
+    }
+
+    .instagram-btn {
+      background: linear-gradient(45deg, #405DE6, #5851DB, #833AB4, #C13584, #E1306C, #FD1D1D);
+      color: #FFFFFF;
+    }
+
+    .line-btn {
+      background-color: #06C755;
+      color: #FFFFFF;
+    }
+
+    .share-reward {
+      color: #356c55;
+      font-size: 14px;
+      margin-top: 12px;
+      font-weight: 500;
+    }
+
+    @media (max-width: 480px) {
+      .social-share-buttons {
+        grid-template-columns: 1fr;
+      }
+      
+      .share-section {
+        margin: 16px;
+        padding: 16px;
+      }
+    }
   </style>
 </head>
 <body>
@@ -64,11 +191,20 @@
       <p class="sub-title">오늘도 나를 돌보는 가장 쉬운 방법, 시작해볼까요?</p>
 
       <div style="text-align:center;">
-        <button class="link-copy-btn" onclick="copyLink()">
-          <img src="assets/img/link-icon.png" alt="링크 아이콘" />
-          같이 하러 가기 💬
-        </button>
-        <div id="copy-msg">복사되었습니다!</div>
+        <div class="share-section">
+          <h3 class="share-title">친구와 함께 건강한 습관 만들기</h3>
+          <div class="social-share-buttons">
+            <button id="kakao-share-btn" class="social-btn kakao-btn">
+              <img src="assets/img/kakao-icon.png" alt="카카오톡" />
+              카카오톡으로 공유
+            </button>
+            <button onclick="shareToInstagram()" class="social-btn instagram-btn">
+              <img src="assets/img/instagram-icon.png" alt="인스타그램" />
+              인스타그램으로 공유
+            </button>
+          </div>
+          <p class="share-reward">공유하면 200P가 적립됩니다! 💚</p>
+        </div>
       </div>
 
       <div class="points-info">

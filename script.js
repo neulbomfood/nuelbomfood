@@ -47,6 +47,39 @@ const feedbackTexts = {
 };
 
 document.addEventListener("DOMContentLoaded", () => {
+  // 카카오톡 공유 버튼 초기화
+  if (window.Kakao) {
+    Kakao.Link.createDefaultButton({
+      container: '#kakao-share-btn',
+      objectType: 'feed',
+      content: {
+        title: '늘봄 건강 퀴즈',
+        description: '나를 위한 작은 습관의 변화, 늘봄과 함께 건강한 습관을 만들어보세요!',
+        imageUrl: 'http://localhost:8000/assets/img/share-preview.jpg',
+        link: {
+          mobileWebUrl: 'http://localhost:8000',
+          webUrl: 'http://localhost:8000',
+        },
+      },
+      buttons: [
+        {
+          title: '퀴즈 풀러가기',
+          link: {
+            mobileWebUrl: 'http://localhost:8000',
+            webUrl: 'http://localhost:8000',
+          },
+        },
+      ],
+      success: function(response) {
+        addPoints(200);
+        showToast('공유 감사합니다! +200P가 적립되었어요 💚');
+      },
+      fail: function(error) {
+        console.log('카카오톡 공유 실패:', error);
+      }
+    });
+  }
+
   // 현재 페이지가 quiz.html인 경우에만 퀴즈 관련 코드 실행
   if (window.location.pathname.includes('quiz.html')) {
     // 배경 이미지 랜덤 적용
@@ -375,4 +408,52 @@ function continueQuiz() {
 // 홈으로 돌아가기 함수 추가
 function goHome() {
   window.location.href = 'index.html';
+}
+
+// 공유 관련 함수들
+function shareApp() {
+  if (navigator.share) {
+    navigator.share({
+      title: '늘봄 건강 퀴즈',
+      text: '나를 위한 작은 습관의 변화, 늘봄과 함께 건강한 습관을 만들어보세요!',
+      url: window.location.href
+    })
+    .then(() => {
+      // 공유 성공 시 포인트 지급
+      addPoints(50);
+      showToast('공유 감사합니다! +50P가 적립되었어요 💚');
+    })
+    .catch((error) => {
+      console.log('공유 실패:', error);
+    });
+  } else {
+    // Web Share API를 지원하지 않는 경우 기존 복사 기능 사용
+    copyLink();
+  }
+}
+
+function shareToInstagram() {
+  const url = encodeURIComponent(window.location.href);
+  const text = encodeURIComponent('나를 위한 작은 습관의 변화, 늘봄과 함께 건강한 습관을 만들어보세요!');
+  window.open(`https://www.instagram.com/share?url=${url}&caption=${text}`, 'instagram-share-dialog', 'width=800,height=600');
+  addPoints(200);
+  showToast('공유 감사합니다! +200P가 적립되었어요 💚');
+}
+
+function showToast(message) {
+  const toast = document.createElement('div');
+  toast.className = 'toast-message';
+  toast.textContent = message;
+  document.body.appendChild(toast);
+  
+  setTimeout(() => {
+    toast.classList.add('show');
+  }, 100);
+  
+  setTimeout(() => {
+    toast.classList.remove('show');
+    setTimeout(() => {
+      document.body.removeChild(toast);
+    }, 300);
+  }, 3000);
 } 

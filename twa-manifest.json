@@ -1,0 +1,43 @@
+{
+  "packageId": "io.github.neulbomfood.twa",
+  "host": "neulbomfood.github.io",
+  "name": "늘봄 건강 퀴즈",
+  "launcherName": "늘봄퀴즈",
+  "display": "standalone",
+  "themeColor": "#67BC8A",
+  "themeColorDark": "#000000",
+  "navigationColor": "#000000",
+  "navigationColorDark": "#000000",
+  "navigationDividerColor": "#000000",
+  "navigationDividerColorDark": "#000000",
+  "backgroundColor": "#67BC8A",
+  "enableNotifications": true,
+  "startUrl": "/nuelbomfood/index.html",
+  "iconUrl": "https://neulbomfood.github.io/nuelbomfood/assets/img/icon-512.png",
+  "splashScreenFadeOutDuration": 300,
+  "signingKey": {
+    "path": "C:\\Users\\admin\\app\\android.keystore",
+    "alias": "android"
+  },
+  "appVersionName": "3",
+  "appVersionCode": 3,
+  "shortcuts": [],
+  "generatorApp": "bubblewrap-cli",
+  "webManifestUrl": "https://neulbomfood.github.io/nuelbomfood/manifest.json",
+  "fallbackType": "customtabs",
+  "features": {},
+  "alphaDependencies": {
+    "enabled": false
+  },
+  "enableSiteSettingsShortcut": true,
+  "isChromeOSOnly": false,
+  "isMetaQuest": false,
+  "fullScopeUrl": "https://neulbomfood.github.io/nuelbomfood/",
+  "minSdkVersion": 21,
+  "orientation": "default",
+  "fingerprints": [],
+  "additionalTrustedOrigins": [],
+  "retainedBundles": [],
+  "protocolHandlers": [],
+  "appVersion": "3"
+}
