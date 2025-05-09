@@ -605,21 +605,40 @@ function showShortsSection() {
   }
 }
 
+function openVideoFullScreen(videoId) {
+  const section = document.getElementById('shorts-section');
+  section.innerHTML = `
+    <div style="width:100vw; max-width:100vw; height:calc(100vh - 60px); display:flex; flex-direction:column; align-items:center; justify-content:center; background:#111;">
+      <iframe width="100%" height="100%" style="flex:1; min-height:300px; border:none;" src="https://www.youtube.com/embed/${videoId}?autoplay=1&playsinline=1" allowfullscreen></iframe>
+      <button onclick="loadVideoList()" class="secondary-button" style="margin:24px auto 0 auto;display:block;">← 목록으로</button>
+    </div>
+  `;
+}
+
 function loadVideoList() {
   fetch('/nuelbomfood/videos.json')
     .then(res => res.json())
     .then(videos => {
+      const section = document.getElementById('shorts-section');
+      section.innerHTML = `
+        <h3 class="video-title">🎥 1분 건강 숏츠</h3>
+        <ul id="videoList" class="video-list"></ul>
+        <button onclick="goBackMain()" class="secondary-button" style="margin-top:20px;">← 뒤로가기</button>
+      `;
       const list = document.getElementById('videoList');
-      if (!list) {
-        console.error('videoList 요소가 없습니다!');
-        return;
-      }
-      list.innerHTML = '';
       videos.forEach(video => {
         const li = document.createElement('li');
         li.className = 'video-item';
-        li.innerHTML = `${video.title} <span class="play-arrow">▶</span>`;
-        li.onclick = () => openVideoModal(video.id);
+        li.innerHTML = `
+          <div class="video-card">
+            <img src="https://img.youtube.com/vi/${video.id}/hqdefault.jpg" alt="썸네일" class="video-thumb">
+            <div class="video-info">
+              <div class="video-title-text">${video.title}</div>
+              <span class="play-arrow">▶</span>
+            </div>
+          </div>
+        `;
+        li.onclick = () => openVideoFullScreen(video.id);
         list.appendChild(li);
       });
     });
