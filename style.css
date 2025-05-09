@@ -255,15 +255,17 @@ h1 {
 }
 
 #answers li.correct {
-  background: var(--success-color);
-  color: white;
-  transform: scale(1.02);
+  background: #6BCB77;
+  color: #fff;
+  box-shadow: 0 0 0 4px #b6f2c1, 0 0 12px 2px #6BCB77;
+  border: 2px solid #4caf50;
+  animation: correctGlow 0.5s;
 }
 
 #answers li.wrong {
-  background: var(--error-color);
-  color: white;
-  transform: scale(0.98);
+  background: #FF6B6B;
+  color: #fff;
+  animation: shake 0.2s linear;
 }
 
 /* 설명 박스 */
@@ -852,4 +854,77 @@ h1 {
   font-size: 1.08em;
   font-weight: 600;
   letter-spacing: -0.5px;
+}
+
+.install-icon {
+  width: 36px;
+  height: 36px;
+  margin-right: 10px;
+}
+
+.social-share-buttons {
+  justify-content: center;
+}
+
+.install-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  background-color: #356c55;
+  color: #fff;
+  font-size: 18px;
+  font-weight: 700;
+  padding: 20px 32px;
+  border-radius: 16px;
+  border: none;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.10);
+  transition: background 0.2s, box-shadow 0.2s;
+  width: 100%;
+  max-width: 320px;
+}
+
+.install-btn:hover {
+  background: #28513e;
+  box-shadow: 0 6px 18px rgba(53,108,85,0.13);
+}
+
+/* 출석 포인트 애니메이션 */
+.toast-message.attendance {
+  background: #388e3c;
+  color: #fff;
+  font-size: 1.1em;
+  font-weight: bold;
+  padding: 16px 32px;
+  border-radius: 999px;
+  position: fixed;
+  left: 50%;
+  top: 80px;
+  transform: translateX(-50%);
+  z-index: 9999;
+  opacity: 0;
+  pointer-events: none;
+  animation: toastUp 1.8s cubic-bezier(0.4,0,0.2,1) forwards;
+}
+@keyframes toastUp {
+  0% { opacity: 0; transform: translateX(-50%) translateY(30px); }
+  10% { opacity: 1; transform: translateX(-50%) translateY(0); }
+  80% { opacity: 1; }
+  100% { opacity: 0; transform: translateX(-50%) translateY(-40px); }
+}
+
+/* 정답 glow 효과 */
+@keyframes correctGlow {
+  0% { box-shadow: 0 0 0 0 #b6f2c1, 0 0 0 0 #6BCB77; }
+  100% { box-shadow: 0 0 0 4px #b6f2c1, 0 0 12px 2px #6BCB77; }
+}
+
+/* 오답 shake 효과 */
+@keyframes shake {
+  0% { transform: translateX(0); }
+  20% { transform: translateX(-8px); }
+  40% { transform: translateX(8px); }
+  60% { transform: translateX(-6px); }
+  80% { transform: translateX(6px); }
+  100% { transform: translateX(0); }
 }

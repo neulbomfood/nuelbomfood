@@ -46,7 +46,63 @@ const feedbackTexts = {
   ]
 };
 
+// 유튜브 영상 시청 완료 시 50P 지급 기능
+let ytPlayer = null;
+let currentVideoId = null;
+
+function loadYouTubeAPI() {
+  if (window.YT && window.YT.Player) {
+    return Promise.resolve();
+  }
+  return new Promise(resolve => {
+    const tag = document.createElement('script');
+    tag.src = "https://www.youtube.com/iframe_api";
+    window.onYouTubeIframeAPIReady = resolve;
+    document.body.appendChild(tag);
+  });
+}
+
+function openVideoModal(videoId) {
+  currentVideoId = videoId;
+  loadYouTubeAPI().then(() => {
+    if (ytPlayer) {
+      ytPlayer.loadVideoById(videoId);
+    } else {
+      ytPlayer = new YT.Player('videoPlayer', {
+        height: '220',
+        width: '100%',
+        videoId: videoId,
+        playerVars: { rel: 0, modestbranding: 1 },
+        events: {
+          'onStateChange': onPlayerStateChange
+        }
+      });
+    }
+    document.getElementById('videoModal').showModal();
+  });
+}
+
+function onPlayerStateChange(event) {
+  if (event.data === YT.PlayerState.ENDED) {
+    // 영상 끝까지 시청 시 포인트 지급 (중복 방지)
+    const watchedVideos = JSON.parse(localStorage.getItem('watchedVideos') || '[]');
+    if (!watchedVideos.includes(currentVideoId)) {
+      addPoints(50);
+      showToast('영상 시청 완료! +50P가 적립되었어요 🎉');
+      watchedVideos.push(currentVideoId);
+      localStorage.setItem('watchedVideos', JSON.stringify(watchedVideos));
+    }
+  }
+}
+
 document.addEventListener("DOMContentLoaded", () => {
+  // 방문 포인트 지급
+  giveDailyVisitPoints();
+  // 초대 리워드 지급
+  handleReferralReward();
+  // 맞춤 퀴즈 리마인드 메시지
+  showDailyQuizReminder();
+
   // 카카오톡 공유 버튼 초기화
   if (window.Kakao) {
     Kakao.Link.createDefaultButton({
@@ -108,6 +164,27 @@ document.addEventListener("DOMContentLoaded", () => {
       updateProgress();
     });
   }
+
+  // 유튜브 영상 리스트 동적 로딩 (클릭 이벤트 변경)
+  const YT_API_KEY = 'AIzaSyAgYUMUXA028wMrLBtOKUkKTAP1hcGvo9g';
+  fetch('videos.json')
+    .then(res => res.json())
+    .then(videos => {
+      const list = document.getElementById('videoList');
+      if (!list) return;
+      videos.forEach(video => {
+        fetch(`https://www.googleapis.com/youtube/v3/videos?part=snippet&id=${video.id}&key=${YT_API_KEY}`)
+          .then(res => res.json())
+          .then(data => {
+            const title = data.items[0]?.snippet?.title || '제목 없음';
+            const li = document.createElement('li');
+            li.className = 'video-item';
+            li.innerHTML = `${title} <span class=\"play-arrow\">▶</span>`;
+            li.onclick = () => openVideoModal(video.id);
+            list.appendChild(li);
+          });
+      });
+    });
 });
 
 function showLoading(show) {
@@ -361,6 +438,9 @@ function finishQuiz() {
       card.classList.add('fade-in');
     }, index * 200);
   });
+
+  // 퀴즈 결과 저장 및 다음날 맞춤 메시지 표시 기능
+  saveQuizResult(accuracy, null);
 }
 
 function requestExchange() {
@@ -440,22 +520,20 @@ function shareToInstagram() {
   showToast('공유 감사합니다! +200P가 적립되었어요 💚');
 }
 
-function showToast(message) {
+function showToast(message, customClass) {
   const toast = document.createElement('div');
-  toast.className = 'toast-message';
+  toast.className = 'toast-message' + (customClass ? ' ' + customClass : '');
   toast.textContent = message;
   document.body.appendChild(toast);
-  
   setTimeout(() => {
     toast.classList.add('show');
   }, 100);
-  
   setTimeout(() => {
     toast.classList.remove('show');
     setTimeout(() => {
       document.body.removeChild(toast);
-    }, 300);
-  }, 3000);
+    }, 600);
+  }, customClass === 'attendance' ? 1800 : 3000);
 }
 
 function shareAppInstall() {
@@ -472,5 +550,60 @@ function shareAppInstall() {
   } else {
     navigator.clipboard.writeText(shareUrl);
     showToast('링크가 복사되었습니다!');
+  }
+}
+
+function handleReferralReward() {
+  const urlParams = new URLSearchParams(window.location.search);
+  const ref = urlParams.get('ref');
+  if (!ref) return;
+  // 이미 이 ref로 리워드를 받은 적이 있는지 확인
+  const rewardedRefs = JSON.parse(localStorage.getItem('rewardedRefs') || '[]');
+  if (!rewardedRefs.includes(ref)) {
+    addPoints(200);
+    showToast('초대 링크로 방문! +200P가 적립되었어요 💚');
+    rewardedRefs.push(ref);
+    localStorage.setItem('rewardedRefs', JSON.stringify(rewardedRefs));
+  }
+}
+
+function giveDailyVisitPoints() {
+  const today = new Date().toISOString().slice(0, 10); // 'YYYY-MM-DD'
+  const lastVisit = localStorage.getItem('lastVisitDate');
+  if (lastVisit !== today) {
+    addPoints(100);
+    showToast('출석 완료  +100P', 'attendance');
+    localStorage.setItem('lastVisitDate', today);
+  }
+}
+
+// 퀴즈 결과 저장 및 다음날 맞춤 메시지 표시 기능
+function saveQuizResult(score, lastWrongCategory) {
+  const today = new Date().toISOString().slice(0, 10);
+  localStorage.setItem('lastQuizDate', today);
+  localStorage.setItem('lastScore', score);
+  if (lastWrongCategory) {
+    localStorage.setItem('lastWrongCategory', lastWrongCategory);
+  }
+}
+
+function showDailyQuizReminder() {
+  const today = new Date().toISOString().slice(0, 10);
+  const lastQuizDate = localStorage.getItem('lastQuizDate');
+  const lastScore = localStorage.getItem('lastScore');
+  const lastWrongCategory = localStorage.getItem('lastWrongCategory');
+  const lastReminderDate = localStorage.getItem('lastReminderDate');
+  // 오늘 이미 리마인드 메시지를 본 적이 없고, 마지막 퀴즈가 오늘이 아니면
+  if (lastQuizDate && lastQuizDate !== today && lastReminderDate !== today) {
+    let msg = '';
+    if (lastWrongCategory) {
+      msg = `어제 ${lastWrongCategory} 문제 틀리셨죠? 오늘 다시 도전해보세요!`;
+    } else if (lastScore) {
+      msg = `어제 정답률이 ${lastScore}%였어요. 오늘 80%에 도전해보세요!`;
+    } else {
+      msg = '어제 퀴즈 복습, 오늘 다시 도전해보세요!';
+    }
+    showToast(msg);
+    localStorage.setItem('lastReminderDate', today);
   }
 } 

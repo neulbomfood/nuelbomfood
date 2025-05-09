@@ -198,9 +198,9 @@
       <div style="text-align:center;">
         <div class="share-section">
           <h3 class="share-title">친구와 함께 건강한 습관 만들기</h3>
-          <div class="social-share-buttons">
+          <div class="social-share-buttons" style="justify-content: center;">
             <button onclick="shareAppInstall()" class="social-btn install-btn">
-              <img src="assets/img/logo.png" alt="앱설치" />
+              <img src="assets/img/icon-512.png" alt="앱설치" class="install-icon" />
               앱 설치 링크 공유
             </button>
           </div>
@@ -261,7 +261,10 @@
     </div>
   </div>
 
-  <a href="health_quiz_set_all.json" download style="display:block;margin:20px 0;font-size:1.1em;color:#007bff;">문제 전체 JSON 다운로드 (로컬 테스트용)</a>
+  <dialog id="videoModal" class="video-modal">
+    <div id="videoPlayer"></div>
+    <button onclick="document.getElementById('videoModal').close()" class="close-btn">닫기</button>
+  </dialog>
 
   <script src="script.js"></script>
 </body>
