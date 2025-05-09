@@ -456,4 +456,21 @@ function showToast(message) {
       document.body.removeChild(toast);
     }, 300);
   }, 3000);
+}
+
+function shareAppInstall() {
+  const shareUrl = "https://play.google.com/store/apps/details?id=com.neulbom.neulbomquiz";
+  if (navigator.share) {
+    navigator.share({
+      title: "늘봄 건강 퀴즈 풀어봐!",
+      text: "퀴즈 풀고 포인트 받아요 🎁",
+      url: shareUrl
+    }).then(() => {
+      addPoints(200);
+      showToast('공유 감사합니다! +200P가 적립되었어요 💚');
+    }).catch(() => {});
+  } else {
+    navigator.clipboard.writeText(shareUrl);
+    showToast('링크가 복사되었습니다!');
+  }
 } 
