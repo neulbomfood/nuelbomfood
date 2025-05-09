@@ -835,3 +835,21 @@ h1 {
   font-size: 15px;
   opacity: 0.8;
 }
+
+.emotion-bar {
+  width: 100%;
+  background: #ff4d4f;
+  border-radius: 8px;
+  padding: 10px 0;
+  margin-bottom: 8px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.emotion-bar .emotion-message {
+  color: #fff;
+  font-size: 1.08em;
+  font-weight: 600;
+  letter-spacing: -0.5px;
+}
