@@ -165,25 +165,31 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  // 유튜브 영상 리스트 동적 로딩 (클릭 이벤트 변경)
-  const YT_API_KEY = 'AIzaSyAgYUMUXA028wMrLBtOKUkKTAP1hcGvo9g';
+  // 유튜브 영상 리스트 동적 로딩
   fetch('videos.json')
     .then(res => res.json())
     .then(videos => {
       const list = document.getElementById('videoList');
       if (!list) return;
+      
+      // 기존 목록 초기화
+      list.innerHTML = '';
+      
+      // 각 영상 정보를 순차적으로 추가
       videos.forEach(video => {
-        fetch(`https://www.googleapis.com/youtube/v3/videos?part=snippet&id=${video.id}&key=${YT_API_KEY}`)
-          .then(res => res.json())
-          .then(data => {
-            const title = data.items[0]?.snippet?.title || '제목 없음';
-            const li = document.createElement('li');
-            li.className = 'video-item';
-            li.innerHTML = `${title} <span class=\"play-arrow\">▶</span>`;
-            li.onclick = () => openVideoModal(video.id);
-            list.appendChild(li);
-          });
+        const li = document.createElement('li');
+        li.className = 'video-item';
+        li.innerHTML = `${video.title} <span class="play-arrow">▶</span>`;
+        li.onclick = () => openVideoModal(video.id);
+        list.appendChild(li);
       });
+    })
+    .catch(error => {
+      console.error('영상 목록을 불러오는데 실패했습니다:', error);
+      const list = document.getElementById('videoList');
+      if (list) {
+        list.innerHTML = '<li class="video-item">영상 목록을 불러오는데 실패했습니다.</li>';
+      }
     });
 });
 
