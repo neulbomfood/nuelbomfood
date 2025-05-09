@@ -166,31 +166,7 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   // 유튜브 영상 리스트 동적 로딩
-  fetch('videos.json')
-    .then(res => res.json())
-    .then(videos => {
-      const list = document.getElementById('videoList');
-      if (!list) return;
-      
-      // 기존 목록 초기화
-      list.innerHTML = '';
-      
-      // 각 영상 정보를 순차적으로 추가
-      videos.forEach(video => {
-        const li = document.createElement('li');
-        li.className = 'video-item';
-        li.innerHTML = `${video.title} <span class="play-arrow">▶</span>`;
-        li.onclick = () => openVideoModal(video.id);
-        list.appendChild(li);
-      });
-    })
-    .catch(error => {
-      console.error('영상 목록을 불러오는데 실패했습니다:', error);
-      const list = document.getElementById('videoList');
-      if (list) {
-        list.innerHTML = '<li class="video-item">영상 목록을 불러오는데 실패했습니다.</li>';
-      }
-    });
+  loadVideoList();
 });
 
 function showLoading(show) {
@@ -629,9 +605,30 @@ function showShortsSection() {
   }
 }
 
+function loadVideoList() {
+  fetch('/nuelbomfood/videos.json')
+    .then(res => res.json())
+    .then(videos => {
+      const list = document.getElementById('videoList');
+      if (!list) {
+        console.error('videoList 요소가 없습니다!');
+        return;
+      }
+      list.innerHTML = '';
+      videos.forEach(video => {
+        const li = document.createElement('li');
+        li.className = 'video-item';
+        li.innerHTML = `${video.title} <span class="play-arrow">▶</span>`;
+        li.onclick = () => openVideoModal(video.id);
+        list.appendChild(li);
+      });
+    });
+}
+
 function goToShorts() {
   document.getElementById('main-section').style.display = 'none';
   document.getElementById('shorts-section').style.display = 'block';
+  loadVideoList(); // 숏츠 화면 진입 시마다 영상 목록 불러오기
   history.pushState({page: 'shorts'}, '', '?shorts=1');
 }
 
