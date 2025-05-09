@@ -850,7 +850,7 @@ h1 {
 }
 
 .emotion-bar .emotion-message {
-  color: #ff4d4f;
+  color: #ff914d;
   font-size: 1.08em;
   font-weight: 600;
   letter-spacing: -0.5px;
@@ -896,6 +896,7 @@ h1 {
   width: 160px;
   height: 80px;
   max-width: 100%;
+  margin: 0 auto;
 }
 
 .install-btn:hover {
