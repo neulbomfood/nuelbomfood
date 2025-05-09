@@ -613,4 +613,12 @@ function addPoints(amount) {
   if (points < 0) points = 0;
   localStorage.setItem("points", points);
   if (typeof updatePoints === 'function') updatePoints();
+}
+
+function showShortsSection() {
+  const section = document.getElementById('shorts-section');
+  if (section) {
+    section.style.display = 'block';
+    section.scrollIntoView({behavior: 'smooth'});
+  }
 } 

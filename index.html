@@ -235,7 +235,7 @@
           <button onclick="window.open('https://smartstore.naver.com/jinjjamall', '_blank')" class="secondary-button" style="margin-top:10px;">
             🛒 늘봄식품 바로가기
           </button>
-          <button onclick="document.getElementById('shorts-section').scrollIntoView({behavior: 'smooth'});" class="secondary-button" style="margin-top:10px;">
+          <button onclick="showShortsSection()" class="secondary-button" style="margin-top:10px;">
             🎥 1분 건강 숏츠 보러가기
           </button>
           <div id="points-insufficient" class="points-notice" style="display: none;">
@@ -262,7 +262,7 @@
         </div>
       </div>
 
-      <div class="video-section" id="shorts-section">
+      <div class="video-section" id="shorts-section" style="display:none;">
         <h3 class="video-title">🎥 1분 건강 숏츠</h3>
         <ul id="videoList" class="video-list"></ul>
       </div>
