@@ -37,7 +37,10 @@ def update_quiz_files():
         'health_quiz_set_new.json',
         'health_quiz_set_02.json',
         'health_quiz_set_03.json',
-        'health_quiz_set_04.json'
+        'health_quiz_set_04.json',
+        'quiz1.json',
+        'quiz2.json',
+        'quiz3.json'  # quiz2.json과 quiz3.json 추가
     ]
     new_questions = []
 
@@ -54,8 +57,10 @@ def update_quiz_files():
                         questions = data.get('questions', [])
                     
                     if isinstance(questions, list):
-                        new_questions.extend(questions)
-                        print(f'{file}에서 {len(questions)}개의 문제를 읽었습니다.')
+                        # 각 문제가 올바른 형식인지 확인
+                        valid_questions = [q for q in questions if isinstance(q, dict) and 'question' in q]
+                        new_questions.extend(valid_questions)
+                        print(f'{file}에서 {len(valid_questions)}개의 문제를 읽었습니다.')
                     else:
                         print(f'{file}의 형식이 올바르지 않습니다.')
                 except json.JSONDecodeError as e:
@@ -66,27 +71,23 @@ def update_quiz_files():
             print(f'{file} 파일이 존재하지 않습니다.')
 
     print(f'새로운 문제 파일들에서 총 {len(new_questions)}개의 문제를 읽었습니다.')
-
-    # 중복 제거하면서 새로운 문제 추가
-    added_count = 0
-    for new_q in new_questions:
-        is_dup = False
-        for existing_q in all_questions:
-            if is_duplicate(new_q, existing_q):
-                is_dup = True
-                print(f'중복 문제 발견: {new_q["question"]}')
-                break
-        if not is_dup:
-            all_questions.append(new_q)
-            added_count += 1
-            print(f'새로운 문제 추가: {new_q["question"]}')
-
+    
+    # 중복 제거 (question 텍스트 기준)
+    questions_set = {q['question'] for q in all_questions if isinstance(q, dict) and 'question' in q}
+    added = 0
+    
+    for q in new_questions:
+        if isinstance(q, dict) and 'question' in q and q['question'] not in questions_set:
+            all_questions.append(q)
+            questions_set.add(q['question'])
+            added += 1
+    
     # 결과 저장
     with open('health_quiz_set_all.json', 'w', encoding='utf-8') as f:
         json.dump(all_questions, f, ensure_ascii=False, indent=2)
-
-    print(f'새로 추가된 문제: {added_count}개')
-    print(f'총 문제 수: {len(all_questions)}개')
+    
+    print(f"새로 추가된 문제: {added}개")
+    print(f"총 문제 수: {len(all_questions)}개")
 
 def git_push():
     try:
