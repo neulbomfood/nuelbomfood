@@ -608,11 +608,24 @@ function showShortsSection() {
 function openVideoFullScreen(videoId) {
   const section = document.getElementById('shorts-section');
   section.innerHTML = `
-    <div style="width:100vw; max-width:100vw; height:calc(100vh - 60px); display:flex; flex-direction:column; align-items:center; justify-content:center; background:#111;">
-      <iframe width="100%" height="100%" style="flex:1; min-height:300px; border:none;" src="https://www.youtube.com/embed/${videoId}?autoplay=1&playsinline=1" allowfullscreen></iframe>
+    <div id="fullscreenVideoWrap" style="width:100vw; max-width:100vw; height:calc(100vh - 60px); display:flex; flex-direction:column; align-items:center; justify-content:center; background:#111;">
+      <iframe id="fullscreenYoutube" width="100%" height="100%" style="flex:1; min-height:300px; border:none;" src="https://www.youtube.com/embed/${videoId}?autoplay=1&playsinline=1" allowfullscreen></iframe>
       <button onclick="loadVideoList()" class="secondary-button" style="margin:24px auto 0 auto;display:block;">← 목록으로</button>
     </div>
   `;
+  // FullScreen API 적용
+  setTimeout(() => {
+    const wrap = document.getElementById('fullscreenVideoWrap');
+    if (wrap && wrap.requestFullscreen) {
+      wrap.requestFullscreen();
+    } else if (wrap && wrap.webkitRequestFullscreen) {
+      wrap.webkitRequestFullscreen();
+    } else if (wrap && wrap.mozRequestFullScreen) {
+      wrap.mozRequestFullScreen();
+    } else if (wrap && wrap.msRequestFullscreen) {
+      wrap.msRequestFullscreen();
+    }
+  }, 100);
 }
 
 function loadVideoList() {
