@@ -419,9 +419,10 @@ function finishQuiz() {
 }
 
 function requestExchange() {
-  const amount = Math.floor(points / 5000) * 5000;
-  if (confirm(`${amount}P를 적립금으로 전환하시겠습니까?`)) {
-    alert('전환 신청이 접수되었습니다.\n관리자 확인 후 적립금으로 지급됩니다.');
+  if (confirm('포인트는 초기화됩니다. 정말 전환 신청하시겠습니까?')) {
+    window.open('https://docs.google.com/forms/d/e/1FAIpQLSf79U4uayn49L_SMV3KgjnAp8vlP7gx-XJ-v6AnBxveqlIPxg/viewform?usp=dialog', '_blank');
+    localStorage.setItem('points', '0');
+    location.reload();
   }
 }
 

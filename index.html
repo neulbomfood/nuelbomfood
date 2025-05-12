@@ -272,5 +272,24 @@
   </dialog>
 
   <script src="script.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      var points = parseInt(localStorage.getItem('points') || '0', 10);
+      var pointsEl = document.getElementById('points');
+      if (pointsEl) pointsEl.textContent = points;
+
+      var exchangeBtn = document.getElementById('exchange-button');
+      var insufficient = document.getElementById('points-insufficient');
+      if (exchangeBtn && insufficient) {
+        if (points >= 5000) {
+          exchangeBtn.style.display = 'block';
+          insufficient.style.display = 'none';
+        } else {
+          exchangeBtn.style.display = 'none';
+          insufficient.style.display = 'block';
+        }
+      }
+    });
+  </script>
 </body>
 </html>
