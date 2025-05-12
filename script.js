@@ -194,7 +194,6 @@ function showQuestion() {
   if (isAnswering) return;
   
   clearInterval(timer);
-  timeLeft = 15;
   document.getElementById("timer-fill").style.width = "100%";
 
   const q = questions[currentIndex];
@@ -229,14 +228,8 @@ function showQuestion() {
 
   quizBox.style.opacity = "1";
 
-  timer = setInterval(() => {
-    timeLeft--;
-    document.getElementById("timer-fill").style.width = (timeLeft * 6.67) + "%";
-    if (timeLeft <= 0) {
-      clearInterval(timer);
-      handleAnswer(null, q);
-    }
-  }, 1000);
+  const timerBar = document.getElementById("timer-bar");
+  if (timerBar) timerBar.style.display = "none";
 }
 
 function handleAnswer(selected, question) {
@@ -629,7 +622,7 @@ function openVideoFullScreen(videoId) {
 }
 
 function loadVideoList() {
-  fetch('/nuelbomfood/videos.json')
+  fetch('./videos.json')
     .then(res => res.json())
     .then(videos => {
       const section = document.getElementById('shorts-section');
