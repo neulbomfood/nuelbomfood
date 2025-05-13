@@ -188,6 +188,18 @@
   </style>
 </head>
 <body>
+  <div id="install-banner" style="display:none; position:fixed; bottom:0; left:0; width:100%; background:rgba(255,255,255,0.95); padding:16px; text-align:center; z-index:999; box-shadow:0 -2px 10px rgba(0,0,0,0.1); backdrop-filter:blur(8px);">
+    <div style="max-width:460px; margin:0 auto; display:flex; align-items:center; justify-content:space-between; gap:12px;">
+      <div style="flex:1; text-align:left;">
+        <p style="margin:0; font-size:15px; font-weight:600; color:#356c55;">📱 앱 설치하고 더 편리하게 이용해보세요!</p>
+        <p style="margin:4px 0 0; font-size:13px; color:#666;">설치하면 홈 화면에서 바로 실행할 수 있어요</p>
+      </div>
+      <div style="display:flex; gap:8px;">
+        <button onclick="closeInstallBanner()" style="padding:8px 12px; border:none; background:#f0f0f0; border-radius:6px; color:#666; font-size:13px; cursor:pointer;">닫기</button>
+        <a href="https://play.google.com/store/apps/details?id=com.neulbom.quiz" target="_blank" style="padding:8px 16px; border:none; background:#356c55; border-radius:6px; color:#fff; font-size:13px; text-decoration:none; font-weight:500;">설치하기</a>
+      </div>
+    </div>
+  </div>
   <div class="container">
     <img src="assets/img/logo.png" alt="늘봄 로고" class="logo">
     <div id="main-section">

@@ -95,6 +95,25 @@ function onPlayerStateChange(event) {
   }
 }
 
+// TWA 감지 함수
+function isTWA() {
+  return navigator.userAgent.includes("TWA");
+}
+
+// 배너 닫기 함수
+function closeInstallBanner() {
+  document.getElementById('install-banner').style.display = 'none';
+  localStorage.setItem('installBannerShown', 'true');
+}
+
+// 배너 표시 로직
+function showInstallBanner() {
+  // TWA가 아니고, 아직 배너를 보지 않은 경우에만 표시
+  if (!isTWA() && !localStorage.getItem('installBannerShown')) {
+    document.getElementById('install-banner').style.display = 'block';
+  }
+}
+
 document.addEventListener("DOMContentLoaded", () => {
   // 방문 포인트 지급
   giveDailyVisitPoints();
@@ -167,6 +186,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // 유튜브 영상 리스트 동적 로딩
   loadVideoList();
+
+  // 배너 표시 로직 추가
+  showInstallBanner();
 });
 
 function showLoading(show) {
