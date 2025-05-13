@@ -105,33 +105,59 @@ function isTWA() {
 // 배너 닫기 함수
 function closeInstallBanner() {
   console.log('배너 닫기 실행');
-  document.getElementById('install-banner').style.display = 'none';
-  localStorage.setItem('installBannerShown', 'true');
-  console.log('localStorage installBannerShown 설정됨:', localStorage.getItem('installBannerShown'));
+  const banner = document.getElementById('install-banner');
+  if (banner) {
+    banner.style.display = 'none';
+    try {
+      localStorage.setItem('installBannerShown', 'true');
+      console.log('localStorage 저장 성공');
+    } catch (e) {
+      console.error('localStorage 저장 실패:', e);
+    }
+  }
 }
 
 // 배너 표시 로직
 function showInstallBanner() {
-  const isTWAEnv = isTWA();
-  const bannerShown = localStorage.getItem('installBannerShown');
-  console.log('배너 표시 조건 체크:', {
-    isTWA: isTWAEnv,
-    bannerShown: bannerShown,
-    shouldShow: !isTWAEnv && !bannerShown
-  });
+  // localStorage 초기화 (테스트용)
+  // localStorage.removeItem('installBannerShown');
   
-  // TWA가 아니고, 아직 배너를 보지 않은 경우에만 표시
-  if (!isTWAEnv && !bannerShown) {
-    const banner = document.getElementById('install-banner');
-    console.log('배너 엘리먼트:', banner);
-    if (banner) {
+  const banner = document.getElementById('install-banner');
+  if (!banner) {
+    console.error('배너 엘리먼트를 찾을 수 없음');
+    return;
+  }
+
+  try {
+    const isTWAEnv = isTWA();
+    const bannerShown = localStorage.getItem('installBannerShown');
+    
+    console.log('배너 상태:', {
+      isTWA: isTWAEnv,
+      bannerShown: bannerShown,
+      bannerDisplay: banner.style.display
+    });
+
+    // TWA가 아니고, 아직 배너를 보지 않은 경우에만 표시
+    if (!isTWAEnv && !bannerShown) {
       banner.style.display = 'block';
       console.log('배너 표시됨');
     } else {
-      console.log('배너 엘리먼트를 찾을 수 없음');
+      banner.style.display = 'none';
+      console.log('배너 숨김 처리됨');
     }
+  } catch (e) {
+    console.error('배너 표시 중 오류 발생:', e);
+    // 오류 발생 시 기본적으로 배너를 표시
+    banner.style.display = 'block';
   }
 }
+
+// 페이지 로드 시 배너 표시
+document.addEventListener('DOMContentLoaded', () => {
+  console.log('페이지 로드됨 - 배너 표시 시도');
+  showInstallBanner();
+});
 
 document.addEventListener("DOMContentLoaded", () => {
   // 방문 포인트 지급
@@ -205,9 +231,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // 유튜브 영상 리스트 동적 로딩
   loadVideoList();
-
-  // 배너 표시 로직 추가
-  showInstallBanner();
 });
 
 function showLoading(show) {
