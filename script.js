@@ -97,20 +97,39 @@ function onPlayerStateChange(event) {
 
 // TWA 감지 함수
 function isTWA() {
-  return navigator.userAgent.includes("TWA");
+  const isTWA = navigator.userAgent.includes("TWA");
+  console.log('TWA 감지 결과:', isTWA, 'UserAgent:', navigator.userAgent);
+  return isTWA;
 }
 
 // 배너 닫기 함수
 function closeInstallBanner() {
+  console.log('배너 닫기 실행');
   document.getElementById('install-banner').style.display = 'none';
   localStorage.setItem('installBannerShown', 'true');
+  console.log('localStorage installBannerShown 설정됨:', localStorage.getItem('installBannerShown'));
 }
 
 // 배너 표시 로직
 function showInstallBanner() {
+  const isTWAEnv = isTWA();
+  const bannerShown = localStorage.getItem('installBannerShown');
+  console.log('배너 표시 조건 체크:', {
+    isTWA: isTWAEnv,
+    bannerShown: bannerShown,
+    shouldShow: !isTWAEnv && !bannerShown
+  });
+  
   // TWA가 아니고, 아직 배너를 보지 않은 경우에만 표시
-  if (!isTWA() && !localStorage.getItem('installBannerShown')) {
-    document.getElementById('install-banner').style.display = 'block';
+  if (!isTWAEnv && !bannerShown) {
+    const banner = document.getElementById('install-banner');
+    console.log('배너 엘리먼트:', banner);
+    if (banner) {
+      banner.style.display = 'block';
+      console.log('배너 표시됨');
+    } else {
+      console.log('배너 엘리먼트를 찾을 수 없음');
+    }
   }
 }
 
