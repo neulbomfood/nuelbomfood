@@ -97,8 +97,20 @@ function onPlayerStateChange(event) {
 
 // TWA 감지 함수
 function isTWA() {
-  const isTWA = navigator.userAgent.includes("TWA");
-  console.log('TWA 감지 결과:', isTWA, 'UserAgent:', navigator.userAgent);
+  // TWA 앱의 UserAgent에는 'TWA' 문자열이 포함되어 있음
+  const userAgent = navigator.userAgent.toLowerCase();
+  const isTWA = userAgent.includes('twa') || 
+                userAgent.includes('android') && userAgent.includes('wv') || // Android WebView
+                window.matchMedia('(display-mode: standalone)').matches && // PWA standalone 모드
+                !window.navigator.standalone; // iOS standalone 모드가 아닌 경우
+  
+  console.log('TWA 감지 상세:', {
+    userAgent: userAgent,
+    isTWA: isTWA,
+    isStandalone: window.matchMedia('(display-mode: standalone)').matches,
+    isIOSStandalone: window.navigator.standalone
+  });
+  
   return isTWA;
 }
 
@@ -119,9 +131,6 @@ function closeInstallBanner() {
 
 // 배너 표시 로직
 function showInstallBanner() {
-  // localStorage 초기화 (테스트용)
-  // localStorage.removeItem('installBannerShown');
-  
   const banner = document.getElementById('install-banner');
   if (!banner) {
     console.error('배너 엘리먼트를 찾을 수 없음');
@@ -132,24 +141,24 @@ function showInstallBanner() {
     const isTWAEnv = isTWA();
     const bannerShown = localStorage.getItem('installBannerShown');
     
-    console.log('배너 상태:', {
+    console.log('배너 표시 조건:', {
       isTWA: isTWAEnv,
       bannerShown: bannerShown,
-      bannerDisplay: banner.style.display
+      shouldShow: !isTWAEnv && !bannerShown
     });
 
     // TWA가 아니고, 아직 배너를 보지 않은 경우에만 표시
     if (!isTWAEnv && !bannerShown) {
       banner.style.display = 'block';
-      console.log('배너 표시됨');
+      console.log('배너 표시됨 (PWA 모드)');
     } else {
       banner.style.display = 'none';
-      console.log('배너 숨김 처리됨');
+      console.log('배너 숨김 처리됨 (TWA 모드 또는 이미 본 경우)');
     }
   } catch (e) {
     console.error('배너 표시 중 오류 발생:', e);
-    // 오류 발생 시 기본적으로 배너를 표시
-    banner.style.display = 'block';
+    // 오류 발생 시 기본적으로 배너를 숨김
+    banner.style.display = 'none';
   }
 }
 
