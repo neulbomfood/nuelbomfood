@@ -2219,18 +2219,46 @@
         padding: 15px;
       }
     }
+
+    /* 음소거 버튼 스타일 */
+    .mute-button {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.9);
+      border: 1px solid #ddd;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      z-index: 1000;
+      transition: all 0.2s ease;
+    }
+
+    .mute-button:hover {
+      transform: scale(1.05);
+      box-shadow: 0 3px 8px rgba(0,0,0,0.15);
+    }
+
+    @media (max-width: 480px) {
+      .mute-button {
+        bottom: 15px;
+        right: 15px;
+        width: 36px;
+        height: 36px;
+      }
+    }
   </style>
 </head>
 <body>
-  </style>
-</head>
-<body>
-  </style>
-</head>
-<body>
-  </style>
-</head>
-<body>
+  <!-- 음소거 버튼 추가 -->
+  <button id="mute-button" class="mute-button" onclick="toggleMute()" title="효과음 켜기/끄기">
+    🔊
+  </button>
   <div id="install-banner" style="display:block; position:fixed; bottom:0; left:0; width:100%; background:#ffffff; padding:16px; text-align:center; z-index:9999; box-shadow:0 -2px 10px rgba(0,0,0,0.2); border-top:1px solid #eee;">
     <div style="max-width:460px; margin:0 auto; display:flex; align-items:center; justify-content:space-between; gap:12px;">
       <div style="flex:1; text-align:left;">
@@ -4367,6 +4395,7 @@
     // 전체 화면 브랜드 이야기 페이지 함수들
     window.openBrandStoryPage = async function() {
       try {
+        history.pushState({ page: 'brand-story' }, '');
         // 로딩 표시
         const overlay = document.getElementById('page-transition-overlay');
         overlay.classList.add('active');
@@ -4474,17 +4503,10 @@
     
     window.closeBrandStoryPage = function() {
       const fullscreenPage = document.getElementById('brand-story-fullscreen');
-      const overlay = document.getElementById('page-transition-overlay');
-      
-      // 페이지 닫기 애니메이션
-      overlay.classList.add('active');
-      fullscreenPage.classList.remove('active');
-      
-      setTimeout(() => {
-        overlay.classList.remove('active');
-        // 바디 스크롤 복원
-        document.body.style.overflow = 'auto';
-      }, 300);
+      if (fullscreenPage) {
+        fullscreenPage.classList.remove('active');
+        document.body.style.overflow = '';
+      }
     };
     
     // ESC 키로 전체 화면 페이지 닫기
@@ -4502,688 +4524,88 @@
     // 전체 화면 오늘의 질문 페이지
     window.openQuestionPage = async function() {
       try {
-        const overlay = document.getElementById('page-transition-overlay');
-        overlay.classList.add('active');
-        const questions = await window.loadHealthQuestions();
-        if (questions.length === 0) {
-          window.showSalonToast('오늘의 질문이 준비 중입니다.', 'info');
-          overlay.classList.remove('active');
-          return;
-        }
-        currentCards = questions;
-        currentSection = 'question';
-        currentCardIndex = 0;
-        const container = document.getElementById('question-content');
-        container.innerHTML = `
-          <div class="card-slider-container">
-            <div class="card-slider" id="question-fullscreen-slider">
-              ${questions.map((question, index) => `
-                <div class="story-card question-card" data-index="${index}">
-                  <div class="story-card-content">
-                    <h3 class="story-card-title">📝 ${question.question}</h3>
-                    <div class="question-options">
-                      ${question.options ? question.options.map((option, optionIndex) => `
-                        <button class="question-option" 
-                                onclick="window.answerStoryQuestion('${question.id}', ${optionIndex}, ${index})"
-                                id="option-${index}-${optionIndex}">
-                          ${option}
-                        </button>
-                      `).join('') : ''}
-                    </div>
-                    <div class="question-reward">💡 답변하면 30P가 적립됩니다!</div>
-                  </div>
-                  <div class="story-comments-section active" id="comments-question-${index}">
-                    <div class="story-comments-header">
-                      댓글 <span id="comment-header-count-question-${index}">${question.commentCount || 0}</span>개
-                    </div>
-                    <div class="story-comments-list" id="comment-list-question-${index}"></div>
-                    <div class="story-comment-input">
-                      <div class="story-comment-form">
-                        <textarea id="comment-input-question-${index}" class="story-comment-textarea" 
-                                  placeholder="댓글을 입력하세요... (+30P)" maxlength="200"></textarea>
-                        <button onclick="window.submitStoryComment('question', '${question.id}', ${index})" 
-                                class="story-comment-submit">등록</button>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              `).join('')}
-            </div>
-            ${questions.length > 1 ? `
-              <button class="card-nav prev" onclick="window.prevCard()" id="prev-btn">‹</button>
-              <button class="card-nav next" onclick="window.nextCard()" id="next-btn">›</button>
-            ` : ''}
-          </div>
-          ${questions.length > 1 ? `
-            <div class="card-indicators">
-              ${questions.map((_, index) => `
-                <div class="card-indicator ${index === 0 ? 'active' : ''}" 
-                     onclick="window.goToCard(${index})" data-index="${index}"></div>
-              `).join('')}
-            </div>
-          ` : ''}
-        `;
-        setTimeout(() => {
-          overlay.classList.remove('active');
-          const fullscreenPage = document.getElementById('question-fullscreen');
-          fullscreenPage.classList.add('active');
-          window.updateCardNavigation();
-          document.body.style.overflow = 'hidden';
-        }, 200);
+        history.pushState({ page: 'question' }, '');
+        // ... 기존 코드 ...
       } catch (error) {
-        console.error('질문 전체화면 페이지 열기 오류:', error);
-        window.showSalonToast('페이지를 불러올 수 없습니다.', 'error');
-        const overlay = document.getElementById('page-transition-overlay');
-        overlay.classList.remove('active');
+        console.error('질문 페이지 열기 오류:', error);
       }
     };
+
     window.closeQuestionPage = function() {
       const fullscreenPage = document.getElementById('question-fullscreen');
-      const overlay = document.getElementById('page-transition-overlay');
-      overlay.classList.add('active');
-      fullscreenPage.classList.remove('active');
-      setTimeout(() => {
-        overlay.classList.remove('active');
-        document.body.style.overflow = 'auto';
-      }, 300);
+      if (fullscreenPage) {
+        fullscreenPage.classList.remove('active');
+        document.body.style.overflow = '';
+      }
     };
 
     // 전체 화면 자유글(건강 한마당) 페이지
     window.openFreePage = async function() {
       try {
-        const overlay = document.getElementById('page-transition-overlay');
-        overlay.classList.add('active');
-        const fullscreenPage = document.getElementById('free-fullscreen');
-        const container = document.getElementById('free-content');
-        if (!container) return;
-        
-        let posts = await window.loadUserPosts();
-        // 정렬
-        if (window.freeFeedSort === 'popular') {
-          posts = posts.slice().sort((a, b) => ((b.likes||0)+(b.commentCount||0)) - ((a.likes||0)+(a.commentCount||0)) || (b.timestamp?.seconds||0)-(a.timestamp?.seconds||0));
-        } else {
-          posts = posts.slice().sort((a, b) => (b.timestamp?.seconds||0)-(a.timestamp?.seconds||0));
-        }
-
-        // 전체화면 HTML 렌더링
-        let html = `
-          <div class="free-feed-tabs" style="display:flex;gap:8px;justify-content:flex-end;margin-bottom:18px;">
-            <button id="free-tab-latest" class="feed-sort-btn${window.freeFeedSort==='latest'?' active':''}">최신순</button>
-            <button id="free-tab-popular" class="feed-sort-btn${window.freeFeedSort==='popular'?' active':''}">인기순</button>
-          </div>
-          <div class="free-feed-list">
-            ${posts.length === 0 ? 
-              '<div style="text-align:center;padding:40px;color:#666;">첫 번째 건강 이야기를 남겨보세요!</div>' :
-              posts.map((post, idx) => {
-                const isMine = post.userId === window.getUserId();
-                const preview = post.content.length > 60 ? post.content.slice(0, 60) + '...' : post.content;
-                return `
-                  <div class="feed-card" style="margin-bottom:22px;box-shadow:0 2px 10px rgba(53,108,85,0.08);border-radius:18px;background:#fff;overflow:hidden;transition:box-shadow 0.2s;">
-                    <div class="feed-card-content" style="padding:20px;">
-                      <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">
-                        <div class="feed-card-avatar" style="width:32px;height:32px;background:#e0ede3;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:700;color:#356c55;">익</div>
-                        <div style="flex:1;">
-                          <span style="font-weight:600;color:#356c55;">익명</span>
-                          <span style="font-size:13px;color:#999;margin-left:8px;">${window.formatTime(post.timestamp)}</span>
-                          ${isMine ? '<span style="background:#e0ede3;color:#356c55;font-size:12px;padding:2px 8px;border-radius:8px;margin-left:8px;">내가 쓴 글</span>' : ''}
-                        </div>
-                      </div>
-                      <div class="feed-card-title" style="font-size:16px;font-weight:600;margin-bottom:6px;">${preview}</div>
-                      ${post.content.length > 60 ? `<button class="feed-more-btn" style="font-size:13px;color:#388e3c;background:none;border:none;cursor:pointer;" onclick="window.showFullPost(${idx})">더보기</button>` : ''}
-                      <div class="feed-card-actions" style="display:flex;gap:16px;align-items:center;justify-content:flex-end;margin-top:12px;">
-                        <button class="story-action-btn" style="color:#e74c3c;display:flex;align-items:center;gap:4px;background:none;border:none;cursor:pointer;font-size:15px;" onclick="window.toggleStoryLike('free', '${post.id}', ${idx})">
-                          <span id="like-icon-free-${idx}">${post.isLiked?'❤️':'🤍'}</span>
-                          <span id="like-count-free-${idx}">${post.likes || 0}</span>
-                        </button>
-                        <button class="story-action-btn comment-btn" style="color:#356c55;display:flex;align-items:center;gap:4px;background:none;border:none;cursor:pointer;font-size:15px;" onclick="window.showFullPost(${idx},true)">
-                          <span>💬</span>
-                          <span id="comment-count-free-${idx}">${post.commentCount || 0}</span>
-                        </button>
-                        ${isMine ? `<button class="story-action-btn" style="color:#888;font-size:13px;background:none;border:none;cursor:pointer;" onclick="window.editMyPost('${post.id}')">수정</button><button class="story-action-btn" style="color:#888;font-size:13px;background:none;border:none;cursor:pointer;" onclick="window.deleteMyPost('${post.id}')">삭제</button>` : ''}
-                      </div>
-                      <div class="feed-card-comments-preview" style="margin-top:10px;">
-                        ${(Array.isArray(post.commentsPreview) && post.commentsPreview.length > 0) ? post.commentsPreview.slice(-2).map(c => `
-                          <div class="feed-comment-preview" style="font-size:13px;color:#666;margin-bottom:2px;"><span class="feed-comment-author" style="color:#356c55;font-weight:600;">${c.author}</span>: <span class="feed-comment-text">${c.content.length>30?c.content.slice(0,30)+'...':c.content}</span></div>
-                        `).join('') : ''}
-                        ${(post.commentCount||0)>2 ? `<button class="feed-more-comments-btn" style="font-size:12px;color:#388e3c;background:none;border:none;cursor:pointer;" onclick="window.showFullPost(${idx},true)">댓글 전체보기</button>` : ''}
-                      </div>
-                    </div>
-                  </div>
-                `;
-              }).join('')
-            }
-          </div>
-          <button class="floating-write-btn" id="floating-write-btn" title="글쓰기" onclick="window.openWriteModal()">+</button>
-        `;
-        container.innerHTML = html;
-
-        // 글쓰기 모달 열기 함수 정의
-        window.openWriteModal = function() {
-          const writeFullscreen = document.getElementById('free-write-fullscreen');
-          const overlay = document.getElementById('page-transition-overlay');
-          
-          if (writeFullscreen && overlay) {
-            overlay.classList.add('active');
-            setTimeout(() => {
-              overlay.classList.remove('active');
-              writeFullscreen.classList.add('active');
-              document.body.style.overflow = 'hidden';
-              // 자동으로 textarea에 포커스
-              const textarea = document.getElementById('habit-salon-free-content');
-              if (textarea) textarea.focus();
-            }, 200);
-          }
-        };
-
-        // 탭 이벤트
-        document.getElementById('free-tab-latest').onclick = () => {
-          window.freeFeedSort = 'latest';
-          window.openFreePage();
-        };
-        document.getElementById('free-tab-popular').onclick = () => {
-          window.freeFeedSort = 'popular';
-          window.openFreePage();
-        };
-
-        // 페이지 전환 애니메이션
-        setTimeout(() => {
-          overlay.classList.remove('active');
-          fullscreenPage.classList.add('active');
-          document.body.style.overflow = 'hidden';
-        }, 200);
+        history.pushState({ page: 'free' }, '');
+        // ... 기존 코드 ...
       } catch (error) {
-        console.error('자유글 전체화면 페이지 열기 오류:', error);
-        window.showSalonToast('페이지를 불러올 수 없습니다.', 'error');
-        const overlay = document.getElementById('page-transition-overlay');
-        overlay.classList.remove('active');
+        console.error('자유 페이지 열기 오류:', error);
       }
     };
 
     window.closeFreePage = function() {
       const fullscreenPage = document.getElementById('free-fullscreen');
-      const writeFullscreen = document.getElementById('free-write-fullscreen');
-      const overlay = document.getElementById('page-transition-overlay');
+      if (fullscreenPage) {
+        fullscreenPage.classList.remove('active');
+        document.body.style.overflow = '';
+      }
+    };
+
+    window.openWriteModal = function() {
+      try {
+        history.pushState({ page: 'write' }, '');
+        const modal = document.getElementById('free-write-fullscreen');
+        if (modal) {
+          modal.classList.add('active');
+          document.body.style.overflow = 'hidden';
+        }
+      } catch (error) {
+        console.error('글쓰기 모달 열기 오류:', error);
+      }
+    };
+
+    window.closeWriteModal = function() {
+      const modal = document.getElementById('free-write-fullscreen');
+      if (modal) {
+        modal.classList.remove('active');
+        document.body.style.overflow = '';
+      }
+    };
+
+    // 모바일 뒤로가기 버튼 처리
+    window.addEventListener('popstate', function(e) {
+      const brandStoryPage = document.getElementById('brand-story-fullscreen');
+      const questionPage = document.getElementById('question-fullscreen');
+      const freePage = document.getElementById('free-fullscreen');
+      const writeModal = document.getElementById('free-write-fullscreen');
       
-      // 글쓰기 모달이 열려있다면 먼저 닫기
-      if (writeFullscreen && writeFullscreen.classList.contains('active')) {
+      if (brandStoryPage && brandStoryPage.classList.contains('active')) {
+        window.closeBrandStoryPage();
+        return;
+      }
+      
+      if (questionPage && questionPage.classList.contains('active')) {
+        window.closeQuestionPage();
+        return;
+      }
+      
+      if (freePage && freePage.classList.contains('active')) {
+        window.closeFreePage();
+        return;
+      }
+      
+      if (writeModal && writeModal.classList.contains('active')) {
         window.closeWriteModal();
         return;
       }
-
-      // 피드 페이지 닫기
-      if (fullscreenPage && overlay) {
-        overlay.classList.add('active');
-        fullscreenPage.classList.remove('active');
-        setTimeout(() => {
-          overlay.classList.remove('active');
-          document.body.style.overflow = 'auto';
-        }, 300);
-      }
-    };
-
-    // ESC 키 이벤트 핸들러 수정
-    document.addEventListener('keydown', function(e) {
-      if (e.key === 'Escape') {
-        const writeFullscreen = document.getElementById('free-write-fullscreen');
-        const fullscreenPage = document.getElementById('free-fullscreen');
-        
-        // 글쓰기 모달이 열려있으면 먼저 닫기
-        if (writeFullscreen && writeFullscreen.classList.contains('active')) {
-          window.closeWriteModal();
-          return;
-        }
-        
-        // 피드 페이지가 열려있으면 닫기
-        if (fullscreenPage && fullscreenPage.classList.contains('active')) {
-          window.closeFreePage();
-        }
-      }
     });
-
-    // 1. 정렬 상태 변수 및 토글 이벤트
-    window.freeFeedSort = 'latest'; // 기본값 최신순
-
-    document.addEventListener('DOMContentLoaded', function() {
-      // ...기존 코드...
-      // 자유글 피드 정렬 토글 이벤트
-      const latestBtn = document.getElementById('sort-latest-btn');
-      const popularBtn = document.getElementById('sort-popular-btn');
-      const floatingWriteBtn = document.getElementById('floating-write-btn');
-      
-      if (latestBtn && popularBtn) {
-        latestBtn.addEventListener('click', function() {
-          latestBtn.classList.add('active');
-          popularBtn.classList.remove('active');
-          window.freeFeedSort = 'latest';
-          window.loadFreeSection();
-        });
-        
-        popularBtn.addEventListener('click', function() {
-          popularBtn.classList.add('active');
-          latestBtn.classList.remove('active');
-          window.freeFeedSort = 'popular';
-          window.loadFreeSection();
-        });
-      }
-
-      // 플로팅 글쓰기 버튼 이벤트 리스너 추가
-      if (floatingWriteBtn) {
-        floatingWriteBtn.addEventListener('click', function() {
-          const writeFullscreen = document.getElementById('free-write-fullscreen');
-          const overlay = document.getElementById('page-transition-overlay');
-          
-          overlay.classList.add('active');
-          setTimeout(() => {
-            overlay.classList.remove('active');
-            writeFullscreen.classList.add('active');
-            document.body.style.overflow = 'hidden';
-            // 자동으로 textarea에 포커스
-            const textarea = document.getElementById('habit-salon-free-content');
-            if (textarea) textarea.focus();
-          }, 200);
-        });
-      }
-    });
-
-    // 2. loadFreeSection 함수 개선
-    window.loadFreeSection = async function() {
-      const container = document.getElementById('habit-salon-free-list');
-      if (!container) return;
-      
-      container.innerHTML = '<div style="text-align:center;padding:40px;color:#666;">로딩 중...</div>';
-      
-      try {
-        let posts = await window.loadUserPosts();
-        // 정렬
-        if (window.freeFeedSort === 'popular') {
-          posts = posts.slice().sort((a, b) => ((b.likes||0)+(b.commentCount||0)) - ((a.likes||0)+(a.commentCount||0)) || (b.timestamp?.seconds||0)-(a.timestamp?.seconds||0));
-        } else {
-          posts = posts.slice().sort((a, b) => (b.timestamp?.seconds||0)-(a.timestamp?.seconds||0));
-        }
-        if (posts.length === 0) {
-          container.innerHTML = '<div style="text-align:center;padding:40px;color:#666;">첫 번째 건강 이야기를 남겨보세요!</div>';
-          return;
-        }
-        window.currentCards = posts;
-        window.currentSection = 'free';
-        window.currentCardIndex = 0;
-        // 3. 카드형 피드 렌더링(미리보기/더보기/공감/댓글/댓글 미리보기)
-        container.innerHTML = `
-          <div class="card-feed-list">
-            ${posts.map((post, index) => {
-              // 본문 미리보기(2~3줄, 60자 기준)
-              const preview = post.content.length > 60 ? post.content.slice(0, 60) + '...' : post.content;
-              // 더보기 버튼 필요 여부
-              const showMore = post.content.length > 60;
-              // 댓글 미리보기(최신 1~2개)
-              let commentPreviewHtml = '';
-              if (Array.isArray(post.commentsPreview) && post.commentsPreview.length > 0) {
-                commentPreviewHtml = post.commentsPreview.slice(-2).map(c => `
-                  <div class="feed-comment-preview">
-                    <span class="feed-comment-author">${c.author}</span>: <span class="feed-comment-text">${c.content.length>30?c.content.slice(0,30)+'...':c.content}</span>
-                  </div>
-                `).join('');
-              }
-              return `
-                <div class="feed-card" data-index="${index}">
-                  <div class="feed-card-content">
-                    <div class="feed-card-meta" style="margin-bottom:8px;">
-                      <div class="feed-card-author">
-                        <div class="feed-card-avatar">익</div>
-                        <div class="feed-card-author-info">
-                          <div class="feed-card-author-name">익명</div>
-                          <div class="feed-card-time">${window.formatTime(post.timestamp)}</div>
-                        </div>
-                      </div>
-                    </div>
-                    <div class="feed-card-title" style="font-size:16px;font-weight:600;margin-bottom:6px;">${preview}</div>
-                    ${showMore ? `<button class="feed-more-btn" onclick="window.showFullPost(${index})">더보기</button>` : ''}
-                    <div class="feed-card-actions" style="justify-content:flex-end;margin-top:12px;">
-                      <button class="story-action-btn" onclick="window.toggleStoryLike('free', '${post.id}', ${index})">
-                        <span id="like-icon-free-${index}">${post.isLiked?'❤️':'🤍'}</span>
-                        <span id="like-count-free-${index}">${post.likes || 0}</span>
-                      </button>
-                      <button class="story-action-btn comment-btn" onclick="window.showFullPost(${index},true)">
-                        <span>💬</span>
-                        <span id="comment-count-free-${index}">${post.commentCount || 0}</span>
-                      </button>
-                    </div>
-                    <div class="feed-card-comments-preview" style="margin-top:10px;">
-                      ${commentPreviewHtml}
-                      ${(post.commentCount||0)>2 ? `<button class="feed-more-comments-btn" onclick="window.showFullPost(${index},true)">댓글 전체보기</button>` : ''}
-                    </div>
-                  </div>
-                </div>
-              `;
-            }).join('')}
-          </div>
-        `;
-      } catch (error) {
-        console.error('자유 섹션 로딩 오류:', error);
-        container.innerHTML = '<div style="text-align:center;padding:40px;color:#f44336;">로딩 중 오류가 발생했습니다.</div>';
-      }
-    };
-
-    // 더보기/댓글 전체보기 진입 함수(모달/전체화면 등 확장 가능)
-    window.showFullPost = function(index, showComments=false) {
-      // 추후 전체화면/모달로 확장 가능, 현재는 전체화면 진입
-      window.openFreePage();
-      setTimeout(()=>{
-        if(showComments) {
-          // 댓글 입력란 포커스 등 추가 가능
-        }
-      }, 300);
-    };
-
-    // <script type="module"> 내부에서 아래 순서로 배치
-    // ... 기존 코드 ...
-    // 1. renderFreeFeed 함수 정의
-    window.renderFreeFeed = async function() {
-      const container = document.getElementById('free-content');
-      if (!container) return;
-      let posts = await window.loadUserPosts();
-      // 정렬
-      if (window.freeFeedSort === 'popular') {
-        posts = posts.slice().sort((a, b) => ((b.likes||0)+(b.commentCount||0)) - ((a.likes||0)+(a.commentCount||0)) || (b.timestamp?.seconds||0)-(a.timestamp?.seconds||0));
-      } else {
-        posts = posts.slice().sort((a, b) => (b.timestamp?.seconds||0)-(a.timestamp?.seconds||0));
-      }
-      let html = `
-        <div class="free-feed-tabs" style="display:flex;gap:8px;justify-content:flex-end;margin-bottom:18px;">
-          <button id="free-tab-latest" class="feed-sort-btn${window.freeFeedSort==='latest'?' active':''}">최신순</button>
-          <button id="free-tab-popular" class="feed-sort-btn${window.freeFeedSort==='popular'?' active':''}">인기순</button>
-        </div>
-        <div class="free-feed-list">
-      `;
-      if (posts.length === 0) {
-        html += `<div style="text-align:center;padding:40px;color:#666;">첫 번째 건강 이야기를 남겨보세요!</div>`;
-      } else {
-        html += posts.map((post, idx) => {
-          const isMine = post.userId === window.getUserId();
-          const preview = post.content.length > 60 ? post.content.slice(0, 60) + '...' : post.content;
-          return `
-            <div class="feed-card" style="margin-bottom:22px;box-shadow:0 2px 10px rgba(53,108,85,0.08);border-radius:18px;background:#fff;overflow:hidden;transition:box-shadow 0.2s;">
-              <div class="feed-card-content" style="padding:20px;">
-                <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">
-                  <div class="feed-card-avatar" style="width:32px;height:32px;background:#e0ede3;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:700;color:#356c55;">익</div>
-                  <div style="flex:1;">
-                    <span style="font-weight:600;color:#356c55;">익명</span>
-                    <span style="font-size:13px;color:#999;margin-left:8px;">${window.formatTime(post.timestamp)}</span>
-                    ${isMine ? '<span style="background:#e0ede3;color:#356c55;font-size:12px;padding:2px 8px;border-radius:8px;margin-left:8px;">내가 쓴 글</span>' : ''}
-                  </div>
-                </div>
-                <div class="feed-card-title" style="font-size:16px;font-weight:600;margin-bottom:6px;">${preview}</div>
-                ${post.content.length > 60 ? `<button class="feed-more-btn" style="font-size:13px;color:#388e3c;background:none;border:none;cursor:pointer;" onclick="window.showFullPost(${idx})">더보기</button>` : ''}
-                <div class="feed-card-actions" style="display:flex;gap:16px;align-items:center;justify-content:flex-end;margin-top:12px;">
-                  <button class="story-action-btn" style="color:#e74c3c;display:flex;align-items:center;gap:4px;background:none;border:none;cursor:pointer;font-size:15px;" onclick="window.toggleStoryLike('free', '${post.id}', ${idx})">
-                    <span id="like-icon-free-${idx}">${post.isLiked?'❤️':'🤍'}</span>
-                    <span id="like-count-free-${idx}">${post.likes || 0}</span>
-                  </button>
-                  <button class="story-action-btn comment-btn" style="color:#356c55;display:flex;align-items:center;gap:4px;background:none;border:none;cursor:pointer;font-size:15px;" onclick="window.showFullPost(${idx},true)">
-                    <span>💬</span>
-                    <span id="comment-count-free-${idx}">${post.commentCount || 0}</span>
-                  </button>
-                  ${isMine ? `<button class="story-action-btn" style="color:#888;font-size:13px;background:none;border:none;cursor:pointer;" onclick="window.editMyPost('${post.id}')">수정</button><button class="story-action-btn" style="color:#888;font-size:13px;background:none;border:none;cursor:pointer;" onclick="window.deleteMyPost('${post.id}')">삭제</button>` : ''}
-                </div>
-                <div class="feed-card-comments-preview" style="margin-top:10px;">
-                  ${(Array.isArray(post.commentsPreview) && post.commentsPreview.length > 0) ? post.commentsPreview.slice(-2).map(c => `
-                    <div class="feed-comment-preview" style="font-size:13px;color:#666;margin-bottom:2px;"><span class="feed-comment-author" style="color:#356c55;font-weight:600;">${c.author}</span>: <span class="feed-comment-text">${c.content.length>30?c.content.slice(0,30)+'...':c.content}</span></div>
-                  `).join('') : ''}
-                  ${(post.commentCount||0)>2 ? `<button class="feed-more-comments-btn" style="font-size:12px;color:#388e3c;background:none;border:none;cursor:pointer;" onclick="window.showFullPost(${idx},true)">댓글 전체보기</button>` : ''}
-                </div>
-              </div>
-            </div>
-          `;
-        }).join('');
-      }
-      html += '</div>';
-      // 플로팅 글쓰기 버튼
-      html += `<button class="floating-write-btn" id="floating-write-btn" title="글쓰기">+</button>`;
-      container.innerHTML = html;
-      // 탭 이벤트
-      document.getElementById('free-tab-latest').onclick = () => {
-        window.freeFeedSort = 'latest';
-        window.renderFreeFeed();
-      };
-      document.getElementById('free-tab-popular').onclick = () => {
-        window.freeFeedSort = 'popular';
-        window.renderFreeFeed();
-      };
-      // 플로팅 글쓰기 버튼 이벤트(임시: 상단 글쓰기 폼 포커스)
-      document.getElementById('floating-write-btn').onclick = () => {
-        // 글쓰기 폼이 이미 있으면 포커스, 없으면 삽입
-        let form = document.getElementById('habit-salon-free-form');
-        if (!form) {
-          // 동적으로 글쓰기 폼 삽입 (최상단에)
-          const feedList = document.querySelector('.free-feed-list');
-          if (feedList) {
-            const formDiv = document.createElement('div');
-            formDiv.innerHTML = `
-              <form id="habit-salon-free-form" style="margin-bottom:16px;">
-                <textarea id="habit-salon-free-content" placeholder="자유롭게 건강 이야기를 남겨보세요 (50자 이상)" style="width:100%;height:80px;padding:12px;border:1px solid #ddd;border-radius:8px;font-size:15px;resize:vertical;"></textarea>
-                <button type="submit" style="margin-top:8px;width:100%;padding:12px;background:#356c55;color:#fff;border:none;border-radius:8px;font-size:16px;font-weight:700;">자유글 작성 (+100P)</button>
-              </form>
-            `;
-            feedList.prepend(formDiv);
-            // 폼 이벤트 리스너 등록
-            const newForm = document.getElementById('habit-salon-free-form');
-            if (newForm) {
-              newForm.addEventListener('submit', window.handleFreePostSubmit);
-              newForm.querySelector('textarea').focus();
-            }
-          }
-        } else {
-          form.scrollIntoView({behavior:'smooth'});
-          form.querySelector('textarea').focus();
-        }
-      };
-    };
-
-    // 2. openFreePage 함수 정의 (renderFreeFeed 이후에 위치)
-    window.openFreePage = async function() {
-      try {
-        const overlay = document.getElementById('page-transition-overlay');
-        overlay.classList.add('active');
-        await window.renderFreeFeed();
-        setTimeout(() => {
-          overlay.classList.remove('active');
-          const fullscreenPage = document.getElementById('free-fullscreen');
-          fullscreenPage.classList.add('active');
-          document.body.style.overflow = 'hidden';
-        }, 200);
-      } catch (error) {
-        console.error('자유글 전체화면 페이지 열기 오류:', error);
-        window.showSalonToast('페이지를 불러올 수 없습니다.', 'error');
-        const overlay = document.getElementById('page-transition-overlay');
-        overlay.classList.remove('active');
-      }
-    };
     // ... existing code ...
-
-    // 3. 글쓰기 페이지 닫기 함수 추가
-    window.closeFreeWritePage = function() {
-      const writeFullscreen = document.getElementById('free-write-fullscreen');
-      const overlay = document.getElementById('page-transition-overlay');
-      overlay.classList.add('active');
-      writeFullscreen.classList.remove('active');
-      setTimeout(() => {
-        overlay.classList.remove('active');
-        document.body.style.overflow = 'auto';
-      }, 300);
-    };
-
-    // 글쓰기 관련 전역 함수들
-    window.openWriteModal = function() {
-      const writeFullscreen = document.getElementById('free-write-fullscreen');
-      const textarea = document.getElementById('habit-salon-free-content');
-      const submitBtn = document.getElementById('write-submit-btn');
-      const overlay = document.getElementById('page-transition-overlay');
-      
-      if (!writeFullscreen || !textarea || !submitBtn || !overlay) {
-        console.error('글쓰기 모달 요소를 찾을 수 없습니다.');
-        return;
-      }
-
-      overlay.classList.add('active');
-      setTimeout(() => {
-        overlay.classList.remove('active');
-        writeFullscreen.classList.add('active');
-        document.body.style.overflow = 'hidden';
-        
-        // textarea 초기화 및 포커스
-        textarea.value = '';
-        textarea.focus();
-        
-        // 글자수 카운터 업데이트
-        updateCharCounter();
-      }, 200);
-      
-      // textarea 이벤트 리스너
-      textarea.oninput = function() {
-        updateCharCounter();
-        // 50자 미만이면 버튼 비활성화
-        submitBtn.disabled = this.value.length < 50;
-      };
-
-      // 제출 버튼 이벤트 리스너
-      submitBtn.onclick = async function() {
-        if (textarea.value.length < 50) {
-          window.showSalonToast('최소 50자 이상 작성해주세요.', 'warning');
-          return;
-        }
-
-        try {
-          submitBtn.disabled = true;
-          submitBtn.innerHTML = '<span>공유하는 중...</span>';
-          
-          // 글 작성 처리
-          await window.submitFreePost(textarea.value);
-          
-          // 모달 닫기
-          window.closeWriteModal();
-          
-          // 피드 새로고침
-          await window.loadFreeSection();
-          
-          // 완료 토스트
-          window.showSalonToast('건강 이야기가 공유되었습니다! (+100P)', 'success');
-          
-          // 스크롤 최상단으로
-          window.scrollTo({ top: 0, behavior: 'smooth' });
-        } catch (error) {
-          console.error('글쓰기 제출 오류:', error);
-          window.showSalonToast('글쓰기 중 오류가 발생했습니다.', 'error');
-          submitBtn.disabled = false;
-          submitBtn.innerHTML = '<span>건강 이야기 공유하기</span><span>+100P</span>';
-        }
-      };
-    };
-
-    window.closeWriteModal = function() {
-      const writeFullscreen = document.getElementById('free-write-fullscreen');
-      const overlay = document.getElementById('page-transition-overlay');
-      
-      if (writeFullscreen && overlay) {
-        overlay.classList.add('active');
-        writeFullscreen.classList.remove('active');
-        
-        setTimeout(() => {
-          overlay.classList.remove('active');
-          document.body.style.overflow = 'auto';
-        }, 300);
-      }
-    };
-
-    // 글자수 카운터 업데이트 함수
-    function updateCharCounter() {
-      const textarea = document.getElementById('habit-salon-free-content');
-      const counter = document.querySelector('.char-counter');
-      if (textarea && counter) {
-        counter.textContent = `${textarea.value.length}/500`;
-        // 글자수에 따른 카운터 색상 변경
-        if (textarea.value.length < 50) {
-          counter.style.color = '#f44336';
-        } else {
-          counter.style.color = '#666';
-        }
-      }
-    }
-
-    // ESC 키로 모달 닫기 이벤트
-    document.addEventListener('keydown', function(e) {
-      if (e.key === 'Escape') {
-        const writeFullscreen = document.getElementById('free-write-fullscreen');
-        if (writeFullscreen && writeFullscreen.classList.contains('active')) {
-          window.closeWriteModal();
-        }
-      }
-    });
-
-    // 플로팅 버튼 이벤트를 전역 이벤트 위임으로 처리
-    document.addEventListener('click', function(e) {
-      const target = e.target.closest('#floating-write-btn');
-      if (target) {
-        e.preventDefault();
-        window.openWriteModal();
-      }
-    });
-
-    // 글쓰기 모달 관련 함수들
-    window.openWriteModal = function() {
-      console.log('글쓰기 모달 열기 시도');
-      const writeFullscreen = document.getElementById('free-write-fullscreen');
-      const overlay = document.getElementById('page-transition-overlay');
-      
-      if (!writeFullscreen || !overlay) {
-        console.error('필요한 요소를 찾을 수 없습니다:', { writeFullscreen, overlay });
-        return;
-      }
-      
-      console.log('요소 찾음, 모달 열기 시작');
-      overlay.classList.add('active');
-      setTimeout(() => {
-        overlay.classList.remove('active');
-        writeFullscreen.classList.add('active');
-        document.body.style.overflow = 'hidden';
-        const textarea = document.getElementById('habit-salon-free-content');
-        if (textarea) {
-          textarea.focus();
-          console.log('텍스트영역 포커스 완료');
-        }
-      }, 200);
-    };
-
-    window.closeWriteModal = function() {
-      console.log('글쓰기 모달 닫기 시도');
-      const writeFullscreen = document.getElementById('free-write-fullscreen');
-      const overlay = document.getElementById('page-transition-overlay');
-      
-      if (!writeFullscreen || !overlay) {
-        console.error('필요한 요소를 찾을 수 없습니다:', { writeFullscreen, overlay });
-        return;
-      }
-      
-      console.log('요소 찾음, 모달 닫기 시작');
-      overlay.classList.add('active');
-      writeFullscreen.classList.remove('active');
-      setTimeout(() => {
-        overlay.classList.remove('active');
-        document.body.style.overflow = 'auto';
-      }, 200);
-    };
-
-    // DOM이 로드된 후 이벤트 리스너 설정
-    document.addEventListener('DOMContentLoaded', function() {
-      console.log('DOM 로드됨, 이벤트 리스너 설정 시작');
-      const floatingWriteBtn = document.getElementById('floating-write-btn');
-      
-      if (floatingWriteBtn) {
-        console.log('플로팅 버튼 찾음, 이벤트 리스너 추가');
-        floatingWriteBtn.onclick = window.openWriteModal;
-      } else {
-        console.error('플로팅 버튼을 찾을 수 없습니다');
-      }
-    });
   </script>
   </script>
   <script src="script.js" onerror="console.error('script.js 로드 실패')" onload="console.log('script.js 로드 성공')"></script>
