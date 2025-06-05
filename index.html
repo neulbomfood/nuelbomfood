@@ -705,9 +705,14 @@
 
     .story-card-image {
       width: 100%;
-      height: 300px;
-      object-fit: cover;
-      background: linear-gradient(135deg, #e0ede3 0%, #f8f9fa 100%);
+      max-width: 100%;
+      height: auto;
+      max-height: 500px;
+      object-fit: contain;
+      display: block;
+      margin: 0 auto;
+      background: #f8f9fa;
+      border-radius: 16px;
     }
 
     .story-card-content {
@@ -1189,34 +1194,39 @@
     .floating-write-btn {
       position: fixed;
       right: 24px;
-      bottom: 32px;
-      z-index: 1002;
-      width: 60px;
-      height: 60px;
+      bottom: 24px;
+      width: 56px;
+      height: 56px;
       border-radius: 50%;
-      background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
-      color: #fff;
-      font-size: 32px;
-      box-shadow: 0 4px 16px rgba(53,108,85,0.18);
+      background: linear-gradient(135deg, #4CAF50, #2E7D32);
+      color: white;
+      font-size: 24px;
+      border: none;
+      box-shadow: 0 4px 12px rgba(46, 125, 50, 0.3);
+      cursor: pointer;
       display: flex;
       align-items: center;
       justify-content: center;
-      cursor: pointer;
-      border: none;
-      transition: background 0.2s, box-shadow 0.2s, transform 0.1s;
+      transition: all 0.2s ease;
+      z-index: 99995;
     }
+
     .floating-write-btn:hover {
-      background: linear-gradient(135deg, #45a049 0%, #388e3c 100%);
-      box-shadow: 0 8px 32px rgba(53,108,85,0.22);
-      transform: scale(1.07);
+      transform: scale(1.05);
+      box-shadow: 0 6px 16px rgba(46, 125, 50, 0.4);
     }
-    @media (max-width: 600px) {
+
+    .floating-write-btn:active {
+      transform: scale(0.95);
+    }
+
+    @media (max-width: 768px) {
       .floating-write-btn {
         right: 16px;
         bottom: 16px;
-        width: 52px;
-        height: 52px;
-        font-size: 28px;
+        width: 48px;
+        height: 48px;
+        font-size: 20px;
       }
     }
 
@@ -1228,13 +1238,15 @@
       width: 100%;
       height: 100vh;
       background: rgba(0,0,0,0.5);
-      z-index: 9999;
+      z-index: 100000;
       display: none;
       justify-content: center;
       align-items: center;
       opacity: 0;
       visibility: hidden;
-      transition: opacity 0.3s ease, visibility 0.3s ease;
+      transition: all 0.3s ease;
+      backdrop-filter: blur(4px);
+      -webkit-backdrop-filter: blur(4px);
     }
 
     #free-write-fullscreen.active {
@@ -1243,224 +1255,8 @@
       visibility: visible;
     }
 
-    .write-modal-card {
-      width: 90%;
-      max-width: 600px;
-      background: #fff;
-      border-radius: 24px;
-      box-shadow: 0 8px 32px rgba(53,108,85,0.15);
-      padding: 28px;
-      position: relative;
-      transform: translateY(20px);
-      transition: transform 0.3s ease;
-    }
-
-    #free-write-fullscreen.active .write-modal-card {
-      transform: translateY(0);
-    }
-
-    .write-modal-header {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      margin-bottom: 20px;
-    }
-
-    .writer-avatar {
-      width: 36px;
-      height: 36px;
-      background: #e0ede3;
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 20px;
-    }
-
-    .writer-info {
-      flex: 1;
-    }
-
-    .writer-label {
-      font-size: 15px;
-      font-weight: 600;
-      color: #356c55;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-
-    .point-badge {
-      background: linear-gradient(135deg, #4CAF50, #2E7D32);
-      color: white;
-      padding: 4px 10px;
-      border-radius: 12px;
-      font-size: 13px;
-      font-weight: 500;
-    }
-
-    .write-modal-title {
-      color: #356c55;
-      font-size: 18px;
-      font-weight: 600;
-      margin: 16px 0;
-    }
-
-    .write-textarea-container {
-      position: relative;
-      margin: 20px 0;
-    }
-
-    #habit-salon-free-content {
-      width: 100%;
-      min-height: 180px;
-      padding: 16px;
-      border: 2px solid #e0ede3;
-      border-radius: 16px;
-      font-size: 15px;
-      line-height: 1.6;
-      resize: none;
-      transition: all 0.2s ease;
-    }
-
-    #habit-salon-free-content:focus {
-      outline: none;
-      border-color: #4CAF50;
-      box-shadow: 0 0 0 4px rgba(76,175,80,0.1);
-    }
-
-    #habit-salon-free-content::placeholder {
-      color: #999;
-    }
-
-    .char-counter {
-      position: absolute;
-      right: 16px;
-      bottom: 16px;
-      font-size: 13px;
-      color: #666;
-    }
-
-    .write-modal-footer {
-      display: flex;
-      gap: 12px;
-      margin-top: 24px;
-      justify-content: space-between;
-      align-items: center;
-    }
-
-    .write-modal-footer .point-info {
-      font-size: 14px;
-      color: #666;
-    }
-
-    .write-modal-actions {
-      display: flex;
-      gap: 12px;
-    }
-
-    .write-submit-btn {
-      background: linear-gradient(135deg, #4CAF50, #2E7D32);
-      color: white;
-      border: none;
-      padding: 12px 24px;
-      border-radius: 12px;
-      font-size: 15px;
-      font-weight: 600;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      transition: all 0.2s ease;
-    }
-
-    .write-submit-btn:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 4px 12px rgba(76,175,80,0.2);
-    }
-
-    .write-submit-btn:disabled {
-      background: #ccc;
-      cursor: not-allowed;
-      transform: none;
-      box-shadow: none;
-    }
-
-    .write-cancel-btn {
-      background: #f5f5f5;
-      color: #666;
-      border: none;
-      padding: 12px 24px;
-      border-radius: 12px;
-      font-size: 15px;
-      font-weight: 600;
-      cursor: pointer;
-      transition: all 0.2s ease;
-    }
-
-    .write-cancel-btn:hover {
-      background: #eee;
-    }
-
-    /* 플로팅 버튼 스타일 */
-    .floating-write-btn {
-      position: fixed;
-      bottom: 24px;
-      right: 24px;
-      width: 56px;
-      height: 56px;
-      background: linear-gradient(135deg, #4CAF50, #2E7D32);
-      color: white;
-      border: none;
-      border-radius: 50%;
-      font-size: 32px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      cursor: pointer;
-      box-shadow: 0 4px 12px rgba(76,175,80,0.3);
-      transition: all 0.2s ease;
-      z-index: 1000;
-    }
-
-    .floating-write-btn:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 6px 16px rgba(76,175,80,0.4);
-    }
-
-    .floating-write-btn:active {
-      transform: translateY(0);
-      box-shadow: 0 2px 8px rgba(76,175,80,0.3);
-    }
-
-    @media (max-width: 480px) {
-      .floating-write-btn {
-        bottom: 16px;
-        right: 16px;
-      }
-    }
-
-    /* 모달 기본 스타일 */
-    .modal-overlay {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100vh;
-      background: rgba(0,0,0,0.5);
-      display: none;
-      justify-content: center;
-      align-items: center;
-      z-index: 9999;
+    #free-write-fullscreen.closing {
       opacity: 0;
-      visibility: hidden;
-      transition: opacity 0.3s ease, visibility 0.3s ease;
-    }
-
-    .modal-overlay.active {
-      display: flex;
-      opacity: 1;
-      visibility: visible;
     }
 
     .modal-content {
@@ -1469,374 +1265,114 @@
       background: #fff;
       border-radius: 24px;
       box-shadow: 0 8px 32px rgba(53,108,85,0.15);
+      padding: 28px;
+      position: relative;
       transform: translateY(20px);
-      transition: transform 0.3s ease;
+      transition: all 0.3s ease;
+      margin: 20px;
     }
 
-    .modal-overlay.active .modal-content {
+    #free-write-fullscreen.active .modal-content {
       transform: translateY(0);
     }
 
     .modal-header {
-      padding: 20px 24px;
-      border-bottom: 1px solid #e0ede3;
       display: flex;
       justify-content: space-between;
       align-items: center;
+      margin-bottom: 24px;
     }
 
     .modal-header h2 {
-      font-size: 1.25rem;
+      font-size: 20px;
       color: #356c55;
       margin: 0;
+      display: flex;
+      align-items: center;
+      gap: 8px;
     }
 
     .modal-close-btn {
+      width: 32px;
+      height: 32px;
       background: none;
       border: none;
       font-size: 24px;
       color: #666;
       cursor: pointer;
       padding: 0;
-      width: 32px;
-      height: 32px;
+      border-radius: 50%;
       display: flex;
       align-items: center;
       justify-content: center;
-      border-radius: 50%;
-      transition: background-color 0.2s;
+      transition: all 0.2s ease;
     }
 
     .modal-close-btn:hover {
-      background-color: #f5f5f5;
+      background: #f5f5f5;
+      transform: scale(1.1);
     }
 
-    .modal-body {
-      padding: 24px;
+    .write-guide {
+      background: #f5f9f6;
+      padding: 16px;
+      border-radius: 12px;
+      margin-bottom: 24px;
+    }
+
+    .write-guide p {
+      color: #356c55;
+      font-weight: 600;
+      margin: 0 0 8px;
+    }
+
+    .write-guide ul {
+      margin: 0;
+      padding-left: 20px;
+      color: #4a7c59;
+      font-size: 14px;
+    }
+
+    .write-guide li {
+      margin: 4px 0;
+    }
+
+    .write-textarea-container {
+      position: relative;
+      margin-bottom: 32px;
     }
 
     #habit-salon-free-content {
       width: 100%;
-      min-height: 180px;
+      min-height: 200px;
       padding: 16px;
       border: 2px solid #e0ede3;
-      border-radius: 16px;
+      border-radius: 12px;
       font-size: 15px;
       line-height: 1.6;
       resize: none;
-      margin-bottom: 16px;
       transition: all 0.2s ease;
     }
 
     #habit-salon-free-content:focus {
       outline: none;
       border-color: #4CAF50;
-      box-shadow: 0 0 0 4px rgba(76,175,80,0.1);
-    }
-
-    .modal-footer {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-top: 20px;
-    }
-
-    .point-info {
-      font-size: 14px;
-      color: #666;
-    }
-
-    .modal-actions {
-      display: flex;
-      gap: 12px;
-    }
-
-    .cancel-btn {
-      padding: 10px 20px;
-      border: none;
-      border-radius: 12px;
-      font-size: 15px;
-      font-weight: 600;
-      cursor: pointer;
-      background: #f5f5f5;
-      color: #666;
-    }
-
-    .submit-btn {
-      padding: 10px 20px;
-      border: none;
-      border-radius: 12px;
-      font-size: 15px;
-      font-weight: 600;
-      cursor: pointer;
-      background: linear-gradient(135deg, #4CAF50, #2E7D32);
-      color: white;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-
-    .submit-btn .point-badge {
-      background: rgba(255,255,255,0.2);
-      padding: 4px 8px;
-      border-radius: 8px;
-      font-size: 13px;
-    }
-
-    @media (max-width: 600px) {
-      .modal-content {
-        width: 95%;
-        margin: 10px;
-      }
-    }
-
-    /* 댓글 섹션 스타일 */
-    .story-comments-section {
-      margin-top: 16px;
-      border-top: 1px solid #e0ede3;
-      padding-top: 16px;
-    }
-
-    .story-comments-header {
-      margin-bottom: 16px;
-    }
-
-    .story-comments-header h3 {
-      font-size: 16px;
-      color: #356c55;
-      margin: 0;
-    }
-
-    .story-comment-form {
-      margin-bottom: 20px;
-    }
-
-    .story-comment-form textarea {
-      width: 100%;
-      min-height: 80px;
-      padding: 12px;
-      border: 1px solid #e0ede3;
-      border-radius: 12px;
-      font-size: 14px;
-      resize: none;
-      margin-bottom: 8px;
-    }
-
-    .story-comment-form textarea:focus {
-      outline: none;
-      border-color: #4CAF50;
-      box-shadow: 0 0 0 2px rgba(76,175,80,0.1);
-    }
-
-    .story-comment-submit {
-      padding: 8px 20px;
-      background: #356c55;
-      color: white;
-      border: none;
-      border-radius: 8px;
-      font-size: 14px;
-      font-weight: 600;
-      cursor: pointer;
-    }
-
-    .story-comment-submit:disabled {
-      background: #ccc;
-      cursor: not-allowed;
-    }
-
-    .story-comments-list {
-      display: flex;
-      flex-direction: column;
-      gap: 16px;
-    }
-
-    .story-comment {
-      background: #f8f9fa;
-      border-radius: 12px;
-      padding: 16px;
-    }
-
-    .story-comment-header {
-      display: flex;
-      align-items: flex-start;
-      gap: 12px;
-      margin-bottom: 8px;
-    }
-
-    .story-comment-author {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-
-    .story-comment-avatar {
-      width: 32px;
-      height: 32px;
-      background: #e0ede3;
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 14px;
-      color: #356c55;
-    }
-
-    .story-comment-info {
-      display: flex;
-      flex-direction: column;
-    }
-
-    .story-comment-name {
-      font-size: 14px;
-      font-weight: 600;
-      color: #356c55;
-    }
-
-    .story-comment-time {
-      font-size: 12px;
-      color: #666;
-    }
-
-    .story-comment-text {
-      font-size: 14px;
-      line-height: 1.5;
-      color: #333;
-    }
-
-    .comment-count-update {
-      animation: countUpdate 0.3s ease;
-    }
-
-    @keyframes countUpdate {
-      0% { transform: scale(1); }
-      50% { transform: scale(1.2); }
-      100% { transform: scale(1); }
-    }
-
-    /* 댓글 섹션 기본 상태 */
-    .story-comments-section {
-      display: none;
-      opacity: 0;
-      transform: translateY(-10px);
-      transition: all 0.3s ease;
-    }
-
-    /* 댓글 섹션 활성화 상태 */
-    .story-comments-section.active {
-      display: block;
-      opacity: 1;
-      transform: translateY(0);
-    }
-
-    /* 글쓰기 모달 스타일 */
-    .write-modal {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100vh;
-      background: rgba(0,0,0,0.5);
-      z-index: 9999;
-      display: none;
-      opacity: 0;
-      visibility: hidden;
-      transition: all 0.3s ease;
-    }
-
-    .write-modal.active {
-      display: flex;
-      opacity: 1;
-      visibility: visible;
-    }
-
-    .write-modal-content {
-      width: 90%;
-      max-width: 600px;
-      margin: auto;
-      background: #fff;
-      border-radius: 24px;
-      box-shadow: 0 8px 32px rgba(53,108,85,0.15);
-      transform: translateY(20px);
-      transition: transform 0.3s ease;
-    }
-
-    .write-modal.active .write-modal-content {
-      transform: translateY(0);
-    }
-
-    .write-modal-header {
-      padding: 24px;
-      border-bottom: 1px solid #e0ede3;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-
-    .write-modal-header h2 {
-      font-size: 1.25rem;
-      color: #356c55;
-      margin: 0;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-
-    .write-modal-close {
-      background: none;
-      border: none;
-      font-size: 24px;
-      color: #666;
-      cursor: pointer;
-      padding: 8px;
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      transition: background 0.2s;
-    }
-
-    .write-modal-close:hover {
-      background: #f5f5f5;
-    }
-
-    .write-modal-body {
-      padding: 24px;
-    }
-
-    .write-form textarea {
-      width: 100%;
-      min-height: 180px;
-      padding: 16px;
-      border: 2px solid #e0ede3;
-      border-radius: 16px;
-      font-size: 15px;
-      line-height: 1.6;
-      resize: none;
-      transition: all 0.2s ease;
-    }
-
-    .write-form textarea:focus {
-      outline: none;
-      border-color: #4CAF50;
-      box-shadow: 0 0 0 4px rgba(76,175,80,0.1);
-    }
-
-    .write-form textarea::placeholder {
-      color: #999;
+      box-shadow: 0 0 0 3px rgba(76,175,80,0.1);
     }
 
     .char-counter {
-      text-align: right;
+      position: absolute;
+      right: 16px;
+      bottom: -24px;
       font-size: 13px;
       color: #666;
-      margin-top: 8px;
     }
 
     .write-modal-footer {
-      padding: 0 24px 24px;
       display: flex;
       justify-content: space-between;
       align-items: center;
+      margin-top: 32px;
     }
 
     .point-info {
@@ -1851,37 +1387,26 @@
 
     .write-cancel-btn {
       padding: 12px 20px;
-      border: none;
-      border-radius: 12px;
       background: #f5f5f5;
       color: #666;
+      border: none;
+      border-radius: 8px;
       font-size: 15px;
-      font-weight: 600;
       cursor: pointer;
-      transition: background 0.2s;
-    }
-
-    .write-cancel-btn:hover {
-      background: #e0e0e0;
     }
 
     .write-submit-btn {
       padding: 12px 24px;
-      border: none;
-      border-radius: 12px;
       background: #4CAF50;
-      color: #fff;
+      color: white;
+      border: none;
+      border-radius: 8px;
       font-size: 15px;
       font-weight: 600;
       cursor: pointer;
       display: flex;
       align-items: center;
       gap: 8px;
-      transition: background 0.2s;
-    }
-
-    .write-submit-btn:hover {
-      background: #45a049;
     }
 
     .write-submit-btn:disabled {
@@ -1889,388 +1414,79 @@
       cursor: not-allowed;
     }
 
-    .write-submit-btn .point-badge {
+    .point-badge {
       background: rgba(255,255,255,0.2);
       padding: 4px 8px;
-      border-radius: 8px;
+      border-radius: 4px;
       font-size: 13px;
     }
 
-    /* 플로팅 버튼 스타일 */
-    .floating-write-btn {
-      position: fixed;
-      right: 24px;
-      bottom: 24px;
-      width: 56px;
-      height: 56px;
-      border-radius: 50%;
-      background: #4CAF50;
-      color: #fff;
-      font-size: 24px;
-      border: none;
-      box-shadow: 0 4px 16px rgba(76,175,80,0.2);
-      cursor: pointer;
-      transition: all 0.2s;
-      z-index: 1000;
-      display: flex;
-      align-items: center;
-      justify-content: center;
+    .fullscreen-page-content {
+      min-width: 0 !important;
+      min-height: 0 !important;
+      max-width: none !important;
+      max-height: none !important;
+      display: block !important;
     }
 
-    .floating-write-btn:hover {
-      background: #45a049;
-      transform: scale(1.05);
-      box-shadow: 0 6px 24px rgba(76,175,80,0.3);
+    .fullscreen-page.active {
+      transform: none !important;
     }
 
-    @media (max-width: 768px) {
-      .floating-write-btn {
-        right: 16px;
-        bottom: 16px;
-        width: 48px;
-        height: 48px;
-        font-size: 20px;
-      }
+    #habit-salon-free {
+      margin: 0 !important;
+      padding: 0 !important;
+      /* 이미 들어간 position, width, height, z-index, overflow는 그대로 유지 */
     }
-
-    .write-guide {
-      background: #f5f9f6;
-      padding: 16px;
-      border-radius: 8px;
-      margin-bottom: 16px;
+    #habit-salon-free-list {
+      min-height: 0 !important;
+      margin-top: 0 !important;
+      padding-top: 0 !important;
     }
-
-    .write-guide p {
-      color: #2E7D32;
-      font-weight: 600;
-      margin: 0 0 8px 0;
-    }
-
-    .write-guide ul {
-      color: #4CAF50;
-      margin: 0;
-      padding-left: 20px;
-    }
-
-    .write-guide li {
-      margin: 4px 0;
-      font-size: 14px;
-    }
-
-    .char-count-guide {
-      text-align: center;
-      margin: 8px 0;
-      font-size: 14px;
-      transition: color 0.2s;
-    }
-
-    #habit-salon-free-content {
-      min-height: 200px;
-    }
-
-    /* 브랜드 이야기 섹션 스타일 수정 */
-    .brand-story-image {
-      width: 100%;
-      max-width: 600px;
-      height: auto;
-      object-fit: contain;
-      margin: 0 auto;
-      display: block;
-    }
-
-    .comments-section {
-      max-width: 600px;
-      margin: 20px auto;
-      padding: 0 15px;
-    }
-
-    .comment-input {
-      width: 100%;
-      max-width: 100%;
-      margin: 10px 0;
-    }
-
-    @media (max-width: 480px) {
-      .brand-story-image {
-        max-width: 100%;
-        padding: 0 15px;
-      }
-      
-      .comments-section {
-        padding: 0 10px;
-      }
-    }
-
-    /* 브랜드 스토리 섹션 스타일 수정 */
-    .brand-story-container {
-      max-width: 800px;
-      margin: 0 auto;
-      padding: 20px;
-    }
-
-    .brand-story-image {
-      width: 100%;
-      max-width: 600px;
-      height: auto;
-      object-fit: contain;
-      margin: 0 auto;
-      display: block;
-      border-radius: 12px;
-    }
-
-    .comments-section {
-      max-width: 600px;
-      margin: 20px auto;
-      padding: 0 15px;
-    }
-
-    .comment-input {
-      width: 100%;
-      max-width: 100%;
-      margin: 10px 0;
-      padding: 12px;
-      border: 1px solid #ddd;
-      border-radius: 8px;
-      resize: vertical;
-    }
-
-    .comment-list {
-      max-width: 600px;
-      margin: 0 auto;
-    }
-
-    @media (max-width: 480px) {
-      .brand-story-container {
-        padding: 10px;
-      }
-
-      .brand-story-image {
-        max-width: 100%;
-        border-radius: 8px;
-      }
-      
-      .comments-section {
-        padding: 0 10px;
-      }
-    }
-
-    /* 브랜드 스토리 섹션 스타일 */
-    .brand-story-container {
-      max-width: 800px;
-      margin: 0 auto;
-      padding: 20px;
-      background: #fff;
-      border-radius: 16px;
-      box-shadow: 0 2px 10px rgba(53,108,85,0.06);
-    }
-
-    .brand-story-image {
-      width: 100%;
-      max-width: 100%;
-      height: auto;
-      object-fit: contain;
-      margin: 0 auto;
-      display: block;
-      border-radius: 12px;
-    }
-
-    .comments-section {
-      max-width: 100%;
-      margin: 20px auto;
-      padding: 15px;
-      background: #f8f9fa;
-      border-radius: 12px;
-    }
-
-    .comment-input {
-      width: 100%;
-      padding: 12px;
-      border: 1px solid #ddd;
-      border-radius: 8px;
-      resize: vertical;
-      margin-bottom: 10px;
-      font-size: 14px;
-    }
-
-    .comment-list {
-      margin-top: 20px;
-    }
-
-    @media (max-width: 480px) {
-      .brand-story-container {
-        padding: 15px;
-        margin: 10px;
-      }
-      
-      .comments-section {
-        padding: 10px;
-        margin: 15px auto;
-      }
-    }
-
-    /* 브랜드 스토리 섹션 스타일 수정 */
-    .brand-story-container {
-      max-width: 100%;
-      margin: 0 auto;
-      padding: 0;
-      background: #fff;
-    }
-
-    .brand-story-image {
-      width: 100%;
-      height: auto;
-      display: block;
-      object-fit: contain;
-      margin: 0 auto;
-    }
-
-    .brand-story-comments {
-      max-width: 600px;
-      margin: 20px auto;
-      padding: 0 15px;
-    }
-
-    .comment-input {
-      width: 100%;
-      padding: 12px;
-      border: 1px solid #ddd;
-      border-radius: 8px;
-      resize: vertical;
-      margin: 10px 0;
-      font-size: 14px;
-    }
-
-    .comment-list {
-      margin-top: 20px;
-    }
-
-    @media (max-width: 480px) {
-      .brand-story-container {
-        margin: 0;
-      }
-      
-      .brand-story-comments {
-        padding: 0 10px;
-      }
-    }
-
-    /* 브랜드 스토리 카드 스타일 수정 */
-    .story-card {
-      background: #fff;
-      border-radius: 0;
-      overflow: hidden;
-      margin: 0;
-      padding: 0;
-      width: 100%;
-      height: 100%;
-      display: flex;
-      flex-direction: column;
-    }
-
-    .story-card-image {
-      width: 100%;
-      height: auto;
-      max-height: none;
-      object-fit: contain;
-      margin: 0;
-      display: block;
-    }
-
-    .story-card-content {
-      padding: 20px;
-      flex: 1;
-    }
-
-    .story-comments-section {
-      max-width: 600px;
-      margin: 0 auto;
-      padding: 20px;
-      background: #f8f9fa;
-      border-radius: 12px;
-    }
-
-    .story-comment-textarea {
-      width: 100%;
-      padding: 12px;
-      border: 1px solid #ddd;
-      border-radius: 8px;
-      resize: vertical;
-      margin: 10px 0;
-      font-size: 14px;
-    }
-
-    .story-comment-submit {
-      background-color: #356c55;
-      color: white;
-      padding: 8px 16px;
-      border: none;
-      border-radius: 4px;
-      cursor: pointer;
-      margin-top: 8px;
-    }
-
-    @media (max-width: 480px) {
-      .story-card-content {
-        padding: 15px;
-      }
-      
-      .story-comments-section {
-        margin: 10px;
-        padding: 15px;
-      }
-    }
-
-    /* 음소거 버튼 스타일 */
-    .mute-button {
-      position: fixed;
-      bottom: 20px;
-      right: 20px;
-      width: 40px;
-      height: 40px;
-      border-radius: 50%;
-      background: rgba(255, 255, 255, 0.9);
-      border: 1px solid #ddd;
-      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      cursor: pointer;
-      z-index: 1000;
-      transition: all 0.2s ease;
-    }
-
-    .mute-button:hover {
-      transform: scale(1.05);
-      box-shadow: 0 3px 8px rgba(0,0,0,0.15);
-    }
-
-    @media (max-width: 480px) {
-      .mute-button {
-        bottom: 15px;
-        right: 15px;
-        width: 36px;
-        height: 36px;
-      }
-    }
-
-    /* 페이지 트랜지션 오버레이 */
-    .page-transition-overlay {
+    #habit-salon-free.fullscreen {
       position: fixed;
       top: 0;
       left: 0;
-      width: 100%;
-      height: 100%;
-      background: rgba(255, 255, 255, 0.9);
-      display: none;
-      justify-content: center;
-      align-items: center;
+      width: 100vw;
+      height: 100vh;
+      background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
       z-index: 9999;
-      transition: opacity 0.2s ease;
+      margin: 0 !important;
+      padding: 0 !important;
+      box-shadow: none !important;
+      border-radius: 0 !important;
+      overflow-y: auto;
+      display: block !important;
     }
-    
-    .page-transition-overlay.active {
+    #habit-salon-free.fullscreen .fullscreen-back-btn {
       display: flex;
-      opacity: 1;
+      align-items: center;
+      gap: 8px;
+      padding: 16px 20px;
+      background: #356c55;
+      color: white;
+      border: none;
+      border-radius: 12px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      margin: 20px 0 0 20px;
+      z-index: 10001;
+    }
+    #habit-salon-free.fullscreen .fullscreen-back-btn:hover {
+      background: #2a5544;
+    }
+    #habit-salon-free.fullscreen .fullscreen-page-title {
+      font-size: 22px;
+      font-weight: 700;
+      color: #356c55;
+      margin: 0 0 24px 0;
+      padding-left: 20px;
+    }
+    #habit-salon-free.fullscreen .habit-salon-free-list {
+      max-width: 600px;
+      margin: 0 auto;
+      padding: 0 16px 40px 16px;
     }
   </style>
 </head>
@@ -2302,20 +1518,21 @@
       <div class="modal-body">
         <form id="habit-salon-free-form">
           <div class="write-guide">
-            <p>💡 나만의 건강 경험과 노하우를 자세히 공유해주세요!</p>
+            <p>💡 100자 이상 작성 시 100P가 적립됩니다!</p>
             <ul>
               <li>실제 경험한 건강 관리 방법</li>
               <li>효과를 본 운동이나 식단</li>
               <li>나만의 건강 습관과 꿀팁</li>
             </ul>
           </div>
-          <textarea id="habit-salon-free-content" 
-                    placeholder="건강과 관련된 자세한 경험과 노하우를 들려주세요. (100자 이상)" 
-                    maxlength="500"></textarea>
-          <div class="char-counter">0/500</div>
+          <div class="write-textarea-container">
+            <textarea id="habit-salon-free-content" 
+                      placeholder="건강과 관련된 경험과 노하우를 100자 이상 작성해주세요."
+                      maxlength="500"></textarea>
+            <div class="char-counter">0/500</div>
+          </div>
           <div class="char-count-guide">더 자세한 이야기를 들려주세요! (100자 필요)</div>
           <div class="modal-footer">
-            <div class="point-info">💡 100자 이상 작성 시 100P가 적립됩니다!</div>
             <div class="modal-actions">
               <button type="button" class="cancel-btn" onclick="window.closeWriteModal()">취소</button>
               <button type="submit" class="submit-btn" disabled>
@@ -2447,7 +1664,7 @@
         <div id="habit-salon-question-comments"></div>
       </section>
       <!-- 3️⃣ 건강 한마당(자유글) -->
-      <section id="habit-salon-free" style="display:none;margin-bottom:40px;">
+      <section id="habit-salon-free" style="display:none;margin-bottom:40px;position:relative;">
         <h2 style="font-size:1.3rem;color:#356c55;font-weight:700;">💬 건강 한마당</h2>
         <!-- 최신/인기순 토글 -->
         <div id="free-feed-sort-toggle" style="display:flex;gap:8px;justify-content:center;margin-bottom:16px;">
@@ -2455,6 +1672,8 @@
           <button id="sort-popular-btn" class="feed-sort-btn">인기순</button>
         </div>
         <div id="habit-salon-free-list"></div>
+        <!-- 플로팅 글쓰기 버튼 (항상 우하단 고정) -->
+        <button id="floating-write-btn" class="floating-write-btn" title="글쓰기" onclick="window.openWriteModal()">+</button>
       </section>
       <!-- 4️⃣ 습관 챌린지(예정) -->
       <section id="habit-salon-challenge" style="display:none;margin-bottom:40px;">
@@ -2502,69 +1721,12 @@
     </div>
 
     <!-- 전체 화면 건강 한마당(자유글) 페이지 -->
-    <div id="free-fullscreen" class="fullscreen-page">
-      <div class="fullscreen-page-header">
-        <button class="fullscreen-back-btn" onclick="window.closeFreePage()">
-          ← 뒤로가기
-        </button>
-        <h1 class="fullscreen-page-title">💬 건강 한마당</h1>
-        <div></div>
-      </div>
-      <div class="fullscreen-page-content">
-        <div id="free-content">
-          <div class="card-feed-list">
-            ${posts.map((post, index) => `
-              <div class="feed-card" data-post-id="${post.id}">
-                <div class="feed-card-content">
-                  <div class="feed-card-meta">
-                    <div class="feed-card-author">
-                      <div class="feed-card-avatar">익</div>
-                      <div class="feed-card-author-info">
-                        <div class="feed-card-author-name">익명</div>
-                        <div class="feed-card-time">${window.formatTime(post.timestamp)}</div>
-                      </div>
-                    </div>
-                  </div>
-                  <div class="feed-card-text">${post.content}</div>
-                  <div class="feed-card-actions">
-                    <button class="story-action-btn" onclick="window.toggleStoryLike('free', '${post.id}')">
-                      <span id="like-icon-free-${post.id}">${post.isLiked?'❤️':'🤍'}</span>
-                      <span id="like-count-free-${post.id}">${post.likes || 0}</span>
-                    </button>
-                    <button class="story-action-btn comment-btn" onclick="window.toggleComments('free', '${post.id}')">
-                      <span>💬</span>
-                      <span id="comment-count-free-${post.id}">${post.commentCount || 0}</span>
-                    </button>
-                  </div>
-                  <!-- 댓글 섹션 -->
-                  <div class="story-comments-section" id="comments-free-${post.id}">
-                    <div class="story-comments-header">
-                      <h3>댓글 <span id="comment-header-count-free-${post.id}">${post.commentCount || 0}</span>개</h3>
-                    </div>
-                    <!-- 댓글 입력 -->
-                    <div class="story-comment-form">
-                      <textarea id="comment-input-free-${post.id}" 
-                               placeholder="댓글을 입력하세요 (최대 200자)"
-                               maxlength="200"></textarea>
-                      <button class="story-comment-submit" onclick="window.submitStoryComment('free', '${post.id}')">등록</button>
-                    </div>
-                    <!-- 댓글 목록 -->
-                    <div class="story-comments-list" id="comment-list-free-${post.id}"></div>
-                  </div>
-                </div>
-              </div>
-            `).join('')}
-          </div>
-        </div>
-      </div>
-      <!-- 플로팅 글쓰기 버튼 -->
-      <button id="floating-write-btn" class="floating-write-btn" title="글쓰기" onclick="window.openWriteModal()">+</button>
-    </div>
+    <!-- free-fullscreen 등 전체화면용 container 완전 삭제 -->
 
     <!-- 페이지 전환 오버레이 -->
     <div id="page-transition-overlay" class="page-transition-overlay"></div>
 
-    <!-- 글쓰기 모달 (단일) -->
+    <!-- 글쓰기 모달 -->
     <div id="free-write-fullscreen" class="modal-overlay">
       <div class="modal-content">
         <div class="modal-header">
@@ -2573,12 +1735,22 @@
         </div>
         <div class="modal-body">
           <form id="habit-salon-free-form">
-            <textarea id="habit-salon-free-content" 
-                      placeholder="자유롭게 건강 이야기를 남겨보세요 (50자 이상)" 
-                      maxlength="500"></textarea>
-            <div class="char-counter">0/500</div>
+            <div class="write-guide">
+              <p>💡 100자 이상 작성 시 100P가 적립됩니다!</p>
+              <ul>
+                <li>실제 경험한 건강 관리 방법</li>
+                <li>효과를 본 운동이나 식단</li>
+                <li>나만의 건강 습관과 꿀팁</li>
+              </ul>
+            </div>
+            <div class="write-textarea-container">
+              <textarea id="habit-salon-free-content" 
+                        placeholder="건강과 관련된 경험과 노하우를 100자 이상 작성해주세요."
+                        maxlength="500"></textarea>
+              <div class="char-counter">0/500</div>
+            </div>
+            <div class="char-count-guide">더 자세한 이야기를 들려주세요! (100자 필요)</div>
             <div class="modal-footer">
-              <div class="point-info">💡 글 작성 시 100P가 적립됩니다!</div>
               <div class="modal-actions">
                 <button type="button" class="cancel-btn" onclick="window.closeWriteModal()">취소</button>
                 <button type="submit" class="submit-btn" disabled>
@@ -2589,20 +1761,6 @@
             </div>
           </form>
         </div>
-      </div>
-    </div>
-
-    <!-- 1. 글쓰기 전용 페이지 HTML 추가 (free-fullscreen 바로 다음에) -->
-    <div id="free-write-fullscreen" class="fullscreen-page">
-      <div class="fullscreen-page-header">
-        <button class="fullscreen-back-btn" onclick="window.closeFreeWritePage()">
-          ← 뒤로가기
-        </button>
-        <h1 class="fullscreen-page-title">✍️ 건강 이야기 쓰기</h1>
-        <div></div>
-      </div>
-      <div class="fullscreen-page-content">
-        <!-- 기존 폼 제거 -->
       </div>
     </div>
   </div>
@@ -3075,33 +2233,36 @@
 
     // 습관살롱 섹션 표시
     window.showHabitSalonSection = async function(sectionName) {
-      // 모든 섹션 숨기기
+      if (sectionName === 'free') {
+        await window.openFreePage();
+        return;
+      }
+      // 기존 섹션 숨기기
       const sections = ['brand', 'question', 'free', 'challenge'];
       sections.forEach(section => {
         const element = document.getElementById(`habit-salon-${section}`);
         if (element) element.style.display = 'none';
       });
-      
-      // 선택된 섹션 표시
+      document.getElementById('main-section').style.display = 'none';
+      document.getElementById('habit-salon-main').style.display = 'block';
+      // 기존 섹션 진입 로직
       const targetSection = document.getElementById(`habit-salon-${sectionName}`);
       if (targetSection) {
         targetSection.style.display = 'block';
-        
-        // 섹션별 데이터 로딩
-        switch(sectionName) {
-          case 'brand':
-            await window.loadBrandSection();
-            break;
-          case 'question':
-            await window.loadQuestionSection();
-            break;
-          case 'free':
-            await window.loadFreeSection();
-            break;
-          case 'challenge':
-            // 준비중 메시지는 이미 HTML에 있음
-            break;
-        }
+        if (sectionName === 'brand') await window.loadBrandSection();
+        if (sectionName === 'question') await window.loadQuestionSection();
+        if (sectionName === 'challenge') {/* 준비중 */}
+      }
+      // habit-salon-free 전체화면 해제
+      const freeSection = document.getElementById('habit-salon-free');
+      if (freeSection) {
+        freeSection.classList.remove('fullscreen');
+        freeSection.style.display = 'none';
+        // 뒤로가기/타이틀 제거
+        const backBtn = document.getElementById('free-back-btn');
+        if (backBtn) backBtn.remove();
+        const title = document.getElementById('free-title');
+        if (title) title.remove();
       }
     };
 
@@ -3286,44 +2447,94 @@
       }
     };
 
-    // 자유 섹션 로딩 (인스타 스타일 카드)
+    // 자유 섹션 로딩 (카드형 리스트 피드)
     window.loadFreeSection = async function() {
       const container = document.getElementById('habit-salon-free-list');
       if (!container) return;
-      
       container.innerHTML = '<div style="text-align:center;padding:40px;color:#666;">로딩 중...</div>';
-      
       try {
-        const posts = await window.loadUserPosts();
-        
-        if (posts.length === 0) {
-          container.innerHTML = '<div style="text-align:center;padding:40px;color:#666;">첫 번째 건강 이야기를 남겨보세요!</div>';
-          return;
+        let posts = await window.loadUserPosts();
+        // 정렬
+        const sortLatestBtn = document.getElementById('sort-latest-btn');
+        const sortPopularBtn = document.getElementById('sort-popular-btn');
+        if (sortLatestBtn && sortPopularBtn) {
+          sortLatestBtn.onclick = () => {
+            sortLatestBtn.classList.add('active');
+            sortPopularBtn.classList.remove('active');
+            posts.sort((a, b) => (b.timestamp?.seconds || 0) - (a.timestamp?.seconds || 0));
+            renderFeed();
+          };
+          sortPopularBtn.onclick = () => {
+            sortPopularBtn.classList.add('active');
+            sortLatestBtn.classList.remove('active');
+            posts.sort((a, b) => (b.likes || 0) - (a.likes || 0));
+            renderFeed();
+          };
         }
-        
-        // 피드 렌더링
-        let html = '<div class="feed-list">';
-        html += posts.map((post, index) => `
-          <div class="feed-card">
-            <div class="feed-card-header">
-              <div class="feed-author">익명</div>
-              <div class="feed-time">${window.formatTime(post.timestamp)}</div>
+        // 기본 최신순
+        posts.sort((a, b) => (b.timestamp?.seconds || 0) - (a.timestamp?.seconds || 0));
+        function renderFeed() {
+          if (posts.length === 0) {
+            container.innerHTML = '<div style="text-align:center;padding:40px;color:#666;">첫 번째 건강 이야기를 남겨보세요!</div>';
+            return;
+          }
+          container.innerHTML = posts.map((post, index) => `
+            <div class="feed-card" style="margin-bottom:24px;">
+              <div class="feed-card-header" style="display:flex;justify-content:space-between;align-items:center;">
+                <span class="feed-card-author" style="font-weight:600;color:#356c55;">${post.author || '익명'}</span>
+                <span class="feed-card-time" style="font-size:13px;color:#999;">${window.formatTime(post.timestamp)}</span>
+              </div>
+              <div class="feed-card-content" style="margin:16px 0;">
+                <div class="feed-card-text" id="feed-card-text-${index}" style="font-size:16px;color:#333;line-height:1.7;max-height:72px;overflow:hidden;position:relative;">${post.content.length > 100 ? post.content.slice(0, 100) + '...' : post.content}</div>
+                ${post.content.length > 100 ? `<button class="feed-card-more-btn" onclick="window.toggleFeedMore(${index})" style="background:none;border:none;color:#4CAF50;font-size:14px;cursor:pointer;">더보기</button>` : ''}
+              </div>
+              <div class="feed-card-actions" style="display:flex;gap:16px;align-items:center;">
+                <button class="feed-card-like-btn" onclick="window.toggleStoryLike('free', '${post.id}', ${index})" style="background:none;border:none;cursor:pointer;font-size:15px;display:flex;align-items:center;gap:4px;">
+                  <span id="like-icon-free-${index}">${post.isLiked ? '❤️' : '🤍'}</span>
+                  <span id="like-count-free-${index}">${post.likes || 0}</span>
+                </button>
+                <button class="feed-card-comment-btn" onclick="window.toggleFeedComments(${index})" style="background:none;border:none;cursor:pointer;font-size:15px;display:flex;align-items:center;gap:4px;">
+                  💬 <span id="comment-count-free-${index}">${post.commentCount || 0}</span>
+                </button>
+              </div>
+              <div class="feed-card-comments" id="feed-card-comments-${index}" style="display:none;margin-top:12px;background:#fafbfc;border-radius:12px;padding:12px 8px;">
+                <div class="story-comments-list" id="comment-list-free-${index}"></div>
+                <div class="story-comment-input" style="margin-top:8px;">
+                  <div class="story-comment-form" style="display:flex;gap:8px;align-items:flex-end;">
+                    <textarea id="comment-input-free-${index}" class="story-comment-textarea" placeholder="댓글을 입력하세요... (+30P)" maxlength="200" style="flex:1;padding:10px 14px;border-radius:16px;border:1px solid #e0e0e0;font-size:14px;"></textarea>
+                    <button onclick="window.submitStoryComment('free', '${post.id}', ${index})" class="story-comment-submit" style="padding:10px 16px;background:#356c55;color:white;border:none;border-radius:16px;font-size:14px;font-weight:600;cursor:pointer;">등록</button>
+                  </div>
+                </div>
+              </div>
             </div>
-            <div class="feed-content">${post.content}</div>
-            <div class="feed-actions">
-              <button onclick="window.toggleLike('${post.id}')" class="feed-action-btn">
-                ${post.isLiked ? '❤️' : '🤍'} ${post.likes || 0}
-              </button>
-              <button onclick="window.toggleComments('${post.id}')" class="feed-action-btn">
-                💬 ${post.commentCount || 0}
-              </button>
-            </div>
-          </div>
-        `).join('');
-        html += '</div>';
-        
-        container.innerHTML = html;
-        
+          `).join('');
+        }
+        // 더보기/펼치기 토글 함수
+        window.toggleFeedMore = function(index) {
+          const textDiv = document.getElementById(`feed-card-text-${index}`);
+          if (!textDiv) return;
+          if (textDiv.style.maxHeight === 'none') {
+            textDiv.style.maxHeight = '72px';
+            textDiv.style.overflow = 'hidden';
+          } else {
+            textDiv.style.maxHeight = 'none';
+            textDiv.style.overflow = 'visible';
+          }
+        };
+        // 댓글창 토글 함수
+        window.toggleFeedComments = async function(index) {
+          const commentsDiv = document.getElementById(`feed-card-comments-${index}`);
+          if (!commentsDiv) return;
+          if (commentsDiv.style.display === 'block') {
+            commentsDiv.style.display = 'none';
+          } else {
+            commentsDiv.style.display = 'block';
+            // 댓글 목록 로드
+            const post = posts[index];
+            await window.loadStoryComments('free', post.id, index);
+          }
+        };
+        renderFeed();
       } catch (error) {
         console.error('피드 로딩 오류:', error);
         container.innerHTML = '<div style="text-align:center;padding:40px;color:#f44336;">로딩 중 오류가 발생했습니다.</div>';
@@ -4204,40 +3415,86 @@
     window.openQuestionPage = async function() {
       try {
         history.pushState({ page: 'question' }, '');
-        // 로딩 표시
         const overlay = document.getElementById('page-transition-overlay');
         overlay.classList.add('active');
-        
+
         // 질문 데이터 로딩
         const questions = await window.loadHealthQuestions();
-        
+        // 카드 슬라이더 형태로 렌더링
+        const container = document.querySelector('#question-fullscreen .fullscreen-page-content');
+        if (!container) return;
+
         if (questions.length === 0) {
-          window.showSalonToast('오늘의 질문이 준비 중입니다.', 'info');
-          overlay.classList.remove('active');
-          return;
+          container.innerHTML = '<div style="text-align:center;padding:40px;color:#666;">오늘의 질문이 준비 중입니다.</div>';
+        } else {
+          window.currentCards = questions;
+          window.currentSection = 'question';
+          window.currentCardIndex = 0;
+          container.innerHTML = `
+            <div class="card-slider-container">
+              <div class="card-slider" id="question-card-slider">
+                ${questions.map((question, index) => `
+                  <div class="story-card question-card" data-index="${index}">
+                    <div class="story-card-content">
+                      <h3 class="story-card-title">📝 ${question.question}</h3>
+                      <div class="question-options">
+                        ${question.options ? question.options.map((option, optionIndex) => `
+                          <button class="question-option" 
+                                  onclick="window.answerStoryQuestion('${question.id}', ${optionIndex}, ${index})"
+                                  id="option-${index}-${optionIndex}">
+                            ${option}
+                          </button>
+                        `).join('') : ''}
+                      </div>
+                      <div class="question-reward">💡 답변하면 30P가 적립됩니다!</div>
+                    </div>
+                    <div class="story-comments-section active" id="comments-question-${index}">
+                      <div class="story-comments-header">
+                        댓글 <span id="comment-header-count-question-${index}">${question.commentCount || 0}</span>개
+                      </div>
+                      <div class="story-comments-list" id="comment-list-question-${index}"></div>
+                      <div class="story-comment-input">
+                        <div class="story-comment-form">
+                          <textarea id="comment-input-question-${index}" class="story-comment-textarea" 
+                                    placeholder="댓글을 입력하세요... (+30P)" maxlength="200"></textarea>
+                          <button onclick="window.submitStoryComment('question', '${question.id}', ${index})" 
+                                  class="story-comment-submit">등록</button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                `).join('')}
+              </div>
+              ${questions.length > 1 ? `
+                <button class="card-nav prev" onclick="window.prevCard()" id="prev-btn">‹</button>
+                <button class="card-nav next" onclick="window.nextCard()" id="next-btn">›</button>
+              ` : ''}
+            </div>
+            ${questions.length > 1 ? `
+              <div class="card-indicators">
+                ${questions.map((_, index) => `
+                  <div class="card-indicator ${index === 0 ? 'active' : ''}" 
+                       onclick="window.goToCard(${index})" data-index="${index}"></div>
+                `).join('')}
+              </div>
+            ` : ''}
+            <div style="text-align:center;margin-top:20px;padding:16px;background:#f8f9fa;border-radius:12px;">
+              <p style="margin:0;color:#356c55;font-weight:600;">💚 현재 포인트: <span id="habit-salon-my-point">${await window.getUserPoints()}</span>P</p>
+            </div>
+          `;
+          setTimeout(() => { window.updateCardNavigation(); }, 0);
         }
-        
-        // 섹션 표시
-        const questionSection = document.getElementById('habit-salon-question');
-        if (questionSection) {
-          questionSection.style.display = 'block';
-          
-          // 다른 섹션 숨기기
-          const sections = ['brand', 'free', 'challenge'];
-          sections.forEach(section => {
-            const element = document.getElementById(`habit-salon-${section}`);
-            if (element) element.style.display = 'none';
-          });
-          
-          // 질문 섹션 로딩
-          await window.loadQuestionSection();
-        }
-        
-        // 트랜지션 효과 제거
+
+        // 기존 작은 리스트 UI 숨김
+        const mainSection = document.getElementById('habit-salon-main');
+        if (mainSection) mainSection.style.display = 'none';
+
         setTimeout(() => {
           overlay.classList.remove('active');
+          const fullscreenPage = document.getElementById('question-fullscreen');
+          fullscreenPage.classList.add('active');
+          document.body.style.overflow = 'hidden';
         }, 200);
-        
       } catch (error) {
         console.error('질문 페이지 열기 오류:', error);
         window.showSalonToast('페이지를 불러올 수 없습니다.', 'error');
@@ -4251,26 +3508,159 @@
       if (fullscreenPage) {
         fullscreenPage.classList.remove('active');
         document.body.style.overflow = '';
+        // 네비게이션 섹션 복귀
+        const mainSection = document.getElementById('habit-salon-main');
+        if (mainSection) mainSection.style.display = 'block';
       }
     };
+
+    // ESC 키로 전체 화면 페이지 닫기 (브랜드/자유글과 동일하게 question도 적용)
+    document.addEventListener('keydown', function(e) {
+      if (e.key === 'Escape') {
+        const fullscreenPage = document.getElementById('question-fullscreen');
+        if (fullscreenPage && fullscreenPage.classList.contains('active')) {
+          window.closeQuestionPage();
+        }
+      }
+    });
 
     // 전체 화면 자유글(건강 한마당) 페이지
     window.openFreePage = async function() {
-      try {
-        history.pushState({ page: 'free' }, '');
-        // ... 기존 코드 ...
-      } catch (error) {
-        console.error('자유 페이지 열기 오류:', error);
+      // 모든 섹션 숨김
+      document.getElementById('main-section').style.display = 'none';
+      document.getElementById('habit-salon-main').style.display = 'none';
+      document.getElementById('habit-salon-brand').style.display = 'none';
+      document.getElementById('habit-salon-question').style.display = 'none';
+      document.getElementById('habit-salon-challenge').style.display = 'none';
+      
+      // habit-salon-free 섹션도 일단 숨김 (전체화면으로 표시하기 전에)
+      const originalFree = document.getElementById('habit-salon-free');
+      if (originalFree && originalFree.parentElement === document.getElementById('habit-salon-main')) {
+        originalFree.style.display = 'none';
       }
+
+      // 플로팅 버튼을 임시 저장
+      const floatingBtn = document.getElementById('floating-write-btn');
+      if (floatingBtn) {
+        floatingBtn.remove(); // 기존 위치에서 제거
+      }
+
+      // habit-salon-free를 body로 이동 (중복 방지를 위해 기존 위치에서 제거)
+      const free = document.getElementById('habit-salon-free');
+      if (free && free.parentElement !== document.body) {
+        document.body.appendChild(free);
+        // 플로팅 버튼을 habit-salon-free의 마지막 자식으로 다시 추가
+        if (floatingBtn) {
+          free.appendChild(floatingBtn);
+        }
+      }
+
+      // 자유게시판 전체화면 스타일 적용
+      free.style.display = 'block';
+      free.style.position = 'fixed';
+      free.style.width = '100vw';
+      free.style.height = '100vh';
+      free.style.top = '0';
+      free.style.left = '0';
+      free.style.background = '#fcfaf5';
+      free.style.zIndex = '99990';
+      free.style.overflowY = 'auto';
+      free.style.margin = '0';
+      free.style.padding = '0';
+
+      // 불필요한 요소 숨김
+      const elementsToHide = free.querySelectorAll('.logo, h2:not(#free-title), p:not(.point-text)');
+      elementsToHide.forEach(el => el.style.display = 'none');
+
+      // 뒤로가기 버튼 추가 (없는 경우에만)
+      if (!document.getElementById('free-back-btn')) {
+        const backBtn = document.createElement('button');
+        backBtn.className = 'fullscreen-back-btn';
+        backBtn.id = 'free-back-btn';
+        backBtn.innerText = '← 뒤로가기';
+        backBtn.onclick = window.closeFreePage;
+        free.insertBefore(backBtn, free.firstChild);
+      }
+
+      // 타이틀 추가 (없는 경우에만)
+      if (!document.getElementById('free-title')) {
+        const title = document.createElement('h1');
+        title.className = 'fullscreen-page-title';
+        title.id = 'free-title';
+        title.innerText = '💬 건강 한마당';
+        free.insertBefore(title, free.children[1]);
+      }
+
+      // 피드 로드
+      await window.loadFreeSection();
+
+      // habit-salon-free-list로 스크롤
+      const freeList = document.getElementById('habit-salon-free-list');
+      if (freeList) freeList.scrollIntoView();
     };
 
     window.closeFreePage = function() {
-      const fullscreenPage = document.getElementById('free-fullscreen');
-      if (fullscreenPage) {
-        fullscreenPage.classList.remove('active');
-        document.body.style.overflow = '';
+      // habit-salon-free 스타일 초기화
+      const free = document.getElementById('habit-salon-free');
+      if (!free) return;
+
+      // 모든 스타일 초기화
+      free.style.display = '';
+      free.style.position = '';
+      free.style.width = '';
+      free.style.height = '';
+      free.style.top = '';
+      free.style.left = '';
+      free.style.background = '';
+      free.style.zIndex = '';
+      free.style.overflowY = '';
+      free.style.margin = '';
+      free.style.padding = '';
+      free.classList.remove('fullscreen');
+
+      // 숨겨진 요소들 복원
+      const hiddenElements = free.querySelectorAll('.logo, h2, p');
+      hiddenElements.forEach(el => el.style.display = '');
+
+      // 뒤로가기/타이틀 제거
+      const backBtn = document.getElementById('free-back-btn');
+      if (backBtn) backBtn.remove();
+      const title = document.getElementById('free-title');
+      if (title) title.remove();
+
+      // 네비게이션 섹션 복원
+      document.getElementById('habit-salon-main').style.display = 'block';
+      document.getElementById('main-section').style.display = 'block';
+
+      // 플로팅 버튼을 임시 저장
+      const floatingBtn = document.getElementById('floating-write-btn');
+      if (floatingBtn) {
+        floatingBtn.remove(); // 현재 위치에서 제거
+      }
+
+      // habit-salon-free를 원래 위치로 이동
+      const habitSalonMain = document.getElementById('habit-salon-main');
+      if (habitSalonMain) {
+        const freeSection = habitSalonMain.querySelector('#habit-salon-free');
+        if (!freeSection) {
+          habitSalonMain.appendChild(free);
+          // 플로팅 버튼을 habit-salon-free의 마지막 자식으로 다시 추가
+          if (floatingBtn) {
+            free.appendChild(floatingBtn);
+          }
+        }
       }
     };
+
+    // ESC 키로 전체 화면 페이지 닫기
+    document.addEventListener('keydown', function(e) {
+      if (e.key === 'Escape') {
+        const free = document.getElementById('habit-salon-free');
+        if (free && free.style.position === 'fixed') {
+          window.closeFreePage();
+        }
+      }
+    });
 
     window.openWriteModal = function() {
       try {
@@ -4345,7 +3735,7 @@
           } else if (section === 'question') {
             window.openQuestionPage();
           } else if (section === 'free') {
-            window.showHabitSalonSection('free');
+            window.openFreePage(); // 기존 showHabitSalonSection('free')에서 변경
           } else if (section === 'challenge') {
             window.showHabitSalonSection('challenge');
           }
@@ -4401,6 +3791,57 @@
       // 초기 이벤트 리스너 설정
       window.initializeEventListeners();
     });
+
+    // 자유 게시판 게시글 로딩
+    window.loadUserPosts = async function() {
+      try {
+        console.log('Firebase에서 자유 게시글 로딩 중...');
+        
+        // 오프라인 상태 시 캐시된 데이터 사용
+        if (!window.isOnline) {
+          console.log('오프라인 상태 - 캐시된 자유 게시글 사용');
+          const cachedData = localStorage.getItem('cached_user_posts');
+          if (cachedData) {
+            const posts = JSON.parse(cachedData);
+            console.log('캐시된 자유 게시글:', posts.length, '개');
+            return posts;
+          }
+          return [];
+        }
+        
+        // Firestore에서 직접 필터링
+        const q = query(
+          collection(db, 'user_posts'),
+          orderBy('timestamp', 'desc')
+        );
+        
+        const snapshot = await getDocs(q);
+        const posts = snapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data(),
+          isLiked: false // 좋아요 상태는 별도로 체크
+        }));
+        
+        // 성공적으로 로딩되면 캐시에 저장
+        if (posts.length > 0) {
+          localStorage.setItem('cached_user_posts', JSON.stringify(posts));
+          localStorage.setItem('cached_user_posts_time', Date.now().toString());
+        }
+        
+        console.log('자유 게시글 로딩 완료:', posts.length, '개');
+        return posts;
+      } catch (error) {
+        console.error('자유 게시글 로딩 오류:', error);
+        // 오류 시 캐시된 데이터 사용 시도
+        const cachedData = localStorage.getItem('cached_user_posts');
+        if (cachedData) {
+          const posts = JSON.parse(cachedData);
+          console.log('오류 발생 - 캐시된 자유 게시글 사용:', posts.length, '개');
+          return posts;
+        }
+        return [];
+      }
+    };
   </script>
   </script>
   <script src="script.js" onerror="console.error('script.js 로드 실패')" onload="console.log('script.js 로드 성공')"></script>
