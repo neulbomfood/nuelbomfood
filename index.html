@@ -2252,6 +2252,26 @@
         height: 36px;
       }
     }
+
+    /* 페이지 트랜지션 오버레이 */
+    .page-transition-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(255, 255, 255, 0.9);
+      display: none;
+      justify-content: center;
+      align-items: center;
+      z-index: 9999;
+      transition: opacity 0.2s ease;
+    }
+    
+    .page-transition-overlay.active {
+      display: flex;
+      opacity: 1;
+    }
   </style>
 </head>
 <body>
@@ -2821,7 +2841,6 @@
             console.log('캐시된 브랜드 게시글:', posts.length, '개');
             return posts;
           }
-          // 캐시가 없으면 기본 데이터 반환
           return [{
             id: 'offline_brand_1',
             title: '늘봄과 함께하는 건강한 습관',
@@ -2834,25 +2853,18 @@
           }];
         }
         
-        // 오늘 날짜 구하기
-        const today = new Date();
-        const todayStr = today.toISOString().split('T')[0]; // YYYY-MM-DD
-        
-        // 단순 쿼리로 변경 (복합 인덱스 불필요)
-        const q = query(collection(db, 'brand_posts'), orderBy('timestamp', 'desc'));
+        // Firestore에서 직접 필터링하도록 수정
+        const q = query(
+          collection(db, 'brand_posts'),
+          where('isPublished', '==', true),
+          orderBy('timestamp', 'desc')
+        );
         const snapshot = await getDocs(q);
         
-        const posts = [];
-        snapshot.forEach((doc) => {
-          const data = doc.data();
-          // 클라이언트 사이드에서 필터링
-          if (data.isPublished === true && data.date === todayStr) {
-          posts.push({
-            id: doc.id,
-              ...data
-            });
-          }
-        });
+        const posts = snapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data()
+        }));
         
         // 성공적으로 로딩되면 캐시에 저장
         if (posts.length > 0) {
@@ -2860,46 +2872,18 @@
           localStorage.setItem('cached_brand_posts_time', Date.now().toString());
         }
         
-        console.log('브랜드 게시글 로딩 완료:', posts.length, '개 (필터링 후)');
+        console.log('브랜드 게시글 로딩 완료:', posts.length, '개');
         return posts;
       } catch (error) {
         console.error('브랜드 게시글 로딩 오류:', error);
-        
-        // 네트워크 오류 시 캐시 사용
+        // 오류 발생 시 캐시된 데이터 사용 시도
         const cachedData = localStorage.getItem('cached_brand_posts');
         if (cachedData) {
-          console.log('오류로 인해 캐시된 브랜드 게시글 사용');
-          window.showSalonToast('캐시된 데이터를 표시합니다.', 'info');
-          return JSON.parse(cachedData);
+          const posts = JSON.parse(cachedData);
+          console.log('오류 발생 - 캐시된 브랜드 게시글 사용:', posts.length, '개');
+          return posts;
         }
-        
-        // fallback: 조건 없이 최근 게시글만
-        try {
-          const q = query(collection(db, 'brand_posts'), orderBy('timestamp', 'desc'));
-          const snapshot = await getDocs(q);
-          const posts = [];
-          snapshot.forEach((doc) => {
-            posts.push({
-              id: doc.id,
-              ...doc.data()
-            });
-          });
-          console.log('브랜드 게시글 fallback 로딩:', posts.length, '개');
-          return posts.slice(0, 3); // 최대 3개만 표시
-        } catch (fallbackError) {
-          console.error('브랜드 게시글 fallback 로딩 오류:', fallbackError);
-          // 최종 fallback - 기본 메시지
-          return [{
-            id: 'error_brand_1',
-            title: '연결 오류',
-            content: '현재 서버와의 연결에 문제가 있습니다. 잠시 후 다시 시도해주세요.',
-            author: '시스템',
-            timestamp: new Date(),
-            likes: 0,
-            commentCount: 0,
-            isError: true
-          }];
-        }
+        return [];
       }
     };
     
@@ -2917,7 +2901,6 @@
             console.log('캐시된 건강 질문:', questions.length, '개');
             return questions;
           }
-          // 캐시가 없으면 기본 질문 반환
           return [{
             id: 'offline_question_1',
             question: '오늘 충분한 수분을 섭취하셨나요?',
@@ -2933,25 +2916,18 @@
           }];
         }
         
-        // 오늘 날짜 구하기
-        const today = new Date();
-        const todayStr = today.toISOString().split('T')[0]; // YYYY-MM-DD
+        // Firestore에서 직접 필터링하도록 수정
+        const q = query(
+          collection(db, 'health_questions'),
+          where('isPublished', '==', true),
+          orderBy('timestamp', 'desc')
+        );
         
-        // 단순 쿼리로 변경 (복합 인덱스 불필요)
-        const q = query(collection(db, 'health_questions'), orderBy('timestamp', 'desc'));
         const snapshot = await getDocs(q);
-        
-        const questions = [];
-        snapshot.forEach((doc) => {
-          const data = doc.data();
-          // 클라이언트 사이드에서 필터링
-          if (data.isPublished === true && data.date === todayStr) {
-          questions.push({
-            id: doc.id,
-              ...data
-            });
-          }
-        });
+        const questions = snapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data()
+        }));
         
         // 성공적으로 로딩되면 캐시에 저장
         if (questions.length > 0) {
@@ -2959,168 +2935,21 @@
           localStorage.setItem('cached_health_questions_time', Date.now().toString());
         }
         
-        console.log('건강 질문 로딩 완료:', questions.length, '개 (필터링 후)');
+        console.log('건강 질문 로딩 완료:', questions.length, '개');
         return questions;
       } catch (error) {
         console.error('건강 질문 로딩 오류:', error);
-        
-        // 네트워크 오류 시 캐시 사용
+        // 오류 시 캐시된 데이터 사용 시도
         const cachedData = localStorage.getItem('cached_health_questions');
         if (cachedData) {
-          console.log('오류로 인해 캐시된 건강 질문 사용');
-          window.showSalonToast('캐시된 데이터를 표시합니다.', 'info');
-          return JSON.parse(cachedData);
+          const questions = JSON.parse(cachedData);
+          console.log('오류 발생 - 캐시된 건강 질문 사용:', questions.length, '개');
+          return questions;
         }
-        
-        // fallback: 조건 없이 최근 질문만
-        try {
-          const q = query(collection(db, 'health_questions'), orderBy('timestamp', 'desc'));
-          const snapshot = await getDocs(q);
-          const questions = [];
-          snapshot.forEach((doc) => {
-            questions.push({
-              id: doc.id,
-              ...doc.data()
-            });
-          });
-          console.log('건강 질문 fallback 로딩:', questions.length, '개');
-          return questions.slice(0, 3); // 최대 3개만 표시
-        } catch (fallbackError) {
-          console.error('건강 질문 fallback 로딩 오류:', fallbackError);
-          // 최종 fallback - 기본 질문
-          return [{
-            id: 'error_question_1',
-            question: '현재 서버 연결에 문제가 있습니다',
-            options: [
-              '네트워크 연결을 확인해주세요',
-              '잠시 후 다시 시도해주세요'
-            ],
-            timestamp: new Date(),
-            responses: 0,
-            isError: true
-          }];
-        }
-      }
-    };
-    
-    // 자유게시글 로딩 (원래 설계대로)
-    window.loadUserPosts = async function() {
-      try {
-        console.log('Firebase에서 자유게시글 로딩 중...');
-        const q = query(collection(db, 'user_posts'), orderBy('timestamp', 'desc'));
-        const snapshot = await getDocs(q);
-        
-        const posts = [];
-        snapshot.forEach((doc) => {
-          posts.push({
-            id: doc.id,
-            ...doc.data()
-          });
-        });
-        
-        console.log('자유게시글 로딩 완료:', posts.length, '개');
-        return posts;
-      } catch (error) {
-        console.error('자유게시글 로딩 오류:', error);
         return [];
       }
     };
-
-    // 새 자유게시글 작성
-    window.addUserPost = async function(content) {
-      try {
-        const userId = window.getUserId();
-        const docRef = await addDoc(collection(db, 'user_posts'), {
-          content: content,
-          author: '익명',
-          userId: userId,
-          timestamp: serverTimestamp(),
-          likes: 0,
-          commentCount: 0
-        });
-        
-        console.log('자유게시글 작성 완료:', docRef.id);
-        
-        // 포인트 지급
-        await window.addUserPoints(100);
-        
-        return docRef.id;
-      } catch (error) {
-        console.error('자유게시글 작성 오류:', error);
-        throw error;
-      }
-    };
-
-    // 댓글 추가 (원래 설계대로)
-    window.addComment = async function(postType, postId, comment) {
-      try {
-        const userId = window.getUserId();
-        const commentData = {
-          content: comment,
-          author: '익명',
-          userId: userId,
-          postId: postId,
-          postType: postType,
-          timestamp: serverTimestamp()
-        };
-        
-        // 댓글 저장
-        const docRef = await addDoc(collection(db, 'comments'), commentData);
-        console.log('댓글 작성 완료:', docRef.id);
-        
-        // 댓글 수 업데이트
-        const postCollection = postType === 'brand' ? 'brand_posts' : 
-                              postType === 'question' ? 'health_questions' : 'user_posts';
-        await updateDoc(doc(db, postCollection, postId), {
-          commentCount: increment(1)
-        });
-        
-        // 포인트 지급은 여기서만 실행 (30P)
-        const actionId = `comment_${postType}_${postId}_${Date.now()}`;
-        await window.addUserPoints(30, 'comment', actionId);
-        
-        return {
-          id: docRef.id,
-          ...commentData,
-          timestamp: new Date()
-        };
-      } catch (error) {
-        console.error('댓글 작성 오류:', error);
-        throw error;
-      }
-    };
     
-    // 댓글 조회 (원래 설계대로)
-    window.getComments = async function(postType, postId) {
-      try {
-        console.log('댓글 조회 시도:', { postType, postId });
-        const q = query(
-          collection(db, 'comments'), 
-          where('postId', '==', postId),
-          where('postType', '==', postType),
-          orderBy('timestamp', 'desc')  // 최신순으로 변경
-        );
-        
-        const snapshot = await getDocs(q);
-        const comments = [];
-        
-        snapshot.forEach((doc) => {
-          const data = doc.data();
-          comments.push({
-            id: doc.id,
-            ...data,
-            timestamp: data.timestamp?.toDate() || new Date()
-          });
-        });
-        
-        console.log('댓글 조회 결과:', comments.length, '개');
-        return comments;
-      } catch (error) {
-        console.error('댓글 조회 오류:', error);
-        return [];
-      }
-    };
-
     // 좋아요 기능 (Firestore 연동)
     window.toggleLike = async function(postType, postId) {
       try {
@@ -3225,54 +3054,23 @@
     window.initHabitSalon = async function() {
       console.log('습관살롱 초기화 시작');
       
-      // 포인트 동기화
-      const points = await window.getUserPoints();
-      const pointDisplay = document.getElementById('habit-salon-my-point');
-      if (pointDisplay) {
-        pointDisplay.textContent = points;
-      }
-      
-      // 네비게이션 카드 이벤트 리스너
-      const navCards = document.querySelectorAll('.habit-salon-nav-card');
-      navCards.forEach(card => {
-        card.addEventListener('click', function() {
-          const section = this.dataset.section;
-          if (section === 'brand') {
-            window.openBrandStoryPage();
-          } else if (section === 'question') {
-            window.openQuestionPage();
-          } else if (section === 'free') {
-            window.openFreePage();
-          } else {
-            window.showHabitSalonSection(section);
-          }
-        });
+      try {
+        // 이벤트 리스너 초기화
+        window.initializeEventListeners();
         
-        card.addEventListener('mouseenter', function() {
-          this.style.boxShadow = '0 4px 16px rgba(53,108,85,0.15)';
-        });
+        // 포인트 동기화
+        const points = await window.getUserPoints();
+        const pointDisplay = document.getElementById('habit-salon-my-point');
+        if (pointDisplay) {
+          pointDisplay.textContent = points;
+        }
         
-        card.addEventListener('mouseleave', function() {
-          this.style.boxShadow = '0 2px 8px #e0ede3';
-        });
-      });
-      
-      // 뒤로가기 버튼
-      const backBtn = document.getElementById('habit-salon-main-back-btn');
-      if (backBtn) {
-        backBtn.addEventListener('click', function() {
-          document.getElementById('habit-salon-main').style.display = 'none';
-          document.getElementById('main-section').style.display = 'block';
-        });
+        
+        console.log('습관살롱 초기화 완료');
+      } catch (error) {
+        console.error('습관살롱 초기화 오류:', error);
+        window.showSalonToast('초기화 중 오류가 발생했습니다. 페이지를 새로고침해주세요.', 'error');
       }
-      
-      // 자유글 폼 이벤트
-      const freeForm = document.getElementById('habit-salon-free-form');
-      if (freeForm) {
-        freeForm.addEventListener('submit', window.handleFreePostSubmit);
-      }
-      
-      console.log('습관살롱 초기화 완료');
     };
 
     // 습관살롱 섹션 표시
@@ -4165,200 +3963,81 @@
 
     // 페이지 로드 후 초기화
     document.addEventListener('DOMContentLoaded', function() {
-      // 습관살롱 진입 버튼 이벤트
-      const enterBtn = document.getElementById('habit-salon-enter-btn');
-      if (enterBtn) {
-        enterBtn.addEventListener('click', function() {
-          document.getElementById('main-section').style.display = 'none';
-          document.getElementById('habit-salon-main').style.display = 'block';
-          window.initHabitSalon();
-        });
-      }
+      // 초기 네트워크 상태 설정
+      window.isOnline = navigator.onLine;
+      console.log('초기 네트워크 상태:', window.isOnline ? '온라인' : '오프라인');
       
-      // 포인트 동기화 및 교환 버튼 상태 업데이트
-      window.getUserPoints().then(points => {
-        const pointElements = document.querySelectorAll('#points, #habit-salon-my-point');
-        pointElements.forEach(el => {
-          if (el) el.textContent = points;
-        });
+      // 네트워크 상태 모니터링
+      window.addEventListener('online', async () => {
+        console.log('🌐 네트워크 연결됨');
+        window.isOnline = true;
+        window.showSalonToast('네트워크가 연결되었습니다! 🌐', 'success');
         
-        // 교환 버튼 활성화 조건 확인
-        const exchangeButton = document.getElementById('exchange-button');
-        const pointsInsufficient = document.getElementById('points-insufficient');
-        
-        if (exchangeButton && pointsInsufficient) {
-          if (points >= 5000) {
-            exchangeButton.style.display = 'block';
-            pointsInsufficient.style.display = 'none';
-          } else {
-            exchangeButton.style.display = 'none';
-            pointsInsufficient.style.display = 'block';
-          }
-        }
-      }).catch(error => {
-        console.error('포인트 동기화 오류:', error);
-        // 오류 시 로컬 포인트 사용
-        const localPoints = parseInt(localStorage.getItem('points') || '0');
-        const pointElements = document.querySelectorAll('#points, #habit-salon-my-point');
-        pointElements.forEach(el => {
-          if (el) el.textContent = localPoints;
-        });
-      });
-      
-      // 🚨 자동 데이터 상태 체크 및 초기화
-      setTimeout(async () => {
         try {
-          console.log('🔍 데이터 상태 자동 체크 시작...');
-          
-          // Firestore 연결 테스트
-          const testQuery = query(collection(db, 'brand_posts'), orderBy('timestamp', 'desc'));
-          const testSnapshot = await getDocs(testQuery);
-          
-          let needsSampleData = false;
-          let needsFieldFix = false;
-          
-          if (testSnapshot.empty) {
-            console.log('❌ brand_posts 컬렉션이 비어있음 - 샘플 데이터 필요');
-            needsSampleData = true;
-          } else {
-            console.log(`✅ brand_posts ${testSnapshot.size}개 문서 발견`);
-            
-            // 필드 누락 체크
-            const today = new Date().toISOString().split('T')[0];
-            let validPosts = 0;
-            
-            testSnapshot.forEach((doc) => {
-              const data = doc.data();
-              if (data.isPublished === true && data.date === today && data.timestamp) {
-                validPosts++;
+          await window.syncOfflineActions();
+          // 현재 섹션 새로고침
+          const habitSalonMain = document.getElementById('habit-salon-main');
+          if (habitSalonMain?.style.display !== 'none') {
+            const sections = ['brand', 'question', 'free'];
+            for (const section of sections) {
+              const sectionElement = document.getElementById(`habit-salon-${section}`);
+              if (sectionElement?.style.display !== 'none') {
+                await window.showHabitSalonSection(section);
+                break;
               }
-            });
-            
-            console.log(`📊 오늘 날짜 & 유효한 게시글: ${validPosts}개`);
-            
-            if (validPosts === 0) {
-              console.log('⚠️ 유효한 게시글이 없음 - 필드 보정 또는 샘플 데이터 필요');
-              needsFieldFix = true;
-              needsSampleData = true;
             }
           }
-          
-          // 자동 초기화 실행
-          if (needsSampleData) {
-            console.log('🚀 자동 샘플 데이터 추가 실행...');
-            await window.addSampleData();
-            await new Promise(resolve => setTimeout(resolve, 1000)); // 1초 대기
-          }
-          
-          if (needsFieldFix) {
-            console.log('🚀 자동 필드 보정 실행...');
-            await window.fixMissingFields();
-          }
-          
-          console.log('✅ 자동 데이터 초기화 완료!');
-          
         } catch (error) {
-          console.error('❌ 자동 데이터 체크 오류:', error);
-          console.log('💡 수동으로 "샘플 데이터 추가" 버튼을 클릭해주세요.');
-          window.showSalonToast('데이터 초기화가 필요합니다. 메인 화면의 버튼을 클릭해주세요.', 'warning');
+          console.error('네트워크 복구 후 동기화 오류:', error);
         }
-      }, 3000); // 3초 후 자동 체크 실행
+      });
+      
+      window.addEventListener('offline', () => {
+        console.log('📴 네트워크 연결 끊김');
+        window.isOnline = false;
+        window.showSalonToast('오프라인 상태입니다. 일부 기능이 제한될 수 있습니다.', 'warning');
+      });
+      
+      // 습관살롱 진입 버튼 초기화
+      const enterBtn = document.getElementById('habit-salon-enter-btn');
+      if (enterBtn) {
+        enterBtn.addEventListener('click', async function() {
+          try {
+            document.getElementById('main-section').style.display = 'none';
+            document.getElementById('habit-salon-main').style.display = 'block';
+            await window.initHabitSalon();
+          } catch (error) {
+            console.error('습관살롱 진입 오류:', error);
+            window.showSalonToast('오류가 발생했습니다. 다시 시도해주세요.', 'error');
+          }
+        });
+      }
     });
 
-    // 개발/테스트용 샘플 데이터 추가 함수
+    // 샘플 데이터 추가 함수 (비활성화됨)
     window.addSampleData = async function() {
-      try {
-        console.log('샘플 데이터 추가 시작...');
-        
-        const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
-        
-        // 브랜드 게시글 샘플
-        await addDoc(collection(db, 'brand_posts'), {
-          title: '늘봄과 함께하는 건강한 습관',
-          content: '안녕하세요, 늘봄팀입니다! 건강한 습관으로 더 나은 내일을 만들어가는 여정에 함께해주셔서 감사합니다. 작은 변화가 큰 차이를 만든다는 믿음으로, 여러분의 건강한 라이프스타일을 응원합니다.',
-          author: '늘봄팀',
-          timestamp: serverTimestamp(),
-          likes: 0,
-          commentCount: 0,
-          imageUrl: null,
-          isPublished: true,
-          date: today
-        });
-        
-        await addDoc(collection(db, 'brand_posts'), {
-          title: '작은 습관, 큰 변화',
-          content: '매일 아침 물 한 잔으로 시작하는 하루, 계단 한 층 더 올라가기, 감사 인사 한 번 더 하기. 이런 작은 습관들이 모여 우리의 건강한 내일을 만들어갑니다. 늘봄과 함께 오늘도 작은 실천을 시작해보세요!',
-          author: '늘봄팀',
-          timestamp: serverTimestamp(),
-          likes: 0,
-          commentCount: 0,
-          imageUrl: null,
-          isPublished: true,
-          date: today
-        });
-        
-        // 건강 질문 샘플
-        await addDoc(collection(db, 'health_questions'), {
-          question: '오늘 물을 충분히 마셨나요?',
-          options: [
-            '네, 2L 이상 마셨어요 💧',
-            '적당히 마셨어요 🥤',
-            '많이 부족해요 😅',
-            '물 마시는 걸 깜빡했어요 💦'
-          ],
-          timestamp: serverTimestamp(),
-          responses: 0,
-          isPublished: true,
-          date: today
-        });
-        
-        await addDoc(collection(db, 'health_questions'), {
-          question: '오늘 스트레칭이나 운동을 하셨나요?',
-          options: [
-            '30분 이상 운동했어요 💪',
-            '가벼운 스트레칭을 했어요 🧘‍♀️',
-            '계단 오르기 정도만 했어요 🚶‍♂️',
-            '거의 움직이지 않았어요 😴'
-          ],
-          timestamp: serverTimestamp(),
-          responses: 0,
-          isPublished: true,
-          date: today
-        });
-        
-        await addDoc(collection(db, 'health_questions'), {
-          question: '오늘 하루 스트레스 관리는 어떠셨나요?',
-          options: [
-            '명상이나 휴식으로 잘 관리했어요 🧘‍♀️',
-            '적당히 관리했어요 😌',
-            '조금 스트레스가 많았어요 😰',
-            '매우 스트레스가 심했어요 😵'
-          ],
-          timestamp: serverTimestamp(),
-          responses: 0,
-          isPublished: true,
-          date: today
-        });
-        
-        console.log('샘플 데이터 추가 완료!');
-        window.showSalonToast('샘플 데이터가 추가되었습니다! 🎉');
-        
-      } catch (error) {
-        console.error('샘플 데이터 추가 오류:', error);
-        window.showSalonToast('샘플 데이터 추가 중 오류가 발생했습니다.', 'error');
-      }
+      console.log('');
+      console.log('⚠️ 샘플 데이터 추가가 비활성화되었습니다.');
+      console.log('데이터 관리는 Firebase Console에서 진행해주세요:');
+      console.log('https://console.firebase.google.com/project/neulbom-healt-quiz/firestore');
+      return;
     };
-    
-    // 콘솔에서 사용할 수 있는 유틸리티 함수들
+
+    // 필드 보정 함수 (비활성화됨)
+    window.fixMissingFields = async function() {
+      console.log('');
+      console.log('⚠️ 필드 보정 기능이 비활성화되었습니다.');
+      console.log('데이터 관리는 Firebase Console에서 진행해주세요:');
+      console.log('https://console.firebase.google.com/project/neulbom-healt-quiz/firestore');
+      return;
+    };
+
+    // 콘솔에서 사용할 수 있는 유틸리티 함수들 (데이터 관리 기능 제외)
     window.habitSalonUtils = {
-      addSampleData: window.addSampleData,
       getUserPoints: window.getUserPoints,
-      addUserPoints: window.addUserPoints,
       loadBrandPosts: window.loadBrandPosts,
       loadHealthQuestions: window.loadHealthQuestions,
       loadUserPosts: window.loadUserPosts,
-      fixMissingFields: window.fixMissingFields,
-      createIndexes: window.createIndexes,
       syncOfflineActions: window.syncOfflineActions
     };
     
@@ -4525,9 +4204,45 @@
     window.openQuestionPage = async function() {
       try {
         history.pushState({ page: 'question' }, '');
-        // ... 기존 코드 ...
+        // 로딩 표시
+        const overlay = document.getElementById('page-transition-overlay');
+        overlay.classList.add('active');
+        
+        // 질문 데이터 로딩
+        const questions = await window.loadHealthQuestions();
+        
+        if (questions.length === 0) {
+          window.showSalonToast('오늘의 질문이 준비 중입니다.', 'info');
+          overlay.classList.remove('active');
+          return;
+        }
+        
+        // 섹션 표시
+        const questionSection = document.getElementById('habit-salon-question');
+        if (questionSection) {
+          questionSection.style.display = 'block';
+          
+          // 다른 섹션 숨기기
+          const sections = ['brand', 'free', 'challenge'];
+          sections.forEach(section => {
+            const element = document.getElementById(`habit-salon-${section}`);
+            if (element) element.style.display = 'none';
+          });
+          
+          // 질문 섹션 로딩
+          await window.loadQuestionSection();
+        }
+        
+        // 트랜지션 효과 제거
+        setTimeout(() => {
+          overlay.classList.remove('active');
+        }, 200);
+        
       } catch (error) {
         console.error('질문 페이지 열기 오류:', error);
+        window.showSalonToast('페이지를 불러올 수 없습니다.', 'error');
+        const overlay = document.getElementById('page-transition-overlay');
+        overlay.classList.remove('active');
       }
     };
 
@@ -4606,6 +4321,86 @@
       }
     });
     // ... existing code ...
+
+    // 이벤트 리스너 초기화 함수
+    window.initializeEventListeners = function() {
+      console.log('이벤트 리스너 초기화 시작');
+      
+      // 네비게이션 카드
+      const navCards = document.querySelectorAll('.habit-salon-nav-card');
+      console.log('찾은 네비게이션 카드 수:', navCards.length);
+      
+      navCards.forEach(card => {
+        const section = card.dataset.section;
+        console.log('네비게이션 카드 설정:', section);
+        
+        // 기존 이벤트 리스너 제거
+        card.removeEventListener('click', card.clickHandler);
+        
+        // 새로운 이벤트 리스너 추가
+        card.clickHandler = function() {
+          console.log('네비게이션 카드 클릭됨:', section);
+          if (section === 'brand') {
+            window.openBrandStoryPage();
+          } else if (section === 'question') {
+            window.openQuestionPage();
+          } else if (section === 'free') {
+            window.showHabitSalonSection('free');
+          } else if (section === 'challenge') {
+            window.showHabitSalonSection('challenge');
+          }
+        };
+        
+        card.addEventListener('click', card.clickHandler);
+        
+        // 호버 효과
+        card.addEventListener('mouseenter', function() {
+          this.style.boxShadow = '0 4px 16px rgba(53,108,85,0.15)';
+        });
+        
+        card.addEventListener('mouseleave', function() {
+          this.style.boxShadow = '0 2px 8px #e0ede3';
+        });
+      });
+      
+      // 뒤로가기 버튼
+      const backBtn = document.getElementById('habit-salon-main-back-btn');
+      if (backBtn) {
+        backBtn.addEventListener('click', function() {
+          document.getElementById('habit-salon-main').style.display = 'none';
+          document.getElementById('main-section').style.display = 'block';
+        });
+      }
+      
+      console.log('이벤트 리스너 초기화 완료');
+    };
+
+    // DOM이 로드된 후 이벤트 리스너 초기화
+    document.addEventListener('DOMContentLoaded', function() {
+      // 초기 네트워크 상태 설정
+      window.isOnline = navigator.onLine;
+      console.log('초기 네트워크 상태:', window.isOnline ? '온라인' : '오프라인');
+      
+      // 습관살롱 진입 버튼 초기화
+      const enterBtn = document.getElementById('habit-salon-enter-btn');
+      if (enterBtn) {
+        enterBtn.addEventListener('click', async function() {
+          try {
+            document.getElementById('main-section').style.display = 'none';
+            document.getElementById('habit-salon-main').style.display = 'block';
+            // 이벤트 리스너 초기화를 여기서도 실행
+            window.initializeEventListeners();
+            await window.initHabitSalon();
+          } catch (error) {
+            console.error('습관살롱 진입 오류:', error);
+            window.showSalonToast('오류가 발생했습니다. 다시 시도해주세요.', 'error');
+          }
+        });
+      }
+      
+      // 초기 이벤트 리스너 설정
+      window.initializeEventListeners();
+    });
   </script>
   </script>
   <script src="script.js" onerror="console.error('script.js 로드 실패')" onload="console.log('script.js 로드 성공')"></script>
