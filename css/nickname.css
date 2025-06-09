@@ -1,0 +1,62 @@
+/* 닉네임 입력 폼 */
+.form-group {
+  display: flex;
+  gap: 8px;
+  max-width: 500px;
+  margin: 0 auto;
+  padding: 0 20px;
+  flex-wrap: wrap;
+}
+
+.nickname-input {
+  flex: 1;
+  min-width: 200px;
+  height: 48px;
+  padding: 0 24px;
+  border: 1px solid #e0e0e0;
+  border-radius: 999px;
+  font-size: 15px;
+  background: #fff;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.nickname-input:focus {
+  outline: none;
+  border-color: #356c55;
+}
+
+.register-button {
+  height: 48px;
+  padding: 0 32px;
+  background-color: #356c55;
+  color: white;
+  border: none;
+  border-radius: 999px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  box-shadow: 0 2px 8px rgba(53, 108, 85, 0.2);
+  width: 100%;
+  max-width: 120px;
+}
+
+.register-button:hover {
+  background-color: #2a5644;
+}
+
+@media screen and (max-width: 430px) {
+  .form-group {
+    padding: 0 12px;
+  }
+  
+  .nickname-input {
+    width: 100%;
+    min-width: 0;
+  }
+  
+  .register-button {
+    width: 100%;
+    max-width: none;
+  }
+} 

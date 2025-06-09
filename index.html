@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>늘봄 건강 퀴즈</title>
   <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="css/nickname.css" />
   <link rel="manifest" href="manifest.json" />
   <script src="https://developers.kakao.com/sdk/js/kakao.min.js"></script>
       <!-- Firebase SDK 추가 -->
@@ -1654,10 +1655,12 @@
       max-width: 500px;
       margin: 0 auto;
       padding: 0 20px;
+      flex-wrap: wrap;
     }
 
     .nickname-input {
       flex: 1;
+      min-width: 200px;
       height: 48px;
       padding: 0 24px;
       border: 1px solid #e0e0e0;
@@ -1684,10 +1687,28 @@
       cursor: pointer;
       white-space: nowrap;
       box-shadow: 0 2px 8px rgba(53, 108, 85, 0.2);
+      width: 100%;
+      max-width: 120px;
     }
 
     .register-button:hover {
       background-color: #2a5644;
+    }
+
+    @media screen and (max-width: 430px) {
+      .form-group {
+        padding: 0 12px;
+      }
+      
+      .nickname-input {
+        width: 100%;
+        min-width: 0;
+      }
+      
+      .register-button {
+        width: 100%;
+        max-width: none;
+      }
     }
 
     /* 포인트 표시 영역 */
@@ -1765,6 +1786,87 @@
       background: #ccc;
       cursor: not-allowed;
     }
+
+    /* 모바일 반응형 스타일 */
+    @media screen and (max-width: 768px) {
+      body {
+        overflow-x: hidden;
+      }
+      
+      .container {
+        width: 100%;
+        padding: 0 16px;
+        box-sizing: border-box;
+      }
+      
+      .card {
+        width: 100%;
+        margin: 16px 0;
+        box-sizing: border-box;
+      }
+      
+      .story-card {
+        width: 100%;
+        margin: 16px 0;
+        box-sizing: border-box;
+      }
+      
+      .story-card-image {
+        width: 100%;
+        height: auto;
+        aspect-ratio: 16/9;
+        object-fit: cover;
+      }
+      
+      .story-card-content {
+        padding: 16px;
+      }
+      
+      .story-comments-section {
+        width: 100%;
+        box-sizing: border-box;
+      }
+      
+      .story-comment-form {
+        flex-direction: column;
+        gap: 8px;
+      }
+      
+      .story-comment-textarea {
+        width: 100%;
+        box-sizing: border-box;
+      }
+      
+      .story-comment-submit {
+        width: 100%;
+        margin-top: 8px;
+      }
+      
+      /* 닉네임 입력 폼 모바일 스타일 */
+      .nickname-input-container {
+        width: 100%;
+        padding: 16px;
+        box-sizing: border-box;
+      }
+      
+      .nickname-input {
+        width: 100%;
+        box-sizing: border-box;
+      }
+      
+      .nickname-submit {
+        width: 100%;
+        margin-top: 8px;
+      }
+      
+      /* 네비게이션 버튼 모바일 스타일 */
+      .card-nav {
+        width: 40px;
+        height: 40px;
+        font-size: 24px;
+      }
+      
+      .card-nav.prev {
   </style>
 </head>
 <body>
@@ -4104,30 +4206,36 @@
 
     // 모바일 뒤로가기 버튼 처리
     window.addEventListener('popstate', function(e) {
+      // 메인 섹션 표시
+      const mainSection = document.getElementById('habit-salon-main');
+      if (mainSection) {
+        mainSection.style.display = 'block';
+      }
+      
+      // 각 섹션 닫기
       const brandStoryPage = document.getElementById('brand-story-fullscreen');
       const questionPage = document.getElementById('question-fullscreen');
-      const freePage = document.getElementById('free-fullscreen');
+      const freePage = document.getElementById('habit-salon-free');
       const writeModal = document.getElementById('free-write-fullscreen');
       
-      if (brandStoryPage && brandStoryPage.classList.contains('active')) {
+      if (brandStoryPage?.classList.contains('active')) {
         window.closeBrandStoryPage();
-        return;
       }
       
-      if (questionPage && questionPage.classList.contains('active')) {
+      if (questionPage?.classList.contains('active')) {
         window.closeQuestionPage();
-        return;
       }
       
-      if (freePage && freePage.classList.contains('active')) {
+      if (freePage?.style.position === 'fixed') {
         window.closeFreePage();
-        return;
       }
       
-      if (writeModal && writeModal.classList.contains('active')) {
+      if (writeModal?.classList.contains('active')) {
         window.closeWriteModal();
-        return;
       }
+      
+      // 스크롤 복원
+      document.body.style.overflow = '';
     });
     // ... existing code ...
 
