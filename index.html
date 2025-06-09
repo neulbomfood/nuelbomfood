@@ -3312,7 +3312,7 @@
                 </div>
               </div>
             </div>
-            <div class="story-comment-text">${comment.content}</div>
+            <div class="story-comment-text">${comment.text || comment.content}</div>
           </div>
         `).join('');
         
@@ -4300,7 +4300,7 @@
         const commentData = {
           userId: userId,
           nickname: nickname,
-          content: content,
+          text: content,  // content 대신 text 필드 사용
           timestamp: serverTimestamp()
         };
         
@@ -4332,6 +4332,8 @@
     // 댓글 가져오기 함수
     window.getComments = async function(postType, postId) {
       try {
+        console.log('[디버깅] getComments 호출:', { postType, postId });
+        
         // 오프라인 상태 시 캐시된 데이터 사용
         if (!window.isOnline) {
           console.log('오프라인 상태 - 캐시된 댓글 사용');
@@ -4346,15 +4348,27 @@
         // Firestore에서 댓글 로드
         const q = query(
           collection(db, `${postType}_comments`),
-          where('postId', '==', postId),
-          orderBy('timestamp', 'desc')
+          where('postId', '==', postId)
         );
+        
+        console.log('[디버깅] Firestore 쿼리:', { 
+          collection: `${postType}_comments`,
+          postId: postId
+        });
         
         const snapshot = await getDocs(q);
         const comments = snapshot.docs.map(doc => ({
           id: doc.id,
           ...doc.data()
-        }));
+        }))
+        // 클라이언트에서 timestamp로 정렬
+        .sort((a, b) => {
+          const timeA = a.timestamp?.seconds || 0;
+          const timeB = b.timestamp?.seconds || 0;
+          return timeB - timeA;  // 내림차순 정렬
+        });
+        
+        console.log('[디버깅] 로드된 댓글:', comments);
         
         // 성공적으로 로딩되면 캐시에 저장
         if (comments.length > 0) {

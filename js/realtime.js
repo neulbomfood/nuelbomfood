@@ -23,16 +23,20 @@ window.initFreePostsListener = () => {
 window.initCommentsListener = (postType, postId) => {
     const unsubscribe = onSnapshot(
         query(
-            collection(db, 'comments'),
-            where('postType', '==', postType),
-            where('postId', '==', postId),
-            orderBy('timestamp', 'desc')
+            collection(db, `${postType}_comments`),
+            where('postId', '==', postId)
         ),
         (snapshot) => {
             const comments = snapshot.docs.map(doc => ({
                 id: doc.id,
                 ...doc.data()
-            }));
+            }))
+            // 클라이언트에서 timestamp로 정렬
+            .sort((a, b) => {
+                const timeA = a.timestamp?.seconds || 0;
+                const timeB = b.timestamp?.seconds || 0;
+                return timeB - timeA;  // 내림차순 정렬
+            });
             
             // 댓글 목록 업데이트
             const container = document.getElementById(`comment-list-${postType}-${postId}`);
@@ -51,7 +55,7 @@ window.initCommentsListener = (postType, postId) => {
                                     </div>
                                 </div>
                             </div>
-                            <div class="story-comment-text">${comment.content}</div>
+                            <div class="story-comment-text">${comment.text}</div>
                         </div>
                     `).join('');
                 }

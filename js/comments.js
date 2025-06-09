@@ -51,7 +51,7 @@ window.loadComments = async function(postType, postId) {
                         </div>
                     </div>
                 </div>
-                <div class="story-comment-text">${comment.content}</div>
+                <div class="story-comment-text">${comment.text || comment.content}</div>
             </div>
         `).join('');
         
