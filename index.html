@@ -1,229 +1,4457 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>늘봄 건강퀴즈 - 닉네임 설정</title>
-    <style>
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>늘봄 건강 퀴즈</title>
+  <link rel="stylesheet" href="style.css" />
+  <link rel="manifest" href="manifest.json" />
+  <script src="https://developers.kakao.com/sdk/js/kakao.min.js"></script>
+      <!-- Firebase SDK 추가 -->
+    <script src="https://www.gstatic.com/firebasejs/9.x.x/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.x.x/firebase-firestore-compat.js"></script>
+    <script>
+      // Firebase 초기화
+      var firebaseConfig = {
+        // Firebase 설정 정보를 여기에 입력하세요
+      };
+      firebase.initializeApp(firebaseConfig);
+      var db = firebase.firestore();
+
+    // 카카오 초기화
+    Kakao.init('2c0e3c8b8e6b4c8f9d5a7e1f3b9c6d2e');
+    
+    // 스크립트 로드 확인용 코드
+    console.log('인라인 스크립트 실행됨');
+    
+    // 앱 설치 배너 닫기 함수
+    function closeInstallBanner() {
+      var banner = document.getElementById('install-banner');
+      if (banner) banner.style.display = 'none';
+    }
+
+    // 닉네임 중복 체크 함수
+    async function isNicknameTaken(nickname) {
+      const querySnapshot = await db.collection("users")
+        .where("nickname", "==", nickname)
+        .get();
+      return !querySnapshot.empty;
+    }
+
+    // 닉네임 등록 함수
+    async function registerNickname() {
+      const nicknameInput = document.getElementById("nicknameInput");
+      const nickname = nicknameInput.value.trim();
+      
+      if (!nickname) {
+        alert("닉네임을 입력해주세요.");
+        return;
+      }
+
+      try {
+        // 중복 체크
+        if (await isNicknameTaken(nickname)) {
+          alert("이미 사용 중인 닉네임입니다.");
+          return;
         }
 
-        body {
-            font-family: 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif;
-            background-color: #f5f5f5;
-            color: #333;
-            line-height: 1.6;
+        // userId 생성 또는 가져오기
+        let userId = localStorage.getItem("userId");
+        if (!userId) {
+          userId = "user_" + Date.now() + "_" + Math.random().toString(36).substr(2, 8);
+          localStorage.setItem("userId", userId);
         }
 
-        .container {
-            max-width: 500px;
-            margin: 20px auto;
-            padding: 20px;
-        }
+        // Firestore에 저장
+        await db.collection("users").doc(userId).set({
+          userId: userId,
+          nickname: nickname,
+          points: 0,
+          createdAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
 
-        .nickname-container {
-            background: white;
-            padding: 20px;
-            border-radius: 12px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-        }
+        localStorage.setItem("nickname", nickname);
+        alert("닉네임이 등록되었습니다!");
+        
+        // 닉네임 입력 폼 숨기기 및 포인트 표시
+        document.getElementById("nickname-form").style.display = "none";
+        document.getElementById("point-display").style.display = "block";
+        getMyPoints();
+      } catch (error) {
+        console.error("Error:", error);
+        alert("닉네임 등록 중 오류가 발생했습니다.");
+      }
+    }
 
-        .title {
-            font-size: 1.5em;
-            font-weight: bold;
-            margin-bottom: 20px;
-            text-align: center;
-            color: #2c3e50;
-        }
+    // 포인트 조회 함수
+    async function getMyPoints() {
+      const userId = localStorage.getItem("userId");
+      if (!userId) {
+        alert("로그인/닉네임 등록이 필요합니다.");
+        return;
+      }
 
-        .input-group {
-            margin-bottom: 20px;
+      try {
+        const doc = await db.collection("users").doc(userId).get();
+        if (doc.exists) {
+          const points = doc.data().points || 0;
+          document.getElementById("points").textContent = `${points}P`;
         }
+      } catch (error) {
+        console.error("Error:", error);
+        alert("포인트 조회 중 오류가 발생했습니다.");
+      }
+    }
 
-        .input-group label {
-            display: block;
-            margin-bottom: 8px;
-            font-weight: 500;
-        }
+    // 페이지 로드 시 실행
+    window.onload = function() {
+      const userId = localStorage.getItem("userId");
+      const nickname = localStorage.getItem("nickname");
+      
+      if (userId && nickname) {
+        document.getElementById("nickname-form").style.display = "none";
+        document.getElementById("point-display").style.display = "block";
+        getMyPoints();
+      }
+    };
+  </script>
+  <style>
+    .link-copy-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      width: 100%;
+      max-width: 320px;
+      height: 60px;
+      margin: 24px auto 0 auto;
+      background-color: #e0ede3;
+      border-radius: 999px;
+      color: #356c55;
+      font-size: 16px;
+      font-weight: 600;
+      border: none;
+      cursor: pointer;
+      transition: background-color 0.2s ease, box-shadow 0.2s;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+    }
+    .link-copy-btn:hover {
+      background-color: #d0e5d6;
+      box-shadow: 0 4px 12px rgba(53,108,85,0.08);
+    }
+    .link-copy-btn img {
+      width: 22px;
+      height: 22px;
+      vertical-align: middle;
+    }
+    @media (max-width: 480px) {
+      .link-copy-btn {
+        max-width: 95vw;
+        height: 48px;
+        font-size: 15px;
+      }
+      .link-copy-btn img {
+        width: 18px;
+        height: 18px;
+      }
+    }
+    #copy-msg {
+      display:none;
+      color:#2e7d32;
+      font-weight:bold;
+      font-size:1.1em;
+      margin-top:10px;
+    }
+    .social-share-buttons {
+      display: flex;
+      gap: 12px;
+      justify-content: center;
+      margin-top: 16px;
+    }
+    
+    .social-btn {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 12px 20px;
+      border-radius: 8px;
+      border: none;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: opacity 0.2s;
+    }
+    
+    .social-btn:hover {
+      opacity: 0.9;
+    }
+    
+    .social-btn img {
+      width: 20px;
+      height: 20px;
+    }
+    
+    .kakao-btn {
+      background-color: #FEE500;
+      color: #000000;
+    }
+    
+    .facebook-btn {
+      background-color: #1877F2;
+      color: #FFFFFF;
+    }
 
-        .input-wrapper {
-            display: flex;
-            gap: 8px;
-        }
+    .share-section {
+      background: rgba(255, 255, 255, 0.9);
+      padding: 24px;
+      border-radius: 16px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+      margin: 24px auto;
+      max-width: 600px;
+    }
 
-        input {
-            flex: 1;
-            padding: 12px;
-            border: 1px solid #ddd;
-            border-radius: 6px;
-            font-size: 16px;
-        }
+    .share-title {
+      color: #356c55;
+      font-size: 18px;
+      margin-bottom: 16px;
+      font-weight: 600;
+    }
 
-        input:focus {
-            outline: none;
-            border-color: #4CAF50;
-        }
+    .social-share-buttons {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+    
+    .social-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 16px;
+      border-radius: 12px;
+      border: none;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    
+    .social-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+    
+    .social-btn img {
+      width: 24px;
+      height: 24px;
+    }
+    
+    .kakao-btn {
+      background-color: #FEE500;
+      color: #000000;
+    }
+    
+    .facebook-btn {
+      background-color: #1877F2;
+      color: #FFFFFF;
+    }
 
-        button {
-            background-color: #4CAF50;
-            color: white;
-            padding: 12px 20px;
-            border: none;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 16px;
-            font-weight: 500;
-            transition: background-color 0.2s;
-        }
+    .instagram-btn {
+      background: linear-gradient(45deg, #405DE6, #5851DB, #833AB4, #C13584, #E1306C, #FD1D1D);
+      color: #FFFFFF;
+    }
 
-        button:hover {
-            background-color: #45a049;
-        }
+    .line-btn {
+      background-color: #06C755;
+      color: #FFFFFF;
+    }
 
-        button:disabled {
-            background-color: #cccccc;
-            cursor: not-allowed;
-        }
+    .share-reward {
+      color: #356c55;
+      font-size: 14px;
+      margin-top: 12px;
+      font-weight: 500;
+    }
 
-        .check-button {
-            white-space: nowrap;
-        }
+    @media (max-width: 480px) {
+      .social-share-buttons {
+        grid-template-columns: 1fr;
+      }
+      
+      .share-section {
+        margin: 16px;
+        padding: 16px;
+      }
+    }
 
-        .error-message {
-            color: #e74c3c;
-            margin-top: 8px;
-            font-size: 14px;
-            display: none;
-        }
+    .install-btn {
+      background-color: #356c55;
+      color: #fff;
+    }
 
-        .success-message {
-            color: #27ae60;
-            margin-top: 8px;
-            font-size: 14px;
-            display: none;
-        }
+    /* 카드형 피드 UI 스타일 */
+    .feed-card {
+      background: #ffffff;
+      border-radius: 18px;
+      box-shadow: 0 2px 10px rgba(53,108,85,0.06);
+      margin-bottom: 20px;
+      overflow: hidden;
+      transition: all 0.3s ease;
+    }
 
-        .user-info {
-            margin-top: 20px;
-            padding: 15px;
-            background-color: #f8f9fa;
-            border-radius: 6px;
-        }
+    .feed-card:hover {
+      box-shadow: 0 4px 20px rgba(53,108,85,0.12);
+      transform: translateY(-2px);
+    }
 
-        .user-info p {
-            margin: 5px 0;
-        }
+    .feed-card-image {
+      width: 100%;
+      height: 200px;
+      object-fit: cover;
+      border-radius: 0;
+    }
 
-        .points-display {
-            text-align: center;
-            font-size: 1.2em;
-            margin-top: 20px;
-            color: #2c3e50;
-        }
-    </style>
+    .feed-card-content {
+      padding: 20px;
+    }
+
+    .feed-card-title {
+      font-size: 18px;
+      font-weight: 700;
+      color: #2c2c2c;
+      margin-bottom: 8px;
+      line-height: 1.4;
+    }
+
+    .feed-card-preview {
+      font-size: 15px;
+      color: #666;
+      line-height: 1.6;
+      margin-bottom: 16px;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
+    .feed-card-meta {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 14px;
+      color: #888;
+      margin-bottom: 16px;
+    }
+
+    .feed-card-author {
+      display: flex;
+      align-items: center;
+    }
+
+    .feed-card-avatar {
+      width: 24px;
+      height: 24px;
+      background: #e0ede3;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      color: #356c55;
+      font-weight: 600;
+    }
+
+    .feed-card-stats {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .feed-card-stat {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      color: #666;
+    }
+
+    .feed-card-comments {
+      background: #f8f9fa;
+      border-radius: 12px;
+      padding: 16px;
+      margin-top: 16px;
+      display: none;
+    }
+
+    .feed-card-comments.active {
+      display: block;
+    }
+
+    .feed-comment {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      margin-bottom: 12px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid #eee;
+    }
+
+    .feed-comment:last-child {
+      margin-bottom: 0;
+      padding-bottom: 0;
+      border-bottom: none;
+    }
+
+    .feed-comment-avatar {
+      width: 28px;
+      height: 28px;
+      background: #e0ede3;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 11px;
+      color: #356c55;
+      font-weight: 600;
+      flex-shrink: 0;
+    }
+
+    .feed-comment-content {
+      flex: 1;
+    }
+
+    .feed-comment-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 4px;
+    }
+
+    .feed-comment-author {
+      font-size: 13px;
+      font-weight: 600;
+      color: #356c55;
+    }
+
+    .feed-comment-time {
+      font-size: 12px;
+      color: #999;
+    }
+
+    .feed-comment-text {
+      font-size: 14px;
+      color: #333;
+      line-height: 1.5;
+    }
+
+    .feed-comment-input-section {
+      margin-top: 16px;
+      display: flex;
+      gap: 12px;
+      padding: 16px;
+      background: #fafbfc;
+      border-radius: 16px;
+      border: 1px solid #e8ebed;
+      transition: all 0.2s ease;
+    }
+
+    .feed-comment-input-section:focus-within {
+      border-color: #356c55;
+      background: #ffffff;
+      box-shadow: 0 0 0 3px rgba(53,108,85,0.08);
+    }
+
+    .feed-comment-input {
+      flex: 1;
+      padding: 12px 16px;
+      border: none;
+      border-radius: 24px;
+      font-size: 15px;
+      background: #ffffff;
+      outline: none;
+      transition: all 0.2s ease;
+      color: #333;
+      line-height: 1.4;
+      min-height: 20px;
+      resize: none;
+    }
+
+    .feed-comment-input::placeholder {
+      color: #9ca3af;
+      font-weight: 400;
+    }
+
+    .feed-comment-input:focus {
+      background: #ffffff;
+      box-shadow: 0 2px 8px rgba(53,108,85,0.05);
+    }
+
+    .feed-comment-submit {
+      padding: 12px 20px;
+      background: #356c55;
+      color: white;
+      border: none;
+      border-radius: 24px;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      white-space: nowrap;
+      min-width: 70px;
+      height: 44px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .feed-comment-submit:hover:not(:disabled) {
+      background: #2a5544;
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(53,108,85,0.2);
+    }
+
+    .feed-comment-submit:disabled {
+      background: #d1d5db;
+      cursor: not-allowed;
+      transform: none;
+      box-shadow: none;
+    }
+
+    .feed-comment-submit:active:not(:disabled) {
+      transform: translateY(0);
+    }
+
+    /* 댓글 입력 글자 수 표시 */
+    .comment-char-count {
+      position: absolute;
+      bottom: -20px;
+      right: 16px;
+      font-size: 12px;
+      color: #9ca3af;
+      transition: color 0.2s ease;
+    }
+
+    .comment-char-count.warning {
+      color: #f59e0b;
+    }
+
+    .comment-char-count.error {
+      color: #ef4444;
+    }
+
+    /* 댓글 입력 섹션 컨테이너 */
+    .comment-input-container {
+      position: relative;
+      margin-bottom: 24px;
+    }
+
+    /* 토스트 알림 고도화 */
+    .salon-toast {
+      position: fixed !important;
+      bottom: 24px !important;
+      left: 50% !important;
+      transform: translateX(-50%) !important;
+      background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%) !important;
+      color: white !important;
+      padding: 16px 24px !important;
+      border-radius: 28px !important;
+      font-size: 15px !important;
+      font-weight: 600 !important;
+      z-index: 10001 !important;
+      box-shadow: 0 8px 32px rgba(76, 175, 80, 0.3), 
+                  0 4px 16px rgba(0, 0, 0, 0.1) !important;
+      backdrop-filter: blur(8px) !important;
+      border: 1px solid rgba(255, 255, 255, 0.2) !important;
+      max-width: 90vw !important;
+      min-width: 280px !important;
+      text-align: center !important;
+    }
+
+    .salon-toast.error {
+      background: linear-gradient(135deg, #f44336 0%, #d32f2f 100%) !important;
+      box-shadow: 0 8px 32px rgba(244, 67, 54, 0.3), 
+                  0 4px 16px rgba(0, 0, 0, 0.1) !important;
+    }
+
+    .salon-toast.warning {
+      background: linear-gradient(135deg, #ff9800 0%, #f57c00 100%) !important;
+      box-shadow: 0 8px 32px rgba(255, 152, 0, 0.3), 
+                  0 4px 16px rgba(0, 0, 0, 0.1) !important;
+    }
+
+    .salon-toast-content {
+      display: flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      gap: 12px !important;
+    }
+
+    .salon-toast-icon {
+      font-size: 18px !important;
+      display: inline-block !important;
+      animation: toastIconBounce 0.6s ease !important;
+    }
+
+    .salon-toast-message {
+      font-weight: 600 !important;
+      letter-spacing: -0.02em !important;
+    }
+
+    /* 토스트 애니메이션 */
+    @keyframes toastSlideUp {
+      0% {
+        transform: translateX(-50%) translateY(120%);
+        opacity: 0;
+        scale: 0.9;
+      }
+      100% {
+        transform: translateX(-50%) translateY(0);
+        opacity: 1;
+        scale: 1;
+      }
+    }
+
+    @keyframes toastSlideDown {
+      0% {
+        transform: translateX(-50%) translateY(0);
+        opacity: 1;
+        scale: 1;
+      }
+      100% {
+        transform: translateX(-50%) translateY(120%);
+        opacity: 0;
+        scale: 0.9;
+      }
+    }
+
+    @keyframes toastIconBounce {
+      0%, 20%, 50%, 80%, 100% {
+        transform: translateY(0);
+      }
+      40% {
+        transform: translateY(-4px);
+      }
+      60% {
+        transform: translateY(-2px);
+      }
+    }
+
+    /* 댓글 섹션 헤더 */
+    .comments-section-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 16px;
+      padding: 0 4px;
+    }
+
+    .comments-count {
+      font-size: 14px;
+      font-weight: 600;
+      color: #6b7280;
+    }
+
+    .comments-sort {
+      font-size: 12px;
+      color: #9ca3af;
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding: 4px 8px;
+      border-radius: 6px;
+      transition: background 0.2s ease;
+    }
+
+    .comments-sort:hover {
+      background: #f3f4f6;
+    }
+
+    /* 댓글 입력 상태 표시 */
+    .comment-input-status {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 8px;
+      padding: 0 16px;
+    }
+
+    .input-status-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: #d1d5db;
+      transition: background 0.2s ease;
+    }
+
+    .input-status-dot.active {
+      background: #356c55;
+      animation: statusPulse 2s infinite;
+    }
+
+    .input-status-text {
+      font-size: 12px;
+      color: #6b7280;
+      font-weight: 500;
+    }
+
+    @keyframes statusPulse {
+      0%, 100% {
+        opacity: 1;
+      }
+      50% {
+        opacity: 0.5;
+      }
+    }
+
+    /* 모바일 최적화 */
+    @media (max-width: 768px) {
+      .feed-comment-input-section {
+        margin: 12px 8px 0;
+        padding: 12px;
+        gap: 8px;
+      }
+
+      .feed-comment-input {
+        padding: 10px 14px;
+        font-size: 14px;
+      }
+
+      .feed-comment-submit {
+        padding: 10px 16px;
+        font-size: 14px;
+        min-width: 60px;
+        height: 40px;
+      }
+
+      .salon-toast {
+        bottom: 20px !important;
+        margin: 0 16px !important;
+        min-width: auto !important;
+        max-width: calc(100vw - 32px) !important;
+        padding: 14px 20px !important;
+        font-size: 14px !important;
+      }
+
+      .comment-char-count {
+        bottom: -18px;
+        right: 12px;
+        font-size: 11px;
+      }
+    }
+
+    /* 댓글 카운트 실시간 업데이트 애니메이션 */
+    .comment-count-update {
+      animation: countUpdate 0.3s ease;
+    }
+
+    @keyframes countUpdate {
+      0% {
+        transform: scale(1);
+      }
+      50% {
+        transform: scale(1.2);
+        color: #356c55;
+      }
+      100% {
+        transform: scale(1);
+      }
+    }
+
+    /* 댓글 등록 성공 시 입력창 애니메이션 */
+    .comment-input-success {
+      animation: inputSuccess 0.5s ease;
+    }
+
+    @keyframes inputSuccess {
+      0% {
+        background: #fafbfc;
+      }
+      50% {
+        background: rgba(76, 175, 80, 0.1);
+        border-color: #4CAF50;
+      }
+      100% {
+        background: #fafbfc;
+      }
+    }
+
+    /* 인스타 스타일 카드 슬라이드 UI */
+    .card-slider-container {
+      position: relative;
+      width: 100%;
+      max-width: 400px;
+      margin: 0 auto;
+      overflow: hidden;
+      border-radius: 20px;
+      box-shadow: 0 8px 32px rgba(53,108,85,0.15);
+    }
+
+    .card-slider {
+      display: flex;
+      transition: transform 0.3s ease;
+      width: 100%;
+    }
+
+    .story-card {
+      min-width: 100%;
+      background: #ffffff;
+      border-radius: 20px;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .story-card-image {
+      width: 100%;
+      max-width: 100%;
+      height: auto;
+      max-height: 500px;
+      object-fit: contain;
+      display: block;
+      margin: 0 auto;
+      background: #f8f9fa;
+      border-radius: 16px;
+    }
+
+    .story-card-content {
+      padding: 24px;
+    }
+
+    .story-card-title {
+      font-size: 20px;
+      font-weight: 700;
+      color: #2c2c2c;
+      margin-bottom: 12px;
+      line-height: 1.4;
+    }
+
+    .story-card-text {
+      font-size: 16px;
+      color: #555;
+      line-height: 1.6;
+      margin-bottom: 20px;
+    }
+
+    .story-card-meta {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+      padding-bottom: 16px;
+      border-bottom: 1px solid #f0f0f0;
+    }
+
+    .story-card-author {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .story-card-avatar {
+      width: 40px;
+      height: 40px;
+      background: linear-gradient(135deg, #356c55 0%, #4a7c59 100%);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+      color: white;
+      font-weight: 700;
+    }
+
+    .story-card-author-info {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .story-card-author-name {
+      font-size: 15px;
+      font-weight: 600;
+      color: #356c55;
+    }
+
+    .story-card-time {
+      font-size: 13px;
+      color: #999;
+    }
+
+    .story-card-actions {
+      display: flex;
+      gap: 16px;
+    }
+
+    .story-action-btn {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding: 8px 12px;
+      border-radius: 20px;
+      transition: all 0.2s ease;
+      font-size: 14px;
+      font-weight: 600;
+    }
+
+    .story-action-btn:hover {
+      background: rgba(53,108,85,0.1);
+    }
+
+    .story-action-btn.liked {
+      color: #e74c3c;
+    }
+
+    .story-action-btn.comment-btn {
+      color: #356c55;
+    }
+
+    /* 카드 네비게이션 */
+    .card-nav {
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      background: rgba(255,255,255,0.9);
+      border: none;
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      color: #356c55;
+      transition: all 0.2s ease;
+      z-index: 10;
+    }
+
+    .card-nav:hover {
+      background: rgba(255,255,255,1);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    }
+
+    .card-nav.prev {
+      left: 16px;
+    }
+
+    .card-nav.next {
+      right: 16px;
+    }
+
+    .card-nav:disabled {
+      opacity: 0.3;
+      cursor: not-allowed;
+    }
+
+    /* 카드 인디케이터 */
+    .card-indicators {
+      display: flex;
+      justify-content: center;
+      gap: 8px;
+      margin-top: 16px;
+    }
+
+    .card-indicator {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #ddd;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .card-indicator.active {
+      background: #356c55;
+      transform: scale(1.2);
+    }
+
+    /* 댓글 영역 (카드 하단) */
+    .story-comments-section {
+      background: #fafbfc;
+      border-top: 1px solid #f0f0f0;
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.3s ease;
+    }
+
+    .story-comments-section.active {
+      max-height: 400px;
+    }
+
+    .story-comments-header {
+      padding: 16px 24px 0;
+      font-size: 14px;
+      font-weight: 600;
+      color: #666;
+    }
+
+    .story-comments-list {
+      padding: 16px 24px;
+      max-height: 200px;
+      overflow-y: auto;
+    }
+
+    .story-comment {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+
+    .story-comment:last-child {
+      margin-bottom: 0;
+    }
+
+    .story-comment-avatar {
+      width: 32px;
+      height: 32px;
+      background: #e0ede3;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      color: #356c55;
+      font-weight: 600;
+      flex-shrink: 0;
+    }
+
+    .story-comment-content {
+      flex: 1;
+    }
+
+    .story-comment-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 4px;
+    }
+
+    .story-comment-author {
+      font-size: 13px;
+      font-weight: 600;
+      color: #356c55;
+    }
+
+    .story-comment-time {
+      font-size: 12px;
+      color: #999;
+    }
+
+    .story-comment-text {
+      font-size: 14px;
+      color: #333;
+      line-height: 1.5;
+    }
+
+    .story-comment-input {
+      padding: 16px 24px;
+      border-top: 1px solid #f0f0f0;
+    }
+
+    .story-comment-form {
+      display: flex;
+      gap: 12px;
+      align-items: flex-end;
+    }
+
+    .story-comment-textarea {
+      flex: 1;
+      padding: 12px 16px;
+      border: 1px solid #e0e0e0;
+      border-radius: 20px;
+      font-size: 14px;
+      resize: none;
+      outline: none;
+      transition: border-color 0.2s ease;
+      min-height: 40px;
+      max-height: 80px;
+    }
+
+    .story-comment-textarea:focus {
+      border-color: #356c55;
+    }
+
+    .story-comment-submit {
+      padding: 12px 20px;
+      background: #356c55;
+      color: white;
+      border: none;
+      border-radius: 20px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      white-space: nowrap;
+    }
+
+    .story-comment-submit:hover:not(:disabled) {
+      background: #2a5544;
+    }
+
+    .story-comment-submit:disabled {
+      background: #ccc;
+      cursor: not-allowed;
+    }
+
+    /* 질문 카드 스타일 */
+    .question-card {
+      background: linear-gradient(135deg, #356c55 0%, #4a7c59 100%);
+      color: white;
+    }
+
+    .question-card .story-card-title {
+      color: white;
+      font-size: 22px;
+    }
+
+    .question-card .story-card-text {
+      color: rgba(255,255,255,0.9);
+    }
+
+    .question-options {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      margin-top: 20px;
+    }
+
+    .question-option {
+      padding: 16px 20px;
+      background: rgba(255,255,255,0.1);
+      border: 2px solid rgba(255,255,255,0.2);
+      border-radius: 12px;
+      color: white;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      font-size: 15px;
+      font-weight: 500;
+    }
+
+    .question-option:hover {
+      background: rgba(255,255,255,0.2);
+      border-color: rgba(255,255,255,0.4);
+    }
+
+    .question-option:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+
+    .question-reward {
+      text-align: center;
+      margin-top: 16px;
+      font-size: 14px;
+      color: rgba(255,255,255,0.8);
+    }
+
+    /* 모바일 최적화 */
+    @media (max-width: 768px) {
+      .card-slider-container {
+        max-width: 95vw;
+        margin: 0 auto;
+      }
+
+      .story-card-content {
+        padding: 20px;
+      }
+
+      .story-card-title {
+        font-size: 18px;
+      }
+
+      .story-card-text {
+        font-size: 15px;
+      }
+
+      .card-nav {
+        width: 36px;
+        height: 36px;
+        font-size: 16px;
+      }
+
+      .card-nav.prev {
+        left: 12px;
+      }
+
+      .card-nav.next {
+        right: 12px;
+      }
+    }
+
+    /* 전체 화면 페이지 전환 스타일 */
+    .fullscreen-page {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100vh;
+      background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+      z-index: 1000;
+      overflow-y: auto;
+      transform: translateX(100%);
+      transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .fullscreen-page.active {
+      transform: translateX(0);
+    }
+
+    .fullscreen-page-header {
+      position: sticky;
+      top: 0;
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(10px);
+      padding: 16px;
+      border-bottom: 1px solid #e9ecef;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      z-index: 10;
+    }
+
+    .fullscreen-back-btn {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 12px 16px;
+      background: #356c55;
+      color: white;
+      border: none;
+      border-radius: 12px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .fullscreen-back-btn:hover {
+      background: #2a5544;
+      transform: translateY(-1px);
+    }
+
+    .fullscreen-page-title {
+      font-size: 20px;
+      font-weight: 700;
+      color: #356c55;
+      margin: 0;
+    }
+
+    .fullscreen-page-content {
+      padding: 20px;
+      max-width: 600px;
+      margin: 0 auto;
+      min-height: calc(100vh - 80px);
+    }
+
+    /* 모바일 최적화 */
+    @media (max-width: 768px) {
+      .fullscreen-page-header {
+        padding: 12px 16px;
+      }
+
+      .fullscreen-back-btn {
+        padding: 10px 14px;
+        font-size: 15px;
+      }
+
+      .fullscreen-page-title {
+        font-size: 18px;
+      }
+
+      .fullscreen-page-content {
+        padding: 16px;
+      }
+
+      .card-slider-container {
+        margin: 0 -8px;
+      }
+    }
+
+    /* 페이지 전환 애니메이션 */
+    .page-transition-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100vh;
+      background: rgba(53, 108, 85, 0.8);
+      z-index: 999;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s ease;
+    }
+
+    .page-transition-overlay.active {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    /* 1. 플로팅 글쓰기 버튼 CSS 추가 (body 하단 고정) */
+    .floating-write-btn {
+      position: fixed;
+      right: 24px;
+      bottom: 24px;
+      width: 56px;
+      height: 56px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #4CAF50, #2E7D32);
+      color: white;
+      font-size: 24px;
+      border: none;
+      box-shadow: 0 4px 12px rgba(46, 125, 50, 0.3);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s ease;
+      z-index: 99995;
+    }
+
+    .floating-write-btn:hover {
+      transform: scale(1.05);
+      box-shadow: 0 6px 16px rgba(46, 125, 50, 0.4);
+    }
+
+    .floating-write-btn:active {
+      transform: scale(0.95);
+    }
+
+    @media (max-width: 768px) {
+      .floating-write-btn {
+        right: 16px;
+        bottom: 16px;
+        width: 48px;
+        height: 48px;
+        font-size: 20px;
+      }
+    }
+
+    /* 글쓰기 모달 스타일 */
+    #free-write-fullscreen {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100vh;
+      background: rgba(0,0,0,0.5);
+      z-index: 100000;
+      display: none;
+      justify-content: center;
+      align-items: center;
+      opacity: 0;
+      visibility: hidden;
+      transition: all 0.3s ease;
+      backdrop-filter: blur(4px);
+      -webkit-backdrop-filter: blur(4px);
+    }
+
+    #free-write-fullscreen.active {
+      display: flex;
+      opacity: 1;
+      visibility: visible;
+    }
+
+    #free-write-fullscreen.closing {
+      opacity: 0;
+    }
+
+    .modal-content {
+      width: 90%;
+      max-width: 600px;
+      background: #fff;
+      border-radius: 24px;
+      box-shadow: 0 8px 32px rgba(53,108,85,0.15);
+      padding: 28px;
+      position: relative;
+      transform: translateY(20px);
+      transition: all 0.3s ease;
+      margin: 20px;
+    }
+
+    #free-write-fullscreen.active .modal-content {
+      transform: translateY(0);
+    }
+
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 24px;
+    }
+
+    .modal-header h2 {
+      font-size: 20px;
+      color: #356c55;
+      margin: 0;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .modal-close-btn {
+      width: 32px;
+      height: 32px;
+      background: none;
+      border: none;
+      font-size: 24px;
+      color: #666;
+      cursor: pointer;
+      padding: 0;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s ease;
+    }
+
+    .modal-close-btn:hover {
+      background: #f5f5f5;
+      transform: scale(1.1);
+    }
+
+    .write-guide {
+      background: #f5f9f6;
+      padding: 16px;
+      border-radius: 12px;
+      margin-bottom: 24px;
+    }
+
+    .write-guide p {
+      color: #356c55;
+      font-weight: 600;
+      margin: 0 0 8px;
+    }
+
+    .write-guide ul {
+      margin: 0;
+      padding-left: 20px;
+      color: #4a7c59;
+      font-size: 14px;
+    }
+
+    .write-guide li {
+      margin: 4px 0;
+    }
+
+    .write-textarea-container {
+      position: relative;
+      margin-bottom: 32px;
+    }
+
+    #habit-salon-free-content {
+      width: 100%;
+      min-height: 200px;
+      padding: 16px;
+      border: 2px solid #e0ede3;
+      border-radius: 12px;
+      font-size: 15px;
+      line-height: 1.6;
+      resize: none;
+      transition: all 0.2s ease;
+    }
+
+    #habit-salon-free-content:focus {
+      outline: none;
+      border-color: #4CAF50;
+      box-shadow: 0 0 0 3px rgba(76,175,80,0.1);
+    }
+
+    .char-counter {
+      position: absolute;
+      right: 16px;
+      bottom: -24px;
+      font-size: 13px;
+      color: #666;
+    }
+
+    .write-modal-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 32px;
+    }
+
+    .point-info {
+      color: #666;
+      font-size: 14px;
+    }
+
+    .write-modal-actions {
+      display: flex;
+      gap: 12px;
+    }
+
+    .write-cancel-btn {
+      padding: 12px 20px;
+      background: #f5f5f5;
+      color: #666;
+      border: none;
+      border-radius: 8px;
+      font-size: 15px;
+      cursor: pointer;
+    }
+
+    .write-submit-btn {
+      padding: 12px 24px;
+      background: #4CAF50;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .write-submit-btn:disabled {
+      background: #ccc;
+      cursor: not-allowed;
+    }
+
+    .point-badge {
+      background: rgba(255,255,255,0.2);
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-size: 13px;
+    }
+
+    .fullscreen-page-content {
+      min-width: 0 !important;
+      min-height: 0 !important;
+      max-width: none !important;
+      max-height: none !important;
+      display: block !important;
+    }
+
+    .fullscreen-page.active {
+      transform: none !important;
+    }
+
+    #habit-salon-free {
+      margin: 0 !important;
+      padding: 0 !important;
+      /* 이미 들어간 position, width, height, z-index, overflow는 그대로 유지 */
+    }
+    #habit-salon-free-list {
+      min-height: 0 !important;
+      margin-top: 0 !important;
+      padding-top: 0 !important;
+    }
+    #habit-salon-free.fullscreen {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+      z-index: 9999;
+      margin: 0 !important;
+      padding: 0 !important;
+      box-shadow: none !important;
+      border-radius: 0 !important;
+      overflow-y: auto;
+      display: block !important;
+    }
+    #habit-salon-free.fullscreen .fullscreen-back-btn {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 16px 20px;
+      background: #356c55;
+      color: white;
+      border: none;
+      border-radius: 12px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      margin: 20px 0 0 20px;
+      z-index: 10001;
+    }
+    #habit-salon-free.fullscreen .fullscreen-back-btn:hover {
+      background: #2a5544;
+    }
+    #habit-salon-free.fullscreen .fullscreen-page-title {
+      font-size: 22px;
+      font-weight: 700;
+      color: #356c55;
+      margin: 0 0 24px 0;
+      padding-left: 20px;
+    }
+    #habit-salon-free.fullscreen .habit-salon-free-list {
+      max-width: 600px;
+      margin: 0 auto;
+      padding: 0 16px 40px 16px;
+    }
+
+    /* 전체 레이아웃 */
+    body {
+      background-color: #f8f8f8;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+
+    /* 상단 타이틀 섹션 */
+    .title-section {
+      text-align: center;
+      padding: 40px 20px;
+      max-width: 600px;
+      margin: 0 auto;
+    }
+
+    .title-section h1 {
+      color: #356c55;
+      font-size: 24px;
+      margin-bottom: 16px;
+      font-weight: 700;
+    }
+
+    .title-section p {
+      color: #666;
+      font-size: 16px;
+    }
+
+    /* 로고 섹션 */
+    .logo-section {
+      text-align: center;
+      margin: 40px 0;
+    }
+
+    .logo-image {
+      width: 120px;
+      height: auto;
+    }
+
+    /* 하단 카드 섹션 */
+    .card-section {
+      background: #fff;
+      border-radius: 20px 20px 0 0;
+      padding: 40px 20px;
+      text-align: center;
+      margin-top: 40px;
+      box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.05);
+    }
+
+    .card-section h2 {
+      color: #356c55;
+      font-size: 20px;
+      margin-bottom: 12px;
+      font-weight: 700;
+    }
+
+    .card-section p {
+      color: #666;
+      font-size: 15px;
+      margin-bottom: 32px;
+    }
+
+    /* 닉네임 입력 폼 */
+    .form-group {
+      display: flex;
+      gap: 8px;
+      max-width: 500px;
+      margin: 0 auto;
+      padding: 0 20px;
+    }
+
+    .nickname-input {
+      flex: 1;
+      height: 48px;
+      padding: 0 24px;
+      border: 1px solid #e0e0e0;
+      border-radius: 999px;
+      font-size: 15px;
+      background: #fff;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    }
+
+    .nickname-input:focus {
+      outline: none;
+      border-color: #356c55;
+    }
+
+    .register-button {
+      height: 48px;
+      padding: 0 32px;
+      background-color: #356c55;
+      color: white;
+      border: none;
+      border-radius: 999px;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      white-space: nowrap;
+      box-shadow: 0 2px 8px rgba(53, 108, 85, 0.2);
+    }
+
+    .register-button:hover {
+      background-color: #2a5644;
+    }
+
+    /* 포인트 표시 영역 */
+    .app-start-button {
+      width: 100%;
+      max-width: 320px;
+      height: 48px;
+      background-color: #356c55;
+      color: white;
+      border: none;
+      border-radius: 999px;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      margin: 24px auto;
+      display: block;
+    }
+
+    .points-info {
+      color: #356c55;
+      font-size: 14px;
+      margin: 16px 0;
+    }
+
+    .current-points {
+      color: #666;
+      font-size: 14px;
+    }
+
+    #points {
+      color: #356c55;
+      font-weight: 600;
+    }
+
+    .nickname-form {
+      display: flex;
+      gap: 8px;
+      margin: 16px auto;
+      max-width: 320px;
+    }
+
+    .nickname-input {
+      flex: 1;
+      padding: 12px 16px;
+      border: 2px solid #e0ede3;
+      border-radius: 8px;
+      font-size: 15px;
+      color: #333;
+      transition: border-color 0.2s ease;
+    }
+
+    .nickname-input:focus {
+      outline: none;
+      border-color: #356c55;
+    }
+
+    .nickname-button {
+      padding: 12px 20px;
+      background: #356c55;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background-color 0.2s ease;
+      white-space: nowrap;
+    }
+
+    .nickname-button:hover {
+      background: #2a5544;
+    }
+
+    .nickname-button:disabled {
+      background: #ccc;
+      cursor: not-allowed;
+    }
+  </style>
 </head>
 <body>
-    <div class="container">
-        <div class="nickname-container">
-            <h1 class="title">닉네임 설정</h1>
-            <div class="input-group">
-                <label for="nicknameInput">닉네임</label>
-                <div class="input-wrapper">
-                    <input type="text" 
-                           id="nicknameInput" 
-                           placeholder="2-10자 사이의 닉네임을 입력하세요" 
-                           maxlength="10"
-                           minlength="2">
-                    <button onclick="handleRegisterNickname()" class="check-button">저장</button>
-                </div>
-                <p id="errorMessage" class="error-message"></p>
-                <p id="successMessage" class="success-message"></p>
+  
+
+  <!-- 음소거 버튼 추가 -->
+  <button id="mute-button" class="mute-button" onclick="toggleMute()" title="효과음 켜기/끄기">
+    🔊
+  </button>
+  <div id="install-banner" style="display:block; position:fixed; bottom:0; left:0; width:100%; background:#ffffff; padding:16px; text-align:center; z-index:9999; box-shadow:0 -2px 10px rgba(0,0,0,0.2); border-top:1px solid #eee;">
+    <div style="max-width:460px; margin:0 auto; display:flex; align-items:center; justify-content:space-between; gap:12px;">
+      <div style="flex:1; text-align:left;">
+        <p style="margin:0; font-size:16px; font-weight:600; color:#356c55;">📱 앱 설치하고 더 편리하게 이용해보세요!</p>
+        <p style="margin:4px 0 0; font-size:14px; color:#666;">설치하면 홈 화면에서 바로 실행할 수 있어요</p>
+      </div>
+      <div style="display:flex; gap:8px;">
+        <button onclick="closeInstallBanner()" style="padding:8px 16px; border:none; background:#f0f0f0; border-radius:6px; color:#666; font-size:14px; cursor:pointer; font-weight:500;">닫기</button>
+        <a href="https://play.google.com/store/apps/details?id=com.neulbom.neulbomquiz" target="_blank" style="padding:8px 20px; border:none; background:#356c55; border-radius:6px; color:#fff; font-size:14px; text-decoration:none; font-weight:500;">설치하기</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- 글쓰기 모달 -->
+  <div id="free-write-fullscreen" class="modal-overlay">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>✍️ 건강 이야기 쓰기</h2>
+        <button class="modal-close-btn" onclick="window.closeWriteModal()">×</button>
+      </div>
+      <div class="modal-body">
+        <form id="habit-salon-free-form">
+          <div class="write-guide">
+            <p>💡 100자 이상 작성 시 100P가 적립됩니다!</p>
+            <ul>
+              <li>실제 경험한 건강 관리 방법</li>
+              <li>효과를 본 운동이나 식단</li>
+              <li>나만의 건강 습관과 꿀팁</li>
+            </ul>
+          </div>
+          <div class="write-textarea-container">
+            <textarea id="habit-salon-free-content" 
+                      placeholder="건강과 관련된 경험과 노하우를 100자 이상 작성해주세요."
+                      maxlength="500"></textarea>
+            <div class="char-counter">0/500</div>
+          </div>
+          <div class="char-count-guide">더 자세한 이야기를 들려주세요! (100자 필요)</div>
+          <div class="modal-footer">
+            <div class="modal-actions">
+              <button type="button" class="cancel-btn" onclick="window.closeWriteModal()">취소</button>
+              <button type="submit" class="submit-btn" disabled>
+                <span>건강 이야기 공유하기</span>
+                <span class="point-badge">+100P</span>
+              </button>
             </div>
-            <div class="user-info">
-                <p>현재 닉네임: <span id="currentNickname">로딩중...</span></p>
-                <p>보유 포인트: <span id="pointsDisplay">0P</span></p>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <div class="container">
+    <img src="assets/img/logo.png" alt="늘봄 로고" class="logo">
+    <div id="main-section">
+      <div class="start-screen">
+        <h1 class="main-title">나를 위한 작은 습관의 변화, 늘봄</h1>
+        <p class="sub-title">오늘도 나를 돌보는 가장 쉬운 방법, 시작해볼까요?</p>
+        <div style="text-align:center;">
+          <div class="share-section">
+            <h3 class="share-title">친구와 함께 건강한 습관 만들기</h3>
+            
+            <!-- 닉네임 입력 폼 -->
+            <div id="nickname-form" class="nickname-form" style="margin-bottom: 20px;">
+              <input type="text" id="nicknameInput" class="nickname-input" placeholder="닉네임을 입력해주세요">
+              <button onclick="registerNickname()" class="nickname-button">등록하기</button>
             </div>
+
+            <div class="social-share-buttons-wrapper">
+              <div class="social-share-buttons">
+                <button onclick="shareAppInstall()" class="social-btn install-btn">
+                  <span class="install-icon-wrap"><img src="assets/img/icon-512.png" alt="앱설치" class="install-icon" /></span>
+                  <span class="install-btn-text">앱 설치 링크 공유</span>
+                </button>
+              </div>
+            </div>
+            <p class="share-reward">공유하면 200P가 적립됩니다! 💚</p>
+          </div>
         </div>
+        <div class="points-info">
+          <p class="current-points">
+            💚 현재 나의 습관 포인트: <strong class="point-value" id="points">0</strong>P
+          </p>
+          <div class="points-guide">
+            <p class="point-main-text">
+              📌 <strong class="point-highlight">5,000포인트</strong>를 달성하면
+              <strong>늘봄몰 적립금으로 전환</strong>할 수 있어요!
+            </p>
+            <p class="point-sub-text">
+              환전 신청 버튼은 <strong class="point-emphasis">5,000P 이상</strong>일 때 자동으로 활성화됩니다
+            </p>
+          </div>
+          <div id="points-action">
+            <button id="habit-salon-enter-btn" class="primary-button" style="margin-bottom:12px;background:#356c55;">🌿 늘봄 습관살롱</button>
+            <button onclick="location.href='quiz.html'" class="primary-button">
+              오늘의 건강 루틴 시작하기 →
+            </button>
+            <button onclick="requestExchange()" id="exchange-button" class="secondary-button" style="display: none;">
+              ✨ 포인트 전환 신청하기
+            </button>
+            <button onclick="window.open('https://smartstore.naver.com/jinjjamall', '_blank')" class="secondary-button" style="margin-top:10px;">
+              🛒 늘봄식품 바로가기
+            </button>
+            <button onclick="goToShorts()" class="secondary-button" style="margin-top:10px;">
+              🎥 1분 건강 숏츠 보러가기
+            </button>
+            
+            <div id="points-insufficient" class="points-notice" style="display: none;">
+              포인트가 부족합니다 😢
+            </div>
+          </div>
+        </div>
+        <div class="card-grid">
+          <div class="info-card">
+            <span class="emoji">✨</span>
+            <h3>작은 실천</h3>
+            <p>실천할수록 쌓이는 습관 포인트<br>오늘의 나를 위한 작은 투자</p>
+          </div>
+          <div class="info-card">
+            <span class="emoji">🌱</span>
+            <h3>건강한 루틴</h3>
+            <p>잠깐의 여유, 나를 챙기는 습관<br>하루 한 번쯤, 나를 위한 체크타임!</p>
+          </div>
+          <div class="info-card">
+            <span class="emoji">🎁</span>
+            <h3>나를 위한 선물</h3>
+            <p>건강 퀴즈로 알아보는 내 몸 사용 설명서<br>알면 지키게 되는 건강 상식!</p>
+          </div>
+        </div>
+        <p class="footer-quote">작은 습관이, 결국 가장 멀리 갑니다</p>
+      </div>
+    </div>
+    <div class="video-section" id="shorts-section" style="display:none;">
+      <h3 class="video-title">🎥 1분 건강 숏츠</h3>
+      <ul id="videoList" class="video-list"></ul>
+      <button onclick="goBackMain()" class="secondary-button" style="margin-top:20px;">← 뒤로가기</button>
     </div>
 
-    <script type="module">
-        import { registerNickname, getMyPoints, getCurrentNickname } from './js/firebase-service.js';
+    <!-- 늘봄 습관살롱 메인 섹션 (초기에는 숨김) -->
+    <div id="habit-salon-main" style="display:none;max-width:700px;margin:40px auto 40px auto;padding:0 8px;">
+      <!-- 뒤로가기 버튼 -->
+      <div style="display:flex;justify-content:flex-end;padding:16px 0;margin-bottom:20px;">
+        <button id="habit-salon-main-back-btn" style="padding:8px 16px;background:#e0ede3;color:#356c55;border:none;border-radius:8px;font-size:14px;font-weight:600;">← 뒤로가기</button>
+      </div>
+      
+      <!-- 섹션 네비게이션 카드 -->
+      <div id="habit-salon-nav-cards" style="display:flex;gap:16px;justify-content:space-between;margin-bottom:32px;flex-wrap:wrap;">
+        <div class="habit-salon-nav-card" data-section="brand" style="flex:1 1 140px;min-width:140px;max-width:180px;background:#fff;border-radius:16px;box-shadow:0 2px 8px #e0ede3;padding:18px 10px;display:flex;flex-direction:column;align-items:center;cursor:pointer;transition:box-shadow 0.2s;">
+          <img src="assets/img/brand-icon.png" alt="브랜드 이야기" style="width:48px;height:48px;margin-bottom:10px;object-fit:contain;"/>
+          <div style="font-weight:700;font-size:1.05rem;color:#356c55;">브랜드 이야기</div>
+        </div>
+        <div class="habit-salon-nav-card" data-section="question" style="flex:1 1 140px;min-width:140px;max-width:180px;background:#fff;border-radius:16px;box-shadow:0 2px 8px #e0ede3;padding:18px 10px;display:flex;flex-direction:column;align-items:center;cursor:pointer;transition:box-shadow 0.2s;">
+          <img src="assets/img/question-icon%20.png" alt="오늘의 질문" style="width:48px;height:48px;margin-bottom:10px;object-fit:contain;"/>
+          <div style="font-weight:700;font-size:1.05rem;color:#356c55;">오늘의 질문</div>
+        </div>
+        <div class="habit-salon-nav-card" data-section="free" style="flex:1 1 140px;min-width:140px;max-width:180px;background:#fff;border-radius:16px;box-shadow:0 2px 8px #e0ede3;padding:18px 10px;display:flex;flex-direction:column;align-items:center;cursor:pointer;transition:box-shadow 0.2s;">
+          <img src="assets/img/community-icon.png" alt="건강 한마당" style="width:48px;height:48px;margin-bottom:10px;object-fit:contain;"/>
+          <div style="font-weight:700;font-size:1.05rem;color:#356c55;">건강 한마당</div>
+        </div>
+        <div class="habit-salon-nav-card" data-section="challenge" style="flex:1 1 140px;min-width:140px;max-width:180px;background:#fff;border-radius:16px;box-shadow:0 2px 8px #e0ede3;padding:18px 10px;display:flex;flex-direction:column;align-items:center;cursor:pointer;transition:box-shadow 0.2s;opacity:0.6;">
+          <img src="assets/img/challenge-icon.png" alt="습관 챌린지" style="width:48px;height:48px;margin-bottom:10px;object-fit:contain;"/>
+          <div style="font-weight:700;font-size:1.05rem;color:#356c55;">습관 챌린지</div>
+        </div>
+      </div>
+      <!-- 1️⃣ 브랜드 이야기 -->
+      <section id="habit-salon-brand" style="display:none;margin-bottom:40px;">
+        <h2 style="font-size:1.3rem;color:#356c55;font-weight:700;">📖 브랜드 이야기</h2>
+        <div id="habit-salon-brand-list" style="display:flex;flex-direction:column;gap:20px;padding:12px 0 8px 0;"></div>
+      </section>
 
-        // 닉네임 유효성 검사
-        function isValidNickname(nickname) {
-            return nickname.length >= 2 && nickname.length <= 10;
+      <!-- 2️⃣ 오늘의 질문 -->
+      <section id="habit-salon-question" style="display:none;margin-bottom:40px;">
+        <h2 style="font-size:1.3rem;color:#356c55;font-weight:700;">📔 오늘의 질문</h2>
+        <div id="habit-salon-question-card" style="background:#f8f9fa;padding:20px;border-radius:12px;margin-bottom:12px;"></div>
+        <div id="habit-salon-question-comments"></div>
+      </section>
+      <!-- 3️⃣ 건강 한마당(자유글) -->
+      <section id="habit-salon-free" style="display:none;margin-bottom:40px;position:relative;">
+        <h2 style="font-size:1.3rem;color:#356c55;font-weight:700;">💬 건강 한마당</h2>
+        <!-- 최신/인기순 토글 -->
+        <div id="free-feed-sort-toggle" style="display:flex;gap:8px;justify-content:center;margin-bottom:16px;">
+          <button id="sort-latest-btn" class="feed-sort-btn active">최신순</button>
+          <button id="sort-popular-btn" class="feed-sort-btn">인기순</button>
+        </div>
+        <div id="habit-salon-free-list"></div>
+        <!-- 플로팅 글쓰기 버튼 (항상 우하단 고정) -->
+        <button id="floating-write-btn" class="floating-write-btn" title="글쓰기" onclick="window.openWriteModal()">+</button>
+      </section>
+      <!-- 4️⃣ 습관 챌린지(예정) -->
+      <section id="habit-salon-challenge" style="display:none;margin-bottom:40px;">
+        <h2 style="font-size:1.3rem;color:#356c55;font-weight:700;">🎯 습관 챌린지 (준비중)</h2>
+        <div style="background:#f8f9fa;padding:20px;border-radius:12px;">주간 실천 과제, 루틴 기록 기능이 곧 오픈됩니다!</div>
+      </section>
+
+      <!-- 포인트 정보 및 로그 -->
+      <div style="text-align:center;margin-top:20px;padding:16px;background:#f8f9fa;border-radius:12px;">
+        <p style="margin:0;color:#356c55;font-weight:600;">💚 현재 포인트: <span id="habit-salon-my-point">0</span>P</p>
+      </div>
+
+      <!-- 피드백 메시지 (기존 방식 대신 토스트 사용) -->
+      <div id="habit-salon-feedback" style="display:none;"></div>
+    </div>
+
+    <!-- 전체 화면 브랜드 이야기 페이지 -->
+    <div id="brand-story-fullscreen" class="fullscreen-page">
+      <div class="fullscreen-page-header">
+        <button class="fullscreen-back-btn" onclick="window.closeBrandStoryPage()">
+          ← 뒤로가기
+        </button>
+        <h1 class="fullscreen-page-title">📖 브랜드 이야기</h1>
+        <div></div>
+      </div>
+      <div class="fullscreen-page-content">
+        <div class="brand-story-container">
+          <div id="brand-story-content"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 전체 화면 오늘의 질문 페이지 -->
+    <div id="question-fullscreen" class="fullscreen-page">
+      <div class="fullscreen-page-header">
+        <button class="fullscreen-back-btn" onclick="window.closeQuestionPage()">
+          ← 뒤로가기
+        </button>
+        <h1 class="fullscreen-page-title">📔 오늘의 질문</h1>
+        <div></div>
+      </div>
+      <div class="fullscreen-page-content">
+        <div id="question-content"></div>
+      </div>
+    </div>
+
+    <!-- 전체 화면 건강 한마당(자유글) 페이지 -->
+    <!-- free-fullscreen 등 전체화면용 container 완전 삭제 -->
+
+    <!-- 페이지 전환 오버레이 -->
+    <div id="page-transition-overlay" class="page-transition-overlay"></div>
+
+    <!-- 글쓰기 모달 -->
+    <div id="free-write-fullscreen" class="modal-overlay">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h2>✍️ 건강 이야기 쓰기</h2>
+          <button class="modal-close-btn" onclick="window.closeWriteModal()">×</button>
+        </div>
+        <div class="modal-body">
+          <form id="habit-salon-free-form">
+            <div class="write-guide">
+              <p>💡 100자 이상 작성 시 100P가 적립됩니다!</p>
+              <ul>
+                <li>실제 경험한 건강 관리 방법</li>
+                <li>효과를 본 운동이나 식단</li>
+                <li>나만의 건강 습관과 꿀팁</li>
+              </ul>
+            </div>
+            <div class="write-textarea-container">
+              <textarea id="habit-salon-free-content" 
+                        placeholder="건강과 관련된 경험과 노하우를 100자 이상 작성해주세요."
+                        maxlength="500"></textarea>
+              <div class="char-counter">0/500</div>
+            </div>
+            <div class="char-count-guide">더 자세한 이야기를 들려주세요! (100자 필요)</div>
+            <div class="modal-footer">
+              <div class="modal-actions">
+                <button type="button" class="cancel-btn" onclick="window.closeWriteModal()">취소</button>
+                <button type="submit" class="submit-btn" disabled>
+                  <span>건강 이야기 공유하기</span>
+                  <span class="point-badge">+100P</span>
+                </button>
+              </div>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <!-- 포인트 표시 영역 -->
+    <div id="pointsDisplay" class="points-display">
+      <span>보유 포인트: </span>
+      <span id="currentPoints">0</span>
+      <button id="exchangePointsBtn" class="exchange-points-btn" style="display: none;">
+        포인트 교환 신청
+      </button>
+    </div>
+
+    <!-- 포인트 교환 모달 -->
+    <div id="exchangeModal" class="modal" style="display: none;">
+      <div class="modal-content">
+        <span class="close">&times;</span>
+        <h2>포인트 교환 신청</h2>
+        <p>현재 보유 포인트: <span id="modalCurrentPoints">0</span></p>
+        <div class="exchange-form">
+          <label for="exchangeAmount">교환할 포인트:</label>
+          <input type="number" id="exchangeAmount" min="5000" step="1000">
+          <p class="exchange-info">* 최소 5,000포인트부터 교환 가능합니다.</p>
+          <button id="submitExchange">교환 신청</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 진행 중인 교환 요청 목록 -->
+    <div id="activeExchangeRequests" class="exchange-requests" style="display: none;">
+      <h3>진행 중인 교환 요청</h3>
+      <div id="requestsList"></div>
+    </div>
+
+  </div>
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-app.js";
+    import { getFirestore, collection, addDoc, getDocs, getDoc, setDoc, updateDoc, doc, query, where, orderBy, serverTimestamp, deleteDoc, writeBatch, increment, enableNetwork, disableNetwork, connectFirestoreEmulator } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyDMgQA6mqaXR_qr9Uyj1-VnC-8qkcj3ZBw",
+      authDomain: "neulbom-healt-quiz.firebaseapp.com",
+      projectId: "neulbom-healt-quiz",
+      storageBucket: "neulbom-healt-quiz.appspot.com",
+      messagingSenderId: "300280931247",
+      appId: "1:300280931247:web:5516f3bd8e8834304a055a"
+    };
+    
+    console.log('Firebase 앱 초기화 중...');
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+    
+    // 🔥 Firestore 오프라인 지원 활성화
+    try {
+      // 오프라인 지속성 활성화 (기본값이지만 명시적으로 설정)
+      console.log('Firestore 오프라인 지원 활성화 중...');
+      
+      // exchangeRequests 컬렉션 초기화
+      const initializeExchangeRequests = async () => {
+        try {
+          // 컬렉션 존재 여부 확인
+          const exchangeRef = collection(db, 'exchangeRequests');
+          const snapshot = await getDocs(exchangeRef);
+          
+          if (snapshot.empty) {
+            // 컬렉션이 비어있으면 초기 문서 생성
+            await addDoc(collection(db, 'exchangeRequests'), {
+              type: 'system',
+              createdAt: serverTimestamp(),
+              message: 'Collection initialized'
+            });
+            console.log('exchangeRequests 컬렉션이 생성되었습니다.');
+          }
+        } catch (error) {
+          console.error('exchangeRequests 컬렉션 초기화 오류:', error);
         }
+      };
 
-        // 에러 메시지 표시
-        function showError(message) {
-            const errorMessage = document.getElementById('errorMessage');
-            const successMessage = document.getElementById('successMessage');
-            errorMessage.textContent = message;
-            errorMessage.style.display = 'block';
-            successMessage.style.display = 'none';
-        }
-
-        // 성공 메시지 표시
-        function showSuccess(message) {
-            const errorMessage = document.getElementById('errorMessage');
-            const successMessage = document.getElementById('successMessage');
-            successMessage.textContent = message;
-            successMessage.style.display = 'block';
-            errorMessage.style.display = 'none';
-        }
-
-        // 닉네임 등록 처리
-        window.handleRegisterNickname = async function() {
-            const nicknameInput = document.getElementById('nicknameInput');
-            const nickname = nicknameInput.value.trim();
-
-            if (!nickname) {
-                showError("닉네임을 입력해주세요.");
-                return;
-            }
-
-            if (!isValidNickname(nickname)) {
-                showError("닉네임은 2-10자 사이여야 합니다.");
-                return;
-            }
-
-            try {
-                await registerNickname(nickname);
-                showSuccess("닉네임이 성공적으로 등록되었습니다!");
-                updateUserInfo();
-                nicknameInput.value = '';
-            } catch (error) {
-                showError(error.message);
-            }
-        };
-
-        // 사용자 정보 업데이트
-        async function updateUserInfo() {
-            try {
-                const [nickname, points] = await Promise.all([
-                    getCurrentNickname(),
-                    getMyPoints()
-                ]);
-                
-                document.getElementById('currentNickname').textContent = nickname;
-                document.getElementById('pointsDisplay').textContent = `${points}P`;
-            } catch (error) {
-                console.error("사용자 정보 업데이트 실패:", error);
-            }
-        }
-
-        // 페이지 로드 시 사용자 정보 표시
-        updateUserInfo();
-
-        // 엔터 키 이벤트 처리
-        document.getElementById('nicknameInput').addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') {
-                handleRegisterNickname();
-            }
+      // 컬렉션 초기화 실행
+      initializeExchangeRequests();
+      
+      // 네트워크 상태 감지
+      window.isOnline = navigator.onLine;
+      
+      window.addEventListener('online', () => {
+        console.log('🌐 네트워크 연결됨 - Firestore 재연결 시도');
+        window.isOnline = true;
+        window.showSalonToast('네트워크가 연결되었습니다! 🌐', 'success');
+        enableNetwork(db).catch(error => {
+          console.log('Firestore 네트워크 재활성화 오류:', error);
         });
-    </script>
+      });
+      
+      window.addEventListener('offline', () => {
+        console.log('📴 네트워크 연결 끊김 - 오프라인 모드');
+        window.isOnline = false;
+        window.showSalonToast('오프라인 상태입니다. 일부 기능이 제한될 수 있습니다.', 'warning');
+      });
+      
+      console.log('네트워크 상태:', window.isOnline ? '온라인' : '오프라인');
+      
+      } catch (error) {
+      console.log('Firestore 오프라인 설정 오류:', error);
+    }
+    
+    console.log('늘봄 습관살롱 Firebase 연동 완료');
+
+    // 전역 변수로 사용할 수 있도록 window 객체에 할당
+    window.db = db;
+    
+    // 사용자 ID 관리 (기존 script.js와 통일)
+    window.getUserId = function() {
+      let userId = localStorage.getItem('userId');
+      if (!userId) {
+        userId = 'user_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+        localStorage.setItem('userId', userId);
+      }
+      return userId;
+    };
+
+    // 닉네임 관리 함수들
+    window.checkNickname = async function() {
+      const nickname = localStorage.getItem('nickname');
+      const userId = window.getUserId();
+      
+      if (nickname) {
+        // 닉네임이 이미 있으면 폼 숨기기
+        const nicknameForm = document.getElementById('nickname-form');
+        if (nicknameForm) {
+          nicknameForm.style.display = 'none';
+        }
+        return;
+      }
+
+      // Firestore에서 닉네임 확인
+      try {
+        const userDoc = await getDoc(doc(db, 'users', userId));
+        if (userDoc.exists() && userDoc.data().nickname) {
+          localStorage.setItem('nickname', userDoc.data().nickname);
+          const nicknameForm = document.getElementById('nickname-form');
+          if (nicknameForm) {
+            nicknameForm.style.display = 'none';
+          }
+        }
+      } catch (error) {
+        console.error('닉네임 확인 오류:', error);
+      }
+    };
+
+    window.registerNickname = async function() {
+      const nicknameInput = document.getElementById('nicknameInput');
+      const nickname = nicknameInput.value.trim();
+      
+      if (!nickname) {
+        window.showSalonToast('닉네임을 입력해주세요.', 'warning');
+        return;
+      }
+
+      try {
+        // 중복 체크
+        const q = query(collection(db, 'users'), where('nickname', '==', nickname));
+        const snapshot = await getDocs(q);
+        
+        if (!snapshot.empty) {
+          window.showSalonToast('이미 사용 중인 닉네임입니다.', 'warning');
+          return;
+        }
+
+        const userId = window.getUserId();
+        
+        // Firestore에 저장
+        await updateDoc(doc(db, 'users', userId), {
+          nickname: nickname,
+          updatedAt: serverTimestamp()
+        });
+
+        // localStorage에 저장
+        localStorage.setItem('nickname', nickname);
+        
+        // 입력 폼 숨기기
+        const nicknameForm = document.getElementById('nickname-form');
+        if (nicknameForm) {
+          nicknameForm.style.display = 'none';
+        }
+
+        window.showSalonToast('닉네임이 등록되었습니다! 🎉', 'success');
+        
+      } catch (error) {
+        console.error('닉네임 등록 오류:', error);
+        window.showSalonToast('닉네임 등록 중 오류가 발생했습니다.', 'error');
+      }
+    };
+
+    // 페이지 로드 시 닉네임 체크
+    window.addEventListener('load', function() {
+      window.checkNickname();
+    });
+
+    // 포인트 관리 (기존 script.js와 연동 + 오프라인 지원)
+    window.getUserPoints = async function() {
+      try {
+        // 오프라인 상태 체크
+        if (!window.isOnline) {
+          console.log('오프라인 상태 - 로컬 포인트 사용');
+          return parseInt(localStorage.getItem('points') || '0');
+        }
+        
+        // 기존 script.js의 points 변수와 동기화
+        const localPoints = parseInt(localStorage.getItem('points') || '0');
+        
+        const userId = window.getUserId();
+        const userDoc = await getDoc(doc(db, 'users', userId));
+        
+        if (userDoc.exists()) {
+          const firestorePoints = userDoc.data().points || 0;
+          // Firestore와 로컬 포인트 중 더 큰 값 사용 (데이터 손실 방지)
+          const syncedPoints = Math.max(localPoints, firestorePoints);
+          
+          if (syncedPoints !== firestorePoints) {
+            // Firestore 업데이트
+            await updateDoc(doc(db, 'users', userId), {
+              points: syncedPoints,
+              lastActive: serverTimestamp()
+            });
+          }
+          
+          localStorage.setItem('points', syncedPoints.toString());
+          
+          // 기존 script.js의 points 변수도 업데이트
+          if (window.points !== undefined) {
+            window.points = syncedPoints;
+          }
+          
+          return syncedPoints;
+        } else {
+          // 사용자 문서가 없으면 생성
+          await setDoc(doc(db, 'users', userId), {
+            points: localPoints,
+            createdAt: serverTimestamp(),
+            lastActive: serverTimestamp()
+          });
+          return localPoints;
+        }
+      } catch (error) {
+        console.error('포인트 조회 오류:', error);
+        console.log('오류로 인해 로컬 포인트 사용');
+        if (error.code === 'failed-precondition' || error.code === 'unavailable') {
+          window.showSalonToast('네트워크 연결을 확인해주세요.', 'warning');
+        }
+        return parseInt(localStorage.getItem('points') || '0');
+      }
+    };
+    
+    window.addUserPoints = async function(pointsToAdd, source = 'habit_salon', actionId = null) {
+      try {
+        const userId = window.getUserId();
+        
+        // 오프라인 상태에서도 로컬 포인트는 업데이트
+        const currentPoints = parseInt(localStorage.getItem('points') || '0');
+        const newPoints = Math.max(0, currentPoints + pointsToAdd);
+        localStorage.setItem('points', newPoints.toString());
+        
+        // 기존 script.js의 points 변수도 업데이트
+        if (window.points !== undefined) {
+          window.points = newPoints;
+        }
+        
+        // 오프라인 상태면 로컬만 업데이트하고 리턴
+        if (!window.isOnline) {
+          console.log('오프라인 상태 - 로컬 포인트만 업데이트:', newPoints);
+          // 오프라인 액션을 큐에 저장 (나중에 동기화용)
+          const offlineActions = JSON.parse(localStorage.getItem('offlineActions') || '[]');
+          offlineActions.push({
+            type: 'addPoints',
+            pointsToAdd,
+            source,
+            actionId,
+            timestamp: Date.now()
+          });
+          localStorage.setItem('offlineActions', JSON.stringify(offlineActions));
+          return newPoints;
+        }
+        
+        const userRef = doc(db, 'users', userId);
+        
+        // 중복 포인트 지급 방지 (actionId가 있는 경우)
+        if (actionId) {
+          const duplicateCheck = query(
+            collection(db, 'pointsHistory'),
+            where('userId', '==', userId),
+            where('actionId', '==', actionId)
+          );
+          const duplicateSnapshot = await getDocs(duplicateCheck);
+          
+          if (!duplicateSnapshot.empty) {
+            console.log('이미 포인트가 지급된 액션입니다:', actionId);
+            window.showSalonToast('이미 포인트를 받은 활동입니다.', 'warning');
+            return await window.getUserPoints();
+          }
+        }
+        
+        // Firestore에서 포인트 업데이트
+        await updateDoc(userRef, {
+          points: newPoints,
+          lastActive: serverTimestamp()
+        });
+        
+        // 포인트 이력을 pointsHistory 컬렉션에 기록
+        const historyData = {
+          userId: userId,
+          points: pointsToAdd,
+          action: pointsToAdd > 0 ? 'earn' : 'spend',
+          source: source,
+          timestamp: serverTimestamp(),
+          beforePoints: currentPoints,
+          afterPoints: newPoints
+        };
+        
+        if (actionId) {
+          historyData.actionId = actionId;
+        }
+        
+        await addDoc(collection(db, 'pointsHistory'), historyData);
+        
+        // 메인 페이지 포인트 표시 업데이트
+        const mainPointElement = document.getElementById('points');
+        if (mainPointElement) {
+          mainPointElement.textContent = newPoints;
+        }
+        
+        // 기존 script.js의 updatePoints 함수 호출
+        if (typeof updatePoints === 'function') {
+          updatePoints();
+        }
+        
+        return newPoints;
+      } catch (error) {
+        console.error('포인트 추가 오류:', error);
+        console.log('오류로 인해 로컬 포인트만 업데이트');
+        
+        // 오류 상황에서도 로컬 포인트는 유지
+        const currentPoints = parseInt(localStorage.getItem('points') || '0');
+        const newPoints = Math.max(0, currentPoints + pointsToAdd);
+        localStorage.setItem('points', newPoints.toString());
+        
+        if (error.code === 'failed-precondition' || error.code === 'unavailable') {
+          window.showSalonToast('네트워크 연결 문제로 로컬에만 저장되었습니다.', 'warning');
+        }
+        
+        // 기존 script.js의 addPoints 함수 사용
+        if (typeof addPoints === 'function') {
+          addPoints(pointsToAdd);
+        }
+        
+        return newPoints;
+      }
+    };
+
+    // 브랜드 게시글 로딩 (인덱스 문제 해결 - 단순 쿼리 + 클라이언트 필터링)
+    window.loadBrandPosts = async function() {
+      try {
+        console.log('Firebase에서 브랜드 게시글 로딩 중...');
+        
+        // 오프라인 상태 시 캐시된 데이터 사용
+        if (!window.isOnline) {
+          console.log('오프라인 상태 - 캐시된 브랜드 게시글 사용');
+          const cachedData = localStorage.getItem('cached_brand_posts');
+          if (cachedData) {
+            const posts = JSON.parse(cachedData);
+            console.log('캐시된 브랜드 게시글:', posts.length, '개');
+            return posts;
+          }
+          return [{
+            id: 'offline_brand_1',
+            title: '늘봄과 함께하는 건강한 습관',
+            content: '네트워크 연결이 불안정합니다. 온라인 상태에서 더 많은 콘텐츠를 확인해보세요.',
+            author: '늘봄팀',
+            timestamp: new Date(),
+            likes: 0,
+            commentCount: 0,
+            isOffline: true
+          }];
+        }
+        
+        // Firestore에서 직접 필터링하도록 수정
+        const q = query(
+          collection(db, 'brand_posts'),
+          where('isPublished', '==', true),
+          orderBy('timestamp', 'desc')
+        );
+        const snapshot = await getDocs(q);
+        
+        const posts = snapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data()
+        }));
+        
+        // 성공적으로 로딩되면 캐시에 저장
+        if (posts.length > 0) {
+          localStorage.setItem('cached_brand_posts', JSON.stringify(posts));
+          localStorage.setItem('cached_brand_posts_time', Date.now().toString());
+        }
+        
+        console.log('브랜드 게시글 로딩 완료:', posts.length, '개');
+        return posts;
+      } catch (error) {
+        console.error('브랜드 게시글 로딩 오류:', error);
+        // 오류 발생 시 캐시된 데이터 사용 시도
+        const cachedData = localStorage.getItem('cached_brand_posts');
+        if (cachedData) {
+          const posts = JSON.parse(cachedData);
+          console.log('오류 발생 - 캐시된 브랜드 게시글 사용:', posts.length, '개');
+          return posts;
+        }
+        return [];
+      }
+    };
+    
+    // 건강 질문 로딩 (인덱스 문제 해결 - 단순 쿼리 + 클라이언트 필터링)
+    window.loadHealthQuestions = async function() {
+      try {
+        console.log('Firebase에서 건강 질문 로딩 중...');
+        
+        // 오프라인 상태 시 캐시된 데이터 사용
+        if (!window.isOnline) {
+          console.log('오프라인 상태 - 캐시된 건강 질문 사용');
+          const cachedData = localStorage.getItem('cached_health_questions');
+          if (cachedData) {
+            const questions = JSON.parse(cachedData);
+            console.log('캐시된 건강 질문:', questions.length, '개');
+            return questions;
+          }
+          return [{
+            id: 'offline_question_1',
+            question: '오늘 충분한 수분을 섭취하셨나요?',
+            options: [
+              '네, 충분히 마셨어요 💧',
+              '적당히 마셨어요 🥤',
+              '부족했어요 😅',
+              '거의 마시지 않았어요 💦'
+            ],
+            timestamp: new Date(),
+            responses: 0,
+            isOffline: true
+          }];
+        }
+        
+        // Firestore에서 직접 필터링하도록 수정
+        const q = query(
+          collection(db, 'health_questions'),
+          where('isPublished', '==', true),
+          orderBy('timestamp', 'desc')
+        );
+        
+        const snapshot = await getDocs(q);
+        const questions = snapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data()
+        }));
+        
+        // 성공적으로 로딩되면 캐시에 저장
+        if (questions.length > 0) {
+          localStorage.setItem('cached_health_questions', JSON.stringify(questions));
+          localStorage.setItem('cached_health_questions_time', Date.now().toString());
+        }
+        
+        console.log('건강 질문 로딩 완료:', questions.length, '개');
+        return questions;
+      } catch (error) {
+        console.error('건강 질문 로딩 오류:', error);
+        // 오류 시 캐시된 데이터 사용 시도
+        const cachedData = localStorage.getItem('cached_health_questions');
+        if (cachedData) {
+          const questions = JSON.parse(cachedData);
+          console.log('오류 발생 - 캐시된 건강 질문 사용:', questions.length, '개');
+          return questions;
+        }
+        return [];
+      }
+    };
+    
+    // 좋아요 기능 (Firestore 연동)
+    window.toggleLike = async function(postType, postId) {
+      try {
+        const userId = window.getUserId();
+        const likeId = `${userId}_${postType}_${postId}`;
+        const likeRef = doc(db, 'likes', likeId);
+        const likeDoc = await getDoc(likeRef);
+        
+        const postCollection = postType === 'brand' ? 'brand_posts' : 
+                              postType === 'question' ? 'health_questions' : 'user_posts';
+        const postRef = doc(db, postCollection, postId);
+        
+        if (likeDoc.exists()) {
+          // 좋아요 취소
+          await deleteDoc(likeRef);
+          await updateDoc(postRef, {
+            likes: increment(-1)
+          });
+          localStorage.removeItem(`like_${postType}_${postId}`);
+          return false;
+        } else {
+          // 좋아요 추가
+          await setDoc(likeRef, {
+            userId: userId,
+            postType: postType,
+            postId: postId,
+            timestamp: serverTimestamp()
+          });
+          await updateDoc(postRef, {
+            likes: increment(1)
+          });
+          localStorage.setItem(`like_${postType}_${postId}`, 'true');
+          return true;
+        }
+      } catch (error) {
+        console.error('좋아요 처리 오류:', error);
+        // 오류 시 로컬스토리지만 사용
+      const likeKey = `like_${postType}_${postId}`;
+      const isLiked = localStorage.getItem(likeKey) === 'true';
+      
+      if (isLiked) {
+        localStorage.removeItem(likeKey);
+        return false;
+      } else {
+        localStorage.setItem(likeKey, 'true');
+        return true;
+        }
+      }
+    };
+    
+    window.isLiked = async function(postType, postId) {
+      try {
+        const userId = window.getUserId();
+        const likeId = `${userId}_${postType}_${postId}`;
+        const likeDoc = await getDoc(doc(db, 'likes', likeId));
+        return likeDoc.exists();
+      } catch (error) {
+        console.error('좋아요 상태 확인 오류:', error);
+      return localStorage.getItem(`like_${postType}_${postId}`) === 'true';
+      }
+    };
+
+    // 토스트 메시지 (고도화된 버전)
+    window.showSalonToast = function(message, type = 'success') {
+      // 기존 토스트 제거
+      const existingToast = document.querySelector('.salon-toast');
+      if (existingToast) {
+        existingToast.remove();
+      }
+      
+      const toast = document.createElement('div');
+      toast.className = `salon-toast ${type}`;
+      
+      const icons = {
+        success: '✅',
+        error: '❌',
+        warning: '⚠️',
+        info: 'ℹ️'
+      };
+      
+      toast.innerHTML = `
+        <div class="salon-toast-content">
+          <span class="salon-toast-icon">${icons[type] || icons.success}</span>
+          <span class="salon-toast-message">${message}</span>
+        </div>
+      `;
+      
+      toast.style.animation = 'toastSlideUp 0.4s ease';
+      document.body.appendChild(toast);
+      
+      setTimeout(() => {
+        toast.style.animation = 'toastSlideDown 0.4s ease';
+        setTimeout(() => {
+          if (toast.parentNode) {
+            toast.parentNode.removeChild(toast);
+          }
+        }, 400);
+      }, 3000);
+    };
+
+    // 습관살롱 초기화
+    window.initHabitSalon = async function() {
+      console.log('습관살롱 초기화 시작');
+      
+      try {
+        // 이벤트 리스너 초기화
+        window.initializeEventListeners();
+        
+        // 포인트 동기화
+        const points = await window.getUserPoints();
+        const pointDisplay = document.getElementById('habit-salon-my-point');
+        if (pointDisplay) {
+          pointDisplay.textContent = points;
+        }
+        
+        
+        console.log('습관살롱 초기화 완료');
+      } catch (error) {
+        console.error('습관살롱 초기화 오류:', error);
+        window.showSalonToast('초기화 중 오류가 발생했습니다. 페이지를 새로고침해주세요.', 'error');
+      }
+    };
+
+    // 습관살롱 섹션 표시
+    window.showHabitSalonSection = async function(sectionName) {
+      if (sectionName === 'free') {
+        await window.openFreePage();
+        return;
+      }
+      // 기존 섹션 숨기기
+      const sections = ['brand', 'question', 'free', 'challenge'];
+      sections.forEach(section => {
+        const element = document.getElementById(`habit-salon-${section}`);
+        if (element) element.style.display = 'none';
+      });
+      document.getElementById('main-section').style.display = 'none';
+      document.getElementById('habit-salon-main').style.display = 'block';
+      // 기존 섹션 진입 로직
+      const targetSection = document.getElementById(`habit-salon-${sectionName}`);
+      if (targetSection) {
+        targetSection.style.display = 'block';
+        if (sectionName === 'brand') await window.loadBrandSection();
+        if (sectionName === 'question') await window.loadQuestionSection();
+        if (sectionName === 'challenge') {/* 준비중 */}
+      }
+      // habit-salon-free 전체화면 해제
+      const freeSection = document.getElementById('habit-salon-free');
+      if (freeSection) {
+        freeSection.classList.remove('fullscreen');
+        freeSection.style.display = 'none';
+        // 뒤로가기/타이틀 제거
+        const backBtn = document.getElementById('free-back-btn');
+        if (backBtn) backBtn.remove();
+        const title = document.getElementById('free-title');
+        if (title) title.remove();
+      }
+    };
+
+    // 카드 슬라이더 상태 관리
+    let currentCardIndex = 0;
+    let currentCards = [];
+    let currentSection = '';
+
+    // 브랜드 섹션 로딩 (인스타 스타일 카드)
+    window.loadBrandSection = async function() {
+      const container = document.getElementById('habit-salon-brand-list');
+      if (!container) return;
+      
+      container.innerHTML = '<div style="text-align:center;padding:40px;color:#666;">로딩 중...</div>';
+      
+      try {
+        const posts = await window.loadBrandPosts();
+        
+        if (posts.length === 0) {
+          container.innerHTML = '<div style="text-align:center;padding:40px;color:#666;">오늘의 브랜드 이야기가 준비 중입니다.</div>';
+          return;
+        }
+        
+        currentCards = posts;
+        currentSection = 'brand';
+        currentCardIndex = 0;
+        
+        container.innerHTML = `
+          <div class="card-slider-container">
+            <div class="card-slider" id="brand-card-slider">
+              ${posts.map((post, index) => `
+                <div class="story-card" data-index="${index}">
+                  ${post.imageUrl ? `<img src="${post.imageUrl}" alt="브랜드 이미지" class="story-card-image">` : 
+                    '<div class="story-card-image" style="display:flex;align-items:center;justify-content:center;font-size:48px;">🌿</div>'}
+                  <div class="story-card-content">
+                    <h3 class="story-card-title">${post.title || '늘봄 브랜드 이야기'}</h3>
+                    <p class="story-card-text">${post.content}</p>
+                    <div class="story-card-meta">
+                      <div class="story-card-author">
+                        <div class="story-card-avatar">늘</div>
+                        <div class="story-card-author-info">
+                          <div class="story-card-author-name">${post.author || '늘봄팀'}</div>
+                          <div class="story-card-time">${window.formatTime(post.timestamp)}</div>
+                        </div>
+                      </div>
+                      <div class="story-card-actions">
+                        <button class="story-action-btn" onclick="window.toggleStoryLike('brand', '${post.id}', ${index})">
+                          <span id="like-icon-brand-${index}">❤️</span>
+                          <span id="like-count-brand-${index}">${post.likes || 0}</span>
+                        </button>
+                        <button class="story-action-btn comment-btn" onclick="window.toggleStoryComments('brand', '${post.id}', ${index})">
+                          <span>💬</span>
+                          <span id="comment-count-brand-${index}">${post.commentCount || 0}</span>
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="story-comments-section active" id="comments-brand-${index}">
+                    <div class="story-comments-header">
+                      댓글 <span id="comment-header-count-brand-${index}">${post.commentCount || 0}</span>개
+                    </div>
+                    <div class="story-comments-list" id="comment-list-brand-${index}">
+                      <!-- 댓글 목록이 여기에 로드됩니다 -->
+                    </div>
+                    <div class="story-comment-input">
+                      <div class="story-comment-form">
+                        <textarea id="comment-input-brand-${index}" class="story-comment-textarea" 
+                                  placeholder="댓글을 입력하세요... (+30P)" maxlength="200"></textarea>
+                        <button onclick="window.submitStoryComment('brand', '${post.id}', ${index})" 
+                                class="story-comment-submit">등록</button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              `).join('')}
+            </div>
+            ${posts.length > 1 ? `
+              <button class="card-nav prev" onclick="window.prevCard()" id="prev-btn">‹</button>
+              <button class="card-nav next" onclick="window.nextCard()" id="next-btn">›</button>
+            ` : ''}
+          </div>
+          ${posts.length > 1 ? `
+            <div class="card-indicators">
+              ${posts.map((_, index) => `
+                <div class="card-indicator ${index === 0 ? 'active' : ''}" 
+                     onclick="window.goToCard(${index})" data-index="${index}"></div>
+              `).join('')}
+            </div>
+          ` : ''}
+        `;
+        
+        window.updateCardNavigation();
+        
+      } catch (error) {
+        console.error('브랜드 섹션 로딩 오류:', error);
+        container.innerHTML = '<div style="text-align:center;padding:40px;color:#f44336;">로딩 중 오류가 발생했습니다.</div>';
+      }
+    };
+
+    // 질문 섹션 로딩 (인스타 스타일 카드)
+    window.loadQuestionSection = async function() {
+      const container = document.getElementById('habit-salon-question-card');
+      const commentsContainer = document.getElementById('habit-salon-question-comments');
+      
+      if (!container) return;
+      
+      container.innerHTML = '<div style="text-align:center;padding:40px;color:#666;">로딩 중...</div>';
+      
+      try {
+        const questions = await window.loadHealthQuestions();
+        
+        if (questions.length === 0) {
+          container.innerHTML = '<div style="text-align:center;padding:40px;color:#666;">오늘의 질문이 준비 중입니다.</div>';
+          return;
+        }
+        
+        currentCards = questions;
+        currentSection = 'question';
+        currentCardIndex = 0;
+        
+        container.innerHTML = `
+          <div class="card-slider-container">
+            <div class="card-slider" id="question-card-slider">
+              ${questions.map((question, index) => `
+                <div class="story-card question-card" data-index="${index}">
+                  <div class="story-card-content">
+                    <h3 class="story-card-title">📝 ${question.question}</h3>
+                    <div class="question-options">
+                      ${question.options ? question.options.map((option, optionIndex) => `
+                        <button class="question-option" 
+                                onclick="window.answerStoryQuestion('${question.id}', ${optionIndex}, ${index})"
+                                id="option-${index}-${optionIndex}">
+                          ${option}
+                        </button>
+                      `).join('') : ''}
+                    </div>
+                    <div class="question-reward">💡 답변하면 30P가 적립됩니다!</div>
+                  </div>
+                  <div class="story-comments-section active" id="comments-question-${index}">
+                    <div class="story-comments-header">
+                      댓글 <span id="comment-header-count-question-${index}">${question.commentCount || 0}</span>개
+                    </div>
+                    <div class="story-comments-list" id="comment-list-question-${index}">
+                      <!-- 댓글 목록이 여기에 로드됩니다 -->
+                    </div>
+                    <div class="story-comment-input">
+                      <div class="story-comment-form">
+                        <textarea id="comment-input-question-${index}" class="story-comment-textarea" 
+                                  placeholder="댓글을 입력하세요... (+30P)" maxlength="200"></textarea>
+                        <button onclick="window.submitStoryComment('question', '${question.id}', ${index})" 
+                                class="story-comment-submit">등록</button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              `).join('')}
+            </div>
+            ${questions.length > 1 ? `
+              <button class="card-nav prev" onclick="window.prevCard()" id="prev-btn">‹</button>
+              <button class="card-nav next" onclick="window.nextCard()" id="next-btn">›</button>
+            ` : ''}
+          </div>
+          ${questions.length > 1 ? `
+            <div class="card-indicators">
+              ${questions.map((_, index) => `
+                <div class="card-indicator ${index === 0 ? 'active' : ''}" 
+                     onclick="window.goToCard(${index})" data-index="${index}"></div>
+              `).join('')}
+            </div>
+          ` : ''}
+        `;
+        
+        if (commentsContainer) {
+          commentsContainer.innerHTML = '';
+        }
+        
+        window.updateCardNavigation();
+        
+      } catch (error) {
+        console.error('질문 섹션 로딩 오류:', error);
+        container.innerHTML = '<div style="text-align:center;padding:40px;color:#f44336;">로딩 중 오류가 발생했습니다.</div>';
+      }
+    };
+
+    // 자유 섹션 로딩 (카드형 리스트 피드)
+    window.loadFreeSection = async function() {
+      const container = document.getElementById('habit-salon-free-list');
+      if (!container) return;
+      container.innerHTML = '<div style="text-align:center;padding:40px;color:#666;">로딩 중...</div>';
+      try {
+        let posts = await window.loadUserPosts();
+        // 정렬
+        const sortLatestBtn = document.getElementById('sort-latest-btn');
+        const sortPopularBtn = document.getElementById('sort-popular-btn');
+        if (sortLatestBtn && sortPopularBtn) {
+          sortLatestBtn.onclick = () => {
+            sortLatestBtn.classList.add('active');
+            sortPopularBtn.classList.remove('active');
+            posts.sort((a, b) => (b.timestamp?.seconds || 0) - (a.timestamp?.seconds || 0));
+            renderFeed();
+          };
+          sortPopularBtn.onclick = () => {
+            sortPopularBtn.classList.add('active');
+            sortLatestBtn.classList.remove('active');
+            posts.sort((a, b) => (b.likes || 0) - (a.likes || 0));
+            renderFeed();
+          };
+        }
+        // 기본 최신순
+        posts.sort((a, b) => (b.timestamp?.seconds || 0) - (a.timestamp?.seconds || 0));
+        function renderFeed() {
+          if (posts.length === 0) {
+            container.innerHTML = '<div style="text-align:center;padding:40px;color:#666;">첫 번째 건강 이야기를 남겨보세요!</div>';
+            return;
+          }
+          container.innerHTML = posts.map((post, index) => `
+            <div class="feed-card" style="margin-bottom:24px;">
+              <div class="feed-card-header" style="display:flex;justify-content:space-between;align-items:center;">
+                <span class="feed-card-author" style="font-weight:600;color:#356c55;">${post.nickname || '익명'}</span>
+                <span class="feed-card-time" style="font-size:13px;color:#999;">${window.formatTime(post.timestamp)}</span>
+              </div>
+              <div class="feed-card-content" style="margin:16px 0;">
+                <div class="feed-card-text" id="feed-card-text-${index}" style="font-size:16px;color:#333;line-height:1.7;max-height:72px;overflow:hidden;position:relative;">${post.content.length > 100 ? post.content.slice(0, 100) + '...' : post.content}</div>
+                ${post.content.length > 100 ? `<button class="feed-card-more-btn" onclick="window.toggleFeedMore(${index})" style="background:none;border:none;color:#4CAF50;font-size:14px;cursor:pointer;">더보기</button>` : ''}
+              </div>
+              <div class="feed-card-actions" style="display:flex;gap:16px;align-items:center;">
+                <button class="feed-card-like-btn" onclick="window.toggleStoryLike('free', '${post.id}', ${index})" style="background:none;border:none;cursor:pointer;font-size:15px;display:flex;align-items:center;gap:4px;">
+                  <span id="like-icon-free-${index}">${post.isLiked ? '❤️' : '🤍'}</span>
+                  <span id="like-count-free-${index}">${post.likes || 0}</span>
+                </button>
+                <button class="feed-card-comment-btn" onclick="window.toggleFeedComments(${index})" style="background:none;border:none;cursor:pointer;font-size:15px;display:flex;align-items:center;gap:4px;">
+                  💬 <span id="comment-count-free-${index}">${post.commentCount || 0}</span>
+                </button>
+              </div>
+              <div class="feed-card-comments" id="feed-card-comments-${index}" style="display:none;margin-top:12px;background:#fafbfc;border-radius:12px;padding:12px 8px;">
+                <div class="story-comments-list" id="comment-list-free-${index}"></div>
+                <div class="story-comment-input" style="margin-top:8px;">
+                  <div class="story-comment-form" style="display:flex;gap:8px;align-items:flex-end;">
+                    <textarea id="comment-input-free-${index}" class="story-comment-textarea" placeholder="댓글을 입력하세요... (+30P)" maxlength="200" style="flex:1;padding:10px 14px;border-radius:16px;border:1px solid #e0e0e0;font-size:14px;"></textarea>
+                    <button onclick="window.submitStoryComment('free', '${post.id}', ${index})" class="story-comment-submit" style="padding:10px 16px;background:#356c55;color:white;border:none;border-radius:16px;font-size:14px;font-weight:600;cursor:pointer;">등록</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          `).join('');
+        }
+        // 더보기/펼치기 토글 함수
+        window.toggleFeedMore = function(index) {
+          const textDiv = document.getElementById(`feed-card-text-${index}`);
+          if (!textDiv) return;
+          if (textDiv.style.maxHeight === 'none') {
+            textDiv.style.maxHeight = '72px';
+            textDiv.style.overflow = 'hidden';
+          } else {
+            textDiv.style.maxHeight = 'none';
+            textDiv.style.overflow = 'visible';
+          }
+        };
+        // 댓글창 토글 함수
+        window.toggleFeedComments = async function(index) {
+          const commentsDiv = document.getElementById(`feed-card-comments-${index}`);
+          if (!commentsDiv) return;
+          if (commentsDiv.style.display === 'block') {
+            commentsDiv.style.display = 'none';
+          } else {
+            commentsDiv.style.display = 'block';
+            // 댓글 목록 로드
+            const post = posts[index];
+            await window.loadStoryComments('free', post.id, index);
+          }
+        };
+        renderFeed();
+      } catch (error) {
+        console.error('피드 로딩 오류:', error);
+        container.innerHTML = '<div style="text-align:center;padding:40px;color:#f44336;">로딩 중 오류가 발생했습니다.</div>';
+      }
+    };
+
+    // 자유글 작성 처리
+    window.handleFreePostSubmit = async function(e) {
+      e.preventDefault();
+      
+      const textarea = document.getElementById('habit-salon-free-content');
+      const content = textarea.value.trim();
+      
+      if (content.length < 50) {
+        window.showSalonToast('50자 이상 입력해주세요.', 'warning');
+        return;
+      }
+      
+      try {
+        const submitBtn = e.target.querySelector('button[type="submit"]');
+        submitBtn.disabled = true;
+        submitBtn.textContent = '작성 중...';
+        
+        await window.addUserPost(content);
+        
+        textarea.value = '';
+        window.showSalonToast('자유글이 작성되었습니다! +100P 적립 🎉');
+        
+        // 포인트 표시 업데이트
+        const points = await window.getUserPoints();
+        const pointDisplay = document.getElementById('habit-salon-my-point');
+        if (pointDisplay) {
+          pointDisplay.textContent = points;
+        }
+        
+        // 자유 섹션 새로고침
+        await window.loadFreeSection();
+        
+      } catch (error) {
+        console.error('자유글 작성 오류:', error);
+        window.showSalonToast('작성 중 오류가 발생했습니다.', 'error');
+      } finally {
+        const submitBtn = e.target.querySelector('button[type="submit"]');
+        submitBtn.disabled = false;
+        submitBtn.textContent = '자유글 작성 (+100P)';
+      }
+    };
+
+    // 댓글 토글
+    window.toggleComments = async function(postType, postId) {
+      console.log('댓글 토글:', { postType, postId });
+      
+      const commentsSection = document.getElementById(`comments-${postType}-${postId}`);
+      if (!commentsSection) {
+        console.error('댓글 섹션을 찾을 수 없습니다.');
+        return;
+      }
+      
+      const isVisible = commentsSection.classList.contains('active');
+      
+      if (!isVisible) {
+        // 댓글 섹션 표시
+        commentsSection.classList.add('active');
+        
+        // 댓글 목록 로드
+        await window.loadStoryComments(postType, postId);
+        
+        // 입력창에 포커스
+        const input = document.getElementById(`comment-input-${postType}-${postId}`);
+        if (input) {
+          input.focus();
+        }
+      } else {
+        // 댓글 섹션 숨기기
+        commentsSection.classList.remove('active');
+      }
+    };
+
+    // 댓글 로딩
+    window.loadComments = async function(postType, postId) {
+      const container = document.getElementById(`comment-list-${postType}-${postId}`);
+      if (!container) return;
+      
+      try {
+        const comments = await window.getComments(postType, postId);
+        
+        container.innerHTML = comments.map(comment => `
+          <div class="feed-comment">
+            <div class="feed-comment-avatar">${comment.author.charAt(0)}</div>
+            <div class="feed-comment-content">
+              <div class="feed-comment-header">
+                <span class="feed-comment-author">${comment.author}</span>
+                <span class="feed-comment-time">${window.formatTime(comment.timestamp)}</span>
+              </div>
+              <div class="feed-comment-text">${comment.content}</div>
+            </div>
+          </div>
+        `).join('');
+        
+      } catch (error) {
+        console.error('댓글 로딩 오류:', error);
+        container.innerHTML = '<div style="color:#f44336;padding:10px;">댓글을 불러올 수 없습니다.</div>';
+      }
+    };
+
+    // 댓글 작성
+    window.submitComment = async function(postType, postId) {
+      const input = document.getElementById(`comment-input-${postType}-${postId}`);
+      const content = input.value.trim();
+      
+      if (!content) {
+        window.showSalonToast('댓글을 입력해주세요.', 'warning');
+        return;
+      }
+      
+      if (content.length > 200) {
+        window.showSalonToast('댓글은 200자 이하로 입력해주세요.', 'warning');
+        return;
+      }
+      
+      try {
+        const submitBtn = input.nextElementSibling;
+        submitBtn.disabled = true;
+        submitBtn.textContent = '등록 중...';
+        
+        await window.addComment(postType, postId, content);
+        
+        input.value = '';
+        const charCount = document.getElementById(`char-count-${postType}-${postId}`);
+        if (charCount) charCount.textContent = '0/200';
+        
+        window.showSalonToast('댓글이 등록되었습니다! +50P 적립 🎉');
+        
+        // 포인트 표시 업데이트
+        const points = await window.getUserPoints();
+        const pointDisplay = document.getElementById('habit-salon-my-point');
+        if (pointDisplay) {
+          pointDisplay.textContent = points;
+        }
+        
+        // 댓글 목록 새로고침
+        await window.loadComments(postType, postId);
+        
+        // 댓글 수 업데이트
+        const countElement = document.getElementById(`comment-count-${postType}-${postId}`);
+        if (countElement) {
+          const currentCount = parseInt(countElement.textContent) || 0;
+          countElement.textContent = currentCount + 1;
+          countElement.classList.add('comment-count-update');
+          setTimeout(() => {
+            countElement.classList.remove('comment-count-update');
+          }, 300);
+        }
+        
+      } catch (error) {
+        console.error('댓글 작성 오류:', error);
+        window.showSalonToast('댓글 작성 중 오류가 발생했습니다.', 'error');
+      } finally {
+        const submitBtn = input.nextElementSibling;
+        submitBtn.disabled = false;
+        submitBtn.textContent = '등록';
+      }
+    };
+
+    // 좋아요 토글
+    window.togglePostLike = async function(postType, postId) {
+      try {
+        const isLiked = await window.toggleLike(postType, postId);
+        const likeElement = document.getElementById(`likes-${postType}-${postId}`);
+        
+        if (likeElement) {
+          const currentLikes = parseInt(likeElement.textContent) || 0;
+          likeElement.textContent = isLiked ? currentLikes + 1 : Math.max(0, currentLikes - 1);
+        }
+        
+        window.showSalonToast(isLiked ? '좋아요! ❤️' : '좋아요 취소');
+        
+      } catch (error) {
+        console.error('좋아요 처리 오류:', error);
+        window.showSalonToast('좋아요 처리 중 오류가 발생했습니다.', 'error');
+      }
+    };
+
+    // 질문 답변
+    window.answerQuestion = async function(questionId, optionIndex) {
+      try {
+        // 답변 기록
+        await addDoc(collection(db, 'question_answers'), {
+          questionId: questionId,
+          optionIndex: optionIndex,
+          userId: window.getUserId(),
+          timestamp: serverTimestamp()
+        });
+        
+        // 포인트 지급
+        await window.addUserPoints(30);
+        
+        window.showSalonToast('답변 완료! +30P 적립 🎉');
+        
+        // 포인트 표시 업데이트
+        const points = await window.getUserPoints();
+        const pointDisplay = document.getElementById('habit-salon-my-point');
+        if (pointDisplay) {
+          pointDisplay.textContent = points;
+        }
+        
+        // 버튼 비활성화
+        const buttons = document.querySelectorAll(`button[onclick*="${questionId}"]`);
+        buttons.forEach(btn => {
+          btn.disabled = true;
+          btn.style.opacity = '0.6';
+        });
+        
+      } catch (error) {
+        console.error('질문 답변 오류:', error);
+        window.showSalonToast('답변 처리 중 오류가 발생했습니다.', 'error');
+      }
+    };
+
+    // 시간 포맷팅
+    window.formatTime = function(timestamp) {
+      if (!timestamp) return '방금 전';
+      
+      const date = timestamp.toDate ? timestamp.toDate() : new Date(timestamp);
+      const now = new Date();
+      const diff = now - date;
+      
+      const minutes = Math.floor(diff / 60000);
+      const hours = Math.floor(diff / 3600000);
+      const days = Math.floor(diff / 86400000);
+      
+      if (minutes < 1) return '방금 전';
+      if (minutes < 60) return `${minutes}분 전`;
+      if (hours < 24) return `${hours}시간 전`;
+      if (days < 7) return `${days}일 전`;
+      
+      return date.toLocaleDateString();
+    };
+
+    console.log('늘봄 습관살롱 시스템 초기화 완료');
+    console.log('사용자 ID:', window.getUserId());
+    
+    // 카드 슬라이더 네비게이션 함수들
+    window.updateCardNavigation = function() {
+      const prevBtn = document.getElementById('prev-btn');
+      const nextBtn = document.getElementById('next-btn');
+      const indicators = document.querySelectorAll('.card-indicator');
+      
+      if (prevBtn) {
+        prevBtn.disabled = currentCardIndex === 0;
+        prevBtn.style.opacity = currentCardIndex === 0 ? '0.3' : '1';
+      }
+      
+      if (nextBtn) {
+        nextBtn.disabled = currentCardIndex === currentCards.length - 1;
+        nextBtn.style.opacity = currentCardIndex === currentCards.length - 1 ? '0.3' : '1';
+      }
+      
+      // 인디케이터 업데이트
+      indicators.forEach((indicator, index) => {
+        indicator.classList.toggle('active', index === currentCardIndex);
+      });
+      
+      // 슬라이더 위치 업데이트
+      const sliders = document.querySelectorAll('.card-slider');
+      sliders.forEach(slider => {
+        slider.style.transform = `translateX(-${currentCardIndex * 100}%)`;
+      });
+    };
+    
+    window.prevCard = function() {
+      if (currentCardIndex > 0) {
+        currentCardIndex--;
+        window.updateCardNavigation();
+      }
+    };
+    
+    window.nextCard = function() {
+      if (currentCardIndex < currentCards.length - 1) {
+        currentCardIndex++;
+        window.updateCardNavigation();
+      }
+    };
+    
+    window.goToCard = function(index) {
+      if (index >= 0 && index < currentCards.length) {
+        currentCardIndex = index;
+        window.updateCardNavigation();
+      }
+    };
+    
+    // 스토리 좋아요 토글
+    window.toggleStoryLike = async function(postType, postId, cardIndex) {
+      try {
+        const isLiked = await window.toggleLike(postType, postId);
+        const likeIcon = document.getElementById(`like-icon-${postType}-${cardIndex}`);
+        const likeCount = document.getElementById(`like-count-${postType}-${cardIndex}`);
+        
+        if (likeIcon) {
+          likeIcon.textContent = isLiked ? '❤️' : '🤍';
+          likeIcon.style.color = isLiked ? '#e74c3c' : '#666';
+        }
+        
+        if (likeCount) {
+          const currentLikes = parseInt(likeCount.textContent) || 0;
+          likeCount.textContent = isLiked ? currentLikes + 1 : Math.max(0, currentLikes - 1);
+        }
+        
+        window.showSalonToast(isLiked ? '좋아요! ❤️' : '좋아요 취소');
+        
+      } catch (error) {
+        console.error('좋아요 처리 오류:', error);
+        window.showSalonToast('좋아요 처리 중 오류가 발생했습니다.', 'error');
+      }
+    };
+    
+    // 스토리 댓글 토글
+    window.toggleStoryComments = async function(postType, postId, cardIndex) {
+      const commentsSection = document.getElementById(`comments-${postType}-${cardIndex}`);
+      if (!commentsSection) return;
+      
+      if (commentsSection.classList.contains('active')) {
+        commentsSection.classList.remove('active');
+      } else {
+        commentsSection.classList.add('active');
+        await window.loadStoryComments(postType, postId, cardIndex);
+      }
+    };
+    
+    // 스토리 댓글 로딩
+    window.loadStoryComments = async function(postType, postId, cardIndex) {
+      console.log('댓글 목록 로드 시도:', { postType, postId, cardIndex });
+      const container = document.getElementById(`comment-list-${postType}-${cardIndex}`);
+      if (!container) {
+        console.error('댓글 컨테이너를 찾을 수 없습니다:', `comment-list-${postType}-${cardIndex}`);
+        return;
+      }
+      
+      try {
+        const comments = await window.getComments(postType, postId);
+        console.log('로드된 댓글:', comments);
+        
+        if (comments.length === 0) {
+          container.innerHTML = '<div style="text-align:center;padding:20px;color:#666;">첫 번째 댓글을 남겨보세요!</div>';
+          return;
+        }
+        
+        container.innerHTML = comments.map(comment => `
+          <div class="story-comment">
+            <div class="story-comment-header">
+              <div class="story-comment-author">
+                <div class="story-comment-avatar">${comment.nickname ? comment.nickname[0] : '익'}</div>
+                <div class="story-comment-info">
+                  <div class="story-comment-name">${comment.nickname || '익명'}</div>
+                  <div class="story-comment-time">${window.formatTime(comment.timestamp)}</div>
+                </div>
+              </div>
+            </div>
+            <div class="story-comment-text">${comment.content}</div>
+          </div>
+        `).join('');
+        
+      } catch (error) {
+        console.error('댓글 로딩 오류:', error);
+        container.innerHTML = '<div style="color:#f44336;padding:10px;">댓글을 불러올 수 없습니다.</div>';
+      }
+    };
+    
+    // 스토리 댓글 작성
+    window.submitStoryComment = async function(postType, postId, cardIndex) {
+      const input = document.getElementById(`comment-input-${postType}-${cardIndex}`);
+      if (!input) {
+        console.error('댓글 입력창을 찾을 수 없습니다.');
+        return;
+      }
+
+      const content = input.value.trim();
+      
+      if (!content) {
+        window.showSalonToast('댓글을 입력해주세요.', 'warning');
+        return;
+      }
+      
+      if (content.length > 200) {
+        window.showSalonToast('댓글은 200자 이하로 입력해주세요.', 'warning');
+        return;
+      }
+      
+      try {
+        const submitBtn = input.parentNode.querySelector('.story-comment-submit');
+        if (submitBtn) {
+          submitBtn.disabled = true;
+          submitBtn.textContent = '등록 중...';
+        }
+        
+        // 댓글 추가 (포인트는 addComment 안에서 처리)
+        await window.addComment(postType, postId, content);
+        
+        input.value = '';
+        window.showSalonToast('댓글이 등록되었습니다! +30P 적립 🎉');
+        
+        // 포인트 표시 업데이트
+        const points = await window.getUserPoints();
+        const pointDisplay = document.getElementById('habit-salon-my-point');
+        if (pointDisplay) {
+          pointDisplay.textContent = points;
+        }
+        
+        // 댓글 목록 새로고침
+        await window.loadStoryComments(postType, postId, cardIndex);
+        
+        // 댓글 수 업데이트
+        const countElements = [
+          document.getElementById(`comment-count-${postType}-${cardIndex}`),
+          document.getElementById(`comment-header-count-${postType}-${cardIndex}`)
+        ];
+        
+        countElements.forEach(countElement => {
+          if (countElement) {
+            const currentCount = parseInt(countElement.textContent) || 0;
+            countElement.textContent = currentCount + 1;
+            countElement.classList.add('comment-count-update');
+            setTimeout(() => {
+              countElement.classList.remove('comment-count-update');
+            }, 300);
+          }
+        });
+        
+      } catch (error) {
+        console.error('댓글 작성 오류:', error);
+        window.showSalonToast('댓글 작성 중 오류가 발생했습니다.', 'error');
+      } finally {
+        const submitBtn = input.parentNode.querySelector('.story-comment-submit');
+        if (submitBtn) {
+          submitBtn.disabled = false;
+          submitBtn.textContent = '등록';
+        }
+      }
+    };
+    
+    // 스토리 질문 답변
+    window.answerStoryQuestion = async function(questionId, optionIndex, cardIndex) {
+      try {
+        // 중복 답변 방지
+        const answerId = `answer_${questionId}_${window.getUserId()}`;
+        const existingAnswer = localStorage.getItem(answerId);
+        
+        if (existingAnswer) {
+          window.showSalonToast('이미 답변한 질문입니다.', 'warning');
+          return;
+        }
+        
+        // 답변 기록
+        await addDoc(collection(db, 'question_answers'), {
+          questionId: questionId,
+          optionIndex: optionIndex,
+          userId: window.getUserId(),
+          timestamp: serverTimestamp()
+        });
+        
+        // 중복 답변 방지용 로컬 저장
+        localStorage.setItem(answerId, 'true');
+        
+        // 포인트 지급
+        await window.addUserPoints(30, 'question_answer', answerId);
+        
+        window.showSalonToast('답변 완료! +30P 적립 🎉');
+        
+        // 포인트 표시 업데이트
+        const points = await window.getUserPoints();
+        const pointDisplay = document.getElementById('habit-salon-my-point');
+        if (pointDisplay) {
+          pointDisplay.textContent = points;
+        }
+        
+        // 버튼들 비활성화
+        const optionButtons = document.querySelectorAll(`#option-${cardIndex}-0, #option-${cardIndex}-1, #option-${cardIndex}-2, #option-${cardIndex}-3`);
+        optionButtons.forEach(btn => {
+          btn.disabled = true;
+          btn.style.opacity = '0.6';
+          btn.style.cursor = 'not-allowed';
+        });
+        
+        // 선택한 옵션 하이라이트
+        const selectedOption = document.getElementById(`option-${cardIndex}-${optionIndex}`);
+        if (selectedOption) {
+          selectedOption.style.background = 'rgba(255,255,255,0.3)';
+          selectedOption.style.borderColor = 'rgba(255,255,255,0.6)';
+        }
+        
+      } catch (error) {
+        console.error('질문 답변 오류:', error);
+        window.showSalonToast('답변 처리 중 오류가 발생했습니다.', 'error');
+      }
+    };
+    
+    // 모바일 스와이프 지원
+    let startX = 0;
+    let isDragging = false;
+    
+    document.addEventListener('touchstart', function(e) {
+      if (e.target.closest('.card-slider-container')) {
+        startX = e.touches[0].clientX;
+        isDragging = true;
+      }
+    });
+    
+    document.addEventListener('touchend', function(e) {
+      if (!isDragging) return;
+      isDragging = false;
+      
+      if (e.target.closest('.card-slider-container')) {
+        const endX = e.changedTouches[0].clientX;
+        const diffX = startX - endX;
+        
+        if (Math.abs(diffX) > 50) { // 50px 이상 스와이프
+          if (diffX > 0) {
+            // 왼쪽 스와이프 (다음 카드)
+            window.nextCard();
+          } else {
+            // 오른쪽 스와이프 (이전 카드)
+            window.prevCard();
+          }
+        }
+      }
+    });
+    
+    console.log('💡 실제 운영 배포 시에는 Firebase 콘솔에서 직접 데이터를 추가하세요.');
+    console.log('개발자 도구에서 필요 시: addSampleData() 또는 fixMissingFields()');
+    
+    // 🚨 긴급 가이드 출력
+    console.log('');
+    console.log('🚨 Firestore 인덱스 문제 해결 가이드');
+    console.log('=====================================');
+    console.log('');
+    console.log('1️⃣ 즉시 실행하세요:');
+    console.log('  fixMissingFields()     // 기존 문서 필드 보정');
+    console.log('  addSampleData()        // 샘플 데이터 추가');
+    console.log('');
+    console.log('2️⃣ 인덱스 생성 가이드:');
+    console.log('  createIndexes()        // 상세 가이드 보기');
+    console.log('');
+    console.log('3️⃣ 개발자 도구에서 다음 함수들 사용 가능:');
+    console.log('  habitSalonUtils.fixMissingFields()');
+    console.log('  habitSalonUtils.addSampleData()');
+    console.log('  habitSalonUtils.createIndexes()');
+    console.log('');
+    console.log('📌 주의: 인덱스가 없으면 빈 결과가 나올 수 있습니다!');
+    console.log('   현재는 클라이언트 필터링으로 임시 해결됨');
+    console.log('=====================================');
+    console.log('');
+    
+    // 🔄 오프라인 액션 동기화 함수
+    window.syncOfflineActions = async function() {
+      try {
+        const offlineActions = JSON.parse(localStorage.getItem('offlineActions') || '[]');
+        
+        if (offlineActions.length === 0) {
+          console.log('동기화할 오프라인 액션이 없습니다.');
+          return;
+        }
+        
+        if (!window.isOnline) {
+          console.log('오프라인 상태 - 동기화를 나중에 시도합니다.');
+          window.showSalonToast('네트워크 연결 후 자동 동기화됩니다.', 'info');
+          return;
+        }
+        
+        console.log(`🔄 ${offlineActions.length}개의 오프라인 액션 동기화 시작...`);
+        let successCount = 0;
+        let failCount = 0;
+        
+        for (const action of offlineActions) {
+          try {
+            if (action.type === 'addPoints') {
+              // 오프라인에서 추가된 포인트를 서버에 동기화
+              await window.addUserPoints(action.pointsToAdd, action.source, action.actionId);
+              successCount++;
+            }
+            // 다른 액션 타입들도 여기에 추가 가능
+          } catch (error) {
+            console.error('액션 동기화 오류:', action, error);
+            failCount++;
+          }
+        }
+        
+        // 성공한 액션들은 큐에서 제거
+        if (successCount > 0) {
+          localStorage.removeItem('offlineActions');
+          console.log(`✅ ${successCount}개 액션 동기화 완료`);
+          window.showSalonToast(`${successCount}개 오프라인 액션이 동기화되었습니다! 🔄`, 'success');
+        }
+        
+        if (failCount > 0) {
+          console.log(`❌ ${failCount}개 액션 동기화 실패`);
+          window.showSalonToast(`${failCount}개 액션 동기화에 실패했습니다.`, 'warning');
+        }
+        
+      } catch (error) {
+        console.error('오프라인 액션 동기화 오류:', error);
+        window.showSalonToast('동기화 중 오류가 발생했습니다.', 'error');
+      }
+    };
+    
+    // 네트워크 복구 시 자동 동기화 (기존 online 이벤트에 추가)
+    const originalOnlineHandler = window.addEventListener('online', () => {
+      console.log('🌐 네트워크 연결됨 - Firestore 재연결 시도');
+      window.isOnline = true;
+      window.showSalonToast('네트워크가 연결되었습니다! 🌐', 'success');
+      enableNetwork(db).catch(error => {
+        console.log('Firestore 네트워크 재활성화 오류:', error);
+      });
+      
+      // 자동 동기화 추가
+      setTimeout(async () => {
+        try {
+          await window.syncOfflineActions();
+          // 캐시 새로고침도 시도
+          const habitSalonMain = document.getElementById('habit-salon-main');
+          if (habitSalonMain && habitSalonMain.style.display !== 'none') {
+            console.log('네트워크 복구 - 습관살롱 데이터 새로고침');
+            // 현재 활성 섹션 새로고침
+            const activeSections = ['brand', 'question', 'free'];
+            for (const section of activeSections) {
+              const sectionElement = document.getElementById(`habit-salon-${section}`);
+              if (sectionElement && sectionElement.style.display !== 'none') {
+                await window.showHabitSalonSection(section);
+                break;
+              }
+            }
+          }
+        } catch (error) {
+          console.error('네트워크 복구 후 동기화 오류:', error);
+        }
+      }, 2000); // 2초 후 동기화 시도
+    });
+
+    // 페이지 로드 후 초기화
+    document.addEventListener('DOMContentLoaded', function() {
+      // 초기 네트워크 상태 설정
+      window.isOnline = navigator.onLine;
+      console.log('초기 네트워크 상태:', window.isOnline ? '온라인' : '오프라인');
+      
+      // 네트워크 상태 모니터링
+      window.addEventListener('online', async () => {
+        console.log('🌐 네트워크 연결됨');
+        window.isOnline = true;
+        window.showSalonToast('네트워크가 연결되었습니다! 🌐', 'success');
+        
+        try {
+          await window.syncOfflineActions();
+          // 현재 섹션 새로고침
+          const habitSalonMain = document.getElementById('habit-salon-main');
+          if (habitSalonMain?.style.display !== 'none') {
+            const sections = ['brand', 'question', 'free'];
+            for (const section of sections) {
+              const sectionElement = document.getElementById(`habit-salon-${section}`);
+              if (sectionElement?.style.display !== 'none') {
+                await window.showHabitSalonSection(section);
+                break;
+              }
+            }
+          }
+        } catch (error) {
+          console.error('네트워크 복구 후 동기화 오류:', error);
+        }
+      });
+      
+      window.addEventListener('offline', () => {
+        console.log('📴 네트워크 연결 끊김');
+        window.isOnline = false;
+        window.showSalonToast('오프라인 상태입니다. 일부 기능이 제한될 수 있습니다.', 'warning');
+      });
+      
+      // 습관살롱 진입 버튼 초기화
+      const enterBtn = document.getElementById('habit-salon-enter-btn');
+      if (enterBtn) {
+        enterBtn.addEventListener('click', async function() {
+          try {
+            document.getElementById('main-section').style.display = 'none';
+            document.getElementById('habit-salon-main').style.display = 'block';
+            await window.initHabitSalon();
+          } catch (error) {
+            console.error('습관살롱 진입 오류:', error);
+            window.showSalonToast('오류가 발생했습니다. 다시 시도해주세요.', 'error');
+          }
+        });
+      }
+    });
+
+    // 샘플 데이터 추가 함수 (비활성화됨)
+    window.addSampleData = async function() {
+      console.log('');
+      console.log('⚠️ 샘플 데이터 추가가 비활성화되었습니다.');
+      console.log('데이터 관리는 Firebase Console에서 진행해주세요:');
+      console.log('https://console.firebase.google.com/project/neulbom-healt-quiz/firestore');
+      return;
+    };
+
+    // 필드 보정 함수 (비활성화됨)
+    window.fixMissingFields = async function() {
+      console.log('');
+      console.log('⚠️ 필드 보정 기능이 비활성화되었습니다.');
+      console.log('데이터 관리는 Firebase Console에서 진행해주세요:');
+      console.log('https://console.firebase.google.com/project/neulbom-healt-quiz/firestore');
+      return;
+    };
+
+    // 콘솔에서 사용할 수 있는 유틸리티 함수들 (데이터 관리 기능 제외)
+    window.habitSalonUtils = {
+      getUserPoints: window.getUserPoints,
+      loadBrandPosts: window.loadBrandPosts,
+      loadHealthQuestions: window.loadHealthQuestions,
+      loadUserPosts: window.loadUserPosts,
+      syncOfflineActions: window.syncOfflineActions
+    };
+    
+    console.log('🚨 Firestore 연결 문제 완전 해결!');
+    console.log('=====================================');
+    console.log('');
+    console.log('✅ 적용된 해결책:');
+    console.log('  - 오프라인 지원 활성화 ✓');
+    console.log('  - 네트워크 상태 자동 감지 ✓');
+    console.log('  - 캐시 시스템 구현 ✓');
+    console.log('  - 강화된 오류 처리 ✓');
+    console.log('  - 자동 동기화 시스템 ✓');
+    console.log('');
+    console.log('🔧 즉시 실행 함수:');
+    console.log('  fixMissingFields()     // 기존 문서 필드 보정');
+    console.log('  addSampleData()        // 샘플 데이터 추가');
+    console.log('  syncOfflineActions()   // 오프라인 액션 동기화');
+    console.log('');
+    console.log('📊 인덱스 생성 가이드:');
+    console.log('  createIndexes()        // 상세 가이드 보기');
+    console.log('');
+    console.log('🔄 개발자 도구에서 사용 가능한 모든 함수:');
+    console.log('  habitSalonUtils.fixMissingFields()');
+    console.log('  habitSalonUtils.addSampleData()');
+    console.log('  habitSalonUtils.syncOfflineActions()');
+    console.log('  habitSalonUtils.createIndexes()');
+    console.log('');
+    console.log('💡 현재 상태:');
+    console.log('  네트워크:', window.isOnline ? '🟢 온라인' : '🔴 오프라인');
+    console.log('  Firestore: 오프라인 지원 활성화됨 ✓');
+    console.log('=====================================');
+    console.log('');
+    
+    // 전체 화면 브랜드 이야기 페이지 함수들
+    window.openBrandStoryPage = async function() {
+      try {
+        history.pushState({ page: 'brand-story' }, '');
+        // 로딩 표시
+        const overlay = document.getElementById('page-transition-overlay');
+        overlay.classList.add('active');
+        
+        // 브랜드 데이터 로딩
+        const posts = await window.loadBrandPosts();
+        
+        if (posts.length === 0) {
+          window.showSalonToast('브랜드 이야기가 준비 중입니다.', 'info');
+          overlay.classList.remove('active');
+          return;
+        }
+        
+        // 카드 슬라이더 초기화
+        currentCards = posts;
+        currentSection = 'brand';
+        currentCardIndex = 0;
+        
+        // 브랜드 스토리 콘텐츠 생성
+        const container = document.getElementById('brand-story-content');
+        container.innerHTML = `
+          <div class="card-slider-container">
+            <div class="card-slider" id="brand-fullscreen-slider">
+              ${posts.map((post, index) => `
+                <div class="story-card" data-index="${index}">
+                  ${post.imageUrl ? `<img src="${post.imageUrl}" alt="브랜드 이미지" class="story-card-image">` : 
+                    '<div class="story-card-image" style="display:flex;align-items:center;justify-content:center;font-size:64px;background:linear-gradient(135deg,#356c55,#4a7c59);">🌿</div>'}
+                  <div class="story-card-content">
+                    <h3 class="story-card-title">${post.title || '늘봄 브랜드 이야기'}</h3>
+                    <p class="story-card-text">${post.content}</p>
+                    <div class="story-card-meta">
+                      <div class="story-card-author">
+                        <div class="story-card-avatar">늘</div>
+                        <div class="story-card-author-info">
+                          <div class="story-card-author-name">${post.author || '늘봄팀'}</div>
+                          <div class="story-card-time">${window.formatTime(post.timestamp)}</div>
+                        </div>
+                      </div>
+                      <div class="story-card-actions">
+                        <button class="story-action-btn" onclick="window.toggleStoryLike('brand', '${post.id}', ${index})">
+                          <span id="like-icon-brand-${index}">❤️</span>
+                          <span id="like-count-brand-${index}">${post.likes || 0}</span>
+                        </button>
+                        <button class="story-action-btn comment-btn" onclick="window.toggleStoryComments('brand', '${post.id}', ${index})">
+                          <span>💬</span>
+                          <span id="comment-count-brand-${index}">${post.commentCount || 0}</span>
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="story-comments-section active" id="comments-brand-${index}">
+                    <div class="story-comments-header">
+                      댓글 <span id="comment-header-count-brand-${index}">${post.commentCount || 0}</span>개
+                    </div>
+                    <div class="story-comments-list" id="comment-list-brand-${index}">
+                      <!-- 댓글 목록이 여기에 로드됩니다 -->
+                    </div>
+                    <div class="story-comment-input">
+                      <div class="story-comment-form">
+                        <textarea id="comment-input-brand-${index}" class="story-comment-textarea" 
+                                  placeholder="댓글을 입력하세요... (+30P)" maxlength="200"></textarea>
+                        <button onclick="window.submitStoryComment('brand', '${post.id}', ${index})" 
+                                class="story-comment-submit">등록</button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              `).join('')}
+            </div>
+            ${posts.length > 1 ? `
+              <button class="card-nav prev" onclick="window.prevCard()" id="prev-btn">‹</button>
+              <button class="card-nav next" onclick="window.nextCard()" id="next-btn">›</button>
+            ` : ''}
+          </div>
+          ${posts.length > 1 ? `
+            <div class="card-indicators">
+              ${posts.map((_, index) => `
+                <div class="card-indicator ${index === 0 ? 'active' : ''}" 
+                     onclick="window.goToCard(${index})" data-index="${index}"></div>
+              `).join('')}
+            </div>
+          ` : ''}
+        `;
+        
+        // 페이지 전환 애니메이션
+        setTimeout(() => {
+          overlay.classList.remove('active');
+          const fullscreenPage = document.getElementById('brand-story-fullscreen');
+          fullscreenPage.classList.add('active');
+          
+          // 카드 네비게이션 업데이트
+          window.updateCardNavigation();
+          
+          // 바디 스크롤 방지
+          document.body.style.overflow = 'hidden';
+        }, 200);
+        
+      } catch (error) {
+        console.error('브랜드 스토리 페이지 열기 오류:', error);
+        window.showSalonToast('페이지를 불러올 수 없습니다.', 'error');
+        const overlay = document.getElementById('page-transition-overlay');
+        overlay.classList.remove('active');
+      }
+    };
+    
+    window.closeBrandStoryPage = function() {
+      const fullscreenPage = document.getElementById('brand-story-fullscreen');
+      if (fullscreenPage) {
+        fullscreenPage.classList.remove('active');
+        document.body.style.overflow = '';
+      }
+    };
+    
+    // ESC 키로 전체 화면 페이지 닫기
+    document.addEventListener('keydown', function(e) {
+      if (e.key === 'Escape') {
+        const fullscreenPage = document.getElementById('brand-story-fullscreen');
+        if (fullscreenPage.classList.contains('active')) {
+          window.closeBrandStoryPage();
+        }
+      }
+    });
+    
+    // 카드 슬라이더 네비게이션 함수들
+
+    // 전체 화면 오늘의 질문 페이지
+    window.openQuestionPage = async function() {
+      try {
+        history.pushState({ page: 'question' }, '');
+        const overlay = document.getElementById('page-transition-overlay');
+        overlay.classList.add('active');
+
+        // 질문 데이터 로딩
+        const questions = await window.loadHealthQuestions();
+        // 카드 슬라이더 형태로 렌더링
+        const container = document.querySelector('#question-fullscreen .fullscreen-page-content');
+        if (!container) return;
+
+        if (questions.length === 0) {
+          container.innerHTML = '<div style="text-align:center;padding:40px;color:#666;">오늘의 질문이 준비 중입니다.</div>';
+        } else {
+          window.currentCards = questions;
+          window.currentSection = 'question';
+          window.currentCardIndex = 0;
+          container.innerHTML = `
+            <div class="card-slider-container">
+              <div class="card-slider" id="question-card-slider">
+                ${questions.map((question, index) => `
+                  <div class="story-card question-card" data-index="${index}">
+                    <div class="story-card-content">
+                      <h3 class="story-card-title">📝 ${question.question}</h3>
+                      <div class="question-options">
+                        ${question.options ? question.options.map((option, optionIndex) => `
+                          <button class="question-option" 
+                                  onclick="window.answerStoryQuestion('${question.id}', ${optionIndex}, ${index})"
+                                  id="option-${index}-${optionIndex}">
+                            ${option}
+                          </button>
+                        `).join('') : ''}
+                      </div>
+                      <div class="question-reward">💡 답변하면 30P가 적립됩니다!</div>
+                    </div>
+                    <div class="story-comments-section active" id="comments-question-${index}">
+                      <div class="story-comments-header">
+                        댓글 <span id="comment-header-count-question-${index}">${question.commentCount || 0}</span>개
+                      </div>
+                      <div class="story-comments-list" id="comment-list-question-${index}"></div>
+                      <div class="story-comment-input">
+                        <div class="story-comment-form">
+                          <textarea id="comment-input-question-${index}" class="story-comment-textarea" 
+                                    placeholder="댓글을 입력하세요... (+30P)" maxlength="200"></textarea>
+                          <button onclick="window.submitStoryComment('question', '${question.id}', ${index})" 
+                                  class="story-comment-submit">등록</button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                `).join('')}
+              </div>
+              ${questions.length > 1 ? `
+                <button class="card-nav prev" onclick="window.prevCard()" id="prev-btn">‹</button>
+                <button class="card-nav next" onclick="window.nextCard()" id="next-btn">›</button>
+              ` : ''}
+            </div>
+            ${questions.length > 1 ? `
+              <div class="card-indicators">
+                ${questions.map((_, index) => `
+                  <div class="card-indicator ${index === 0 ? 'active' : ''}" 
+                       onclick="window.goToCard(${index})" data-index="${index}"></div>
+                `).join('')}
+              </div>
+            ` : ''}
+            <div style="text-align:center;margin-top:20px;padding:16px;background:#f8f9fa;border-radius:12px;">
+              <p style="margin:0;color:#356c55;font-weight:600;">💚 현재 포인트: <span id="habit-salon-my-point">${await window.getUserPoints()}</span>P</p>
+            </div>
+          `;
+          setTimeout(() => { window.updateCardNavigation(); }, 0);
+        }
+
+        // 기존 작은 리스트 UI 숨김
+        const mainSection = document.getElementById('habit-salon-main');
+        if (mainSection) mainSection.style.display = 'none';
+
+        setTimeout(() => {
+          overlay.classList.remove('active');
+          const fullscreenPage = document.getElementById('question-fullscreen');
+          fullscreenPage.classList.add('active');
+          document.body.style.overflow = 'hidden';
+        }, 200);
+      } catch (error) {
+        console.error('질문 페이지 열기 오류:', error);
+        window.showSalonToast('페이지를 불러올 수 없습니다.', 'error');
+        const overlay = document.getElementById('page-transition-overlay');
+        overlay.classList.remove('active');
+      }
+    };
+
+    window.closeQuestionPage = function() {
+      const fullscreenPage = document.getElementById('question-fullscreen');
+      if (fullscreenPage) {
+        fullscreenPage.classList.remove('active');
+        document.body.style.overflow = '';
+        // 네비게이션 섹션 복귀
+        const mainSection = document.getElementById('habit-salon-main');
+        if (mainSection) mainSection.style.display = 'block';
+      }
+    };
+
+    // ESC 키로 전체 화면 페이지 닫기 (브랜드/자유글과 동일하게 question도 적용)
+    document.addEventListener('keydown', function(e) {
+      if (e.key === 'Escape') {
+        const fullscreenPage = document.getElementById('question-fullscreen');
+        if (fullscreenPage && fullscreenPage.classList.contains('active')) {
+          window.closeQuestionPage();
+        }
+      }
+    });
+
+    // 전체 화면 자유글(건강 한마당) 페이지
+    window.openFreePage = async function() {
+      // 모든 섹션 숨김
+      document.getElementById('main-section').style.display = 'none';
+      document.getElementById('habit-salon-main').style.display = 'none';
+      document.getElementById('habit-salon-brand').style.display = 'none';
+      document.getElementById('habit-salon-question').style.display = 'none';
+      document.getElementById('habit-salon-challenge').style.display = 'none';
+      
+      // habit-salon-free 섹션도 일단 숨김 (전체화면으로 표시하기 전에)
+      const originalFree = document.getElementById('habit-salon-free');
+      if (originalFree && originalFree.parentElement === document.getElementById('habit-salon-main')) {
+        originalFree.style.display = 'none';
+      }
+
+      // 플로팅 버튼을 임시 저장
+      const floatingBtn = document.getElementById('floating-write-btn');
+      if (floatingBtn) {
+        floatingBtn.remove(); // 기존 위치에서 제거
+      }
+
+      // habit-salon-free를 body로 이동 (중복 방지를 위해 기존 위치에서 제거)
+      const free = document.getElementById('habit-salon-free');
+      if (free && free.parentElement !== document.body) {
+        document.body.appendChild(free);
+        // 플로팅 버튼을 habit-salon-free의 마지막 자식으로 다시 추가
+        if (floatingBtn) {
+          free.appendChild(floatingBtn);
+        }
+      }
+
+      // 자유게시판 전체화면 스타일 적용
+      free.style.display = 'block';
+      free.style.position = 'fixed';
+      free.style.width = '100vw';
+      free.style.height = '100vh';
+      free.style.top = '0';
+      free.style.left = '0';
+      free.style.background = '#fcfaf5';
+      free.style.zIndex = '99990';
+      free.style.overflowY = 'auto';
+      free.style.margin = '0';
+      free.style.padding = '0';
+
+      // 불필요한 요소 숨김
+      const elementsToHide = free.querySelectorAll('.logo, h2:not(#free-title), p:not(.point-text)');
+      elementsToHide.forEach(el => el.style.display = 'none');
+
+      // 뒤로가기 버튼 추가 (없는 경우에만)
+      if (!document.getElementById('free-back-btn')) {
+        const backBtn = document.createElement('button');
+        backBtn.className = 'fullscreen-back-btn';
+        backBtn.id = 'free-back-btn';
+        backBtn.innerText = '← 뒤로가기';
+        backBtn.onclick = window.closeFreePage;
+        free.insertBefore(backBtn, free.firstChild);
+      }
+
+      // 타이틀 추가 (없는 경우에만)
+      if (!document.getElementById('free-title')) {
+        const title = document.createElement('h1');
+        title.className = 'fullscreen-page-title';
+        title.id = 'free-title';
+        title.innerText = '💬 건강 한마당';
+        free.insertBefore(title, free.children[1]);
+      }
+
+      // 피드 로드
+      await window.loadFreeSection();
+
+      // habit-salon-free-list로 스크롤
+      const freeList = document.getElementById('habit-salon-free-list');
+      if (freeList) freeList.scrollIntoView();
+    };
+
+    window.closeFreePage = function() {
+      // habit-salon-free 스타일 초기화
+      const free = document.getElementById('habit-salon-free');
+      if (!free) return;
+
+      // 모든 스타일 초기화
+      free.style.display = '';
+      free.style.position = '';
+      free.style.width = '';
+      free.style.height = '';
+      free.style.top = '';
+      free.style.left = '';
+      free.style.background = '';
+      free.style.zIndex = '';
+      free.style.overflowY = '';
+      free.style.margin = '';
+      free.style.padding = '';
+      free.classList.remove('fullscreen');
+
+      // 숨겨진 요소들 복원
+      const hiddenElements = free.querySelectorAll('.logo, h2, p');
+      hiddenElements.forEach(el => el.style.display = '');
+
+      // 뒤로가기/타이틀 제거
+      const backBtn = document.getElementById('free-back-btn');
+      if (backBtn) backBtn.remove();
+      const title = document.getElementById('free-title');
+      if (title) title.remove();
+
+      // 네비게이션 섹션 복원
+      document.getElementById('habit-salon-main').style.display = 'block';
+      document.getElementById('main-section').style.display = 'block';
+
+      // 플로팅 버튼을 임시 저장
+      const floatingBtn = document.getElementById('floating-write-btn');
+      if (floatingBtn) {
+        floatingBtn.remove(); // 현재 위치에서 제거
+      }
+
+      // habit-salon-free를 원래 위치로 이동
+      const habitSalonMain = document.getElementById('habit-salon-main');
+      if (habitSalonMain) {
+        const freeSection = habitSalonMain.querySelector('#habit-salon-free');
+        if (!freeSection) {
+          habitSalonMain.appendChild(free);
+          // 플로팅 버튼을 habit-salon-free의 마지막 자식으로 다시 추가
+          if (floatingBtn) {
+            free.appendChild(floatingBtn);
+          }
+        }
+      }
+    };
+
+    // ESC 키로 전체 화면 페이지 닫기
+    document.addEventListener('keydown', function(e) {
+      if (e.key === 'Escape') {
+        const free = document.getElementById('habit-salon-free');
+        if (free && free.style.position === 'fixed') {
+          window.closeFreePage();
+        }
+      }
+    });
+
+    window.openWriteModal = function() {
+      try {
+        history.pushState({ page: 'write' }, '');
+        const modal = document.getElementById('free-write-fullscreen');
+        if (modal) {
+          modal.classList.add('active');
+          document.body.style.overflow = 'hidden';
+        }
+      } catch (error) {
+        console.error('글쓰기 모달 열기 오류:', error);
+      }
+    };
+
+    window.closeWriteModal = function() {
+      const modal = document.getElementById('free-write-fullscreen');
+      if (modal) {
+        modal.classList.remove('active');
+        document.body.style.overflow = '';
+      }
+    };
+
+    // 모바일 뒤로가기 버튼 처리
+    window.addEventListener('popstate', function(e) {
+      const brandStoryPage = document.getElementById('brand-story-fullscreen');
+      const questionPage = document.getElementById('question-fullscreen');
+      const freePage = document.getElementById('free-fullscreen');
+      const writeModal = document.getElementById('free-write-fullscreen');
+      
+      if (brandStoryPage && brandStoryPage.classList.contains('active')) {
+        window.closeBrandStoryPage();
+        return;
+      }
+      
+      if (questionPage && questionPage.classList.contains('active')) {
+        window.closeQuestionPage();
+        return;
+      }
+      
+      if (freePage && freePage.classList.contains('active')) {
+        window.closeFreePage();
+        return;
+      }
+      
+      if (writeModal && writeModal.classList.contains('active')) {
+        window.closeWriteModal();
+        return;
+      }
+    });
+    // ... existing code ...
+
+    // 이벤트 리스너 초기화 함수
+    window.initializeEventListeners = function() {
+      console.log('이벤트 리스너 초기화 시작');
+      
+      // 네비게이션 카드
+      const navCards = document.querySelectorAll('.habit-salon-nav-card');
+      console.log('찾은 네비게이션 카드 수:', navCards.length);
+      
+      navCards.forEach(card => {
+        const section = card.dataset.section;
+        console.log('네비게이션 카드 설정:', section);
+        
+        // 기존 이벤트 리스너 제거
+        card.removeEventListener('click', card.clickHandler);
+        
+        // 새로운 이벤트 리스너 추가
+        card.clickHandler = function() {
+          console.log('네비게이션 카드 클릭됨:', section);
+          if (section === 'brand') {
+            window.openBrandStoryPage();
+          } else if (section === 'question') {
+            window.openQuestionPage();
+          } else if (section === 'free') {
+            window.openFreePage(); // 기존 showHabitSalonSection('free')에서 변경
+          } else if (section === 'challenge') {
+            window.showHabitSalonSection('challenge');
+          }
+        };
+        
+        card.addEventListener('click', card.clickHandler);
+        
+        // 호버 효과
+        card.addEventListener('mouseenter', function() {
+          this.style.boxShadow = '0 4px 16px rgba(53,108,85,0.15)';
+        });
+        
+        card.addEventListener('mouseleave', function() {
+          this.style.boxShadow = '0 2px 8px #e0ede3';
+        });
+      });
+      
+      // 뒤로가기 버튼
+      const backBtn = document.getElementById('habit-salon-main-back-btn');
+      if (backBtn) {
+        backBtn.addEventListener('click', function() {
+          document.getElementById('habit-salon-main').style.display = 'none';
+          document.getElementById('main-section').style.display = 'block';
+        });
+      }
+      
+      console.log('이벤트 리스너 초기화 완료');
+    };
+
+    // DOM이 로드된 후 이벤트 리스너 초기화
+    document.addEventListener('DOMContentLoaded', function() {
+      // 초기 네트워크 상태 설정
+      window.isOnline = navigator.onLine;
+      console.log('초기 네트워크 상태:', window.isOnline ? '온라인' : '오프라인');
+      
+      // 습관살롱 진입 버튼 초기화
+      const enterBtn = document.getElementById('habit-salon-enter-btn');
+      if (enterBtn) {
+        enterBtn.addEventListener('click', async function() {
+          try {
+            document.getElementById('main-section').style.display = 'none';
+            document.getElementById('habit-salon-main').style.display = 'block';
+            // 이벤트 리스너 초기화를 여기서도 실행
+            window.initializeEventListeners();
+            await window.initHabitSalon();
+          } catch (error) {
+            console.error('습관살롱 진입 오류:', error);
+            window.showSalonToast('오류가 발생했습니다. 다시 시도해주세요.', 'error');
+          }
+        });
+      }
+      
+      // 초기 이벤트 리스너 설정
+      window.initializeEventListeners();
+    });
+
+    // 자유 게시판 게시글 로딩
+    window.loadUserPosts = async function() {
+      try {
+        console.log('Firebase에서 자유 게시글 로딩 중...');
+        
+        // 오프라인 상태 시 캐시된 데이터 사용
+        if (!window.isOnline) {
+          console.log('오프라인 상태 - 캐시된 자유 게시글 사용');
+          const cachedData = localStorage.getItem('cached_user_posts');
+          if (cachedData) {
+            const posts = JSON.parse(cachedData);
+            console.log('캐시된 자유 게시글:', posts.length, '개');
+            return posts;
+          }
+          return [];
+        }
+        
+        // Firestore에서 직접 필터링
+        const q = query(
+          collection(db, 'user_posts'),
+          orderBy('timestamp', 'desc')
+        );
+        
+        const snapshot = await getDocs(q);
+        const posts = snapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data(),
+          isLiked: false // 좋아요 상태는 별도로 체크
+        }));
+        
+        // 성공적으로 로딩되면 캐시에 저장
+        if (posts.length > 0) {
+          localStorage.setItem('cached_user_posts', JSON.stringify(posts));
+          localStorage.setItem('cached_user_posts_time', Date.now().toString());
+        }
+        
+        console.log('자유 게시글 로딩 완료:', posts.length, '개');
+        return posts;
+      } catch (error) {
+        console.error('자유 게시글 로딩 오류:', error);
+        // 오류 시 캐시된 데이터 사용 시도
+        const cachedData = localStorage.getItem('cached_user_posts');
+        if (cachedData) {
+          const posts = JSON.parse(cachedData);
+          console.log('오류 발생 - 캐시된 자유 게시글 사용:', posts.length, '개');
+          return posts;
+        }
+        return [];
+      }
+    };
+
+    // 자유글 작성 함수
+    window.addUserPost = async function(content) {
+      try {
+        const userId = window.getUserId();
+        const nickname = localStorage.getItem('nickname');
+        
+        const postData = {
+          userId: userId,
+          nickname: nickname,
+          content: content,
+          timestamp: serverTimestamp(),
+          likes: 0,
+          commentCount: 0
+        };
+        
+        // Firestore에 저장
+        const docRef = await addDoc(collection(db, 'user_posts'), postData);
+        
+        // 포인트 지급
+        const actionId = `post_${docRef.id}`;
+        await window.addUserPoints(100, 'post', actionId);
+        
+        return docRef.id;
+      } catch (error) {
+        console.error('자유글 작성 오류:', error);
+        throw error;
+      }
+    };
+
+    // 댓글 작성 함수
+    window.addComment = async function(postType, postId, content) {
+      try {
+        const userId = window.getUserId();
+        const nickname = localStorage.getItem('nickname');
+        
+        const commentData = {
+          userId: userId,
+          nickname: nickname,
+          content: content,
+          timestamp: serverTimestamp()
+        };
+        
+        // Firestore에 저장
+        const docRef = await addDoc(collection(db, `${postType}_comments`), {
+          postId: postId,
+          ...commentData
+        });
+        
+        // 댓글 수 업데이트
+        const postRef = doc(db, postType === 'brand' ? 'brand_posts' : 
+                           postType === 'question' ? 'health_questions' : 'user_posts', 
+                           postId);
+        await updateDoc(postRef, {
+          commentCount: increment(1)
+        });
+        
+        // 포인트 지급
+        const actionId = `comment_${postType}_${postId}_${userId}`;
+        await window.addUserPoints(30, 'comment', actionId);
+        
+        return docRef.id;
+      } catch (error) {
+        console.error('댓글 작성 오류:', error);
+        throw error;
+      }
+    };
+
+    // 댓글 가져오기 함수
+    window.getComments = async function(postType, postId) {
+      try {
+        // 오프라인 상태 시 캐시된 데이터 사용
+        if (!window.isOnline) {
+          console.log('오프라인 상태 - 캐시된 댓글 사용');
+          const cacheKey = `cached_comments_${postType}_${postId}`;
+          const cachedData = localStorage.getItem(cacheKey);
+          if (cachedData) {
+            return JSON.parse(cachedData);
+          }
+          return [];
+        }
+        
+        // Firestore에서 댓글 로드
+        const q = query(
+          collection(db, `${postType}_comments`),
+          where('postId', '==', postId),
+          orderBy('timestamp', 'desc')
+        );
+        
+        const snapshot = await getDocs(q);
+        const comments = snapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data()
+        }));
+        
+        // 성공적으로 로딩되면 캐시에 저장
+        if (comments.length > 0) {
+          const cacheKey = `cached_comments_${postType}_${postId}`;
+          localStorage.setItem(cacheKey, JSON.stringify(comments));
+          localStorage.setItem(`${cacheKey}_time`, Date.now().toString());
+        }
+        
+        return comments;
+      } catch (error) {
+        console.error('댓글 로드 오류:', error);
+        
+        // 오류 시 캐시된 데이터 사용 시도
+        const cacheKey = `cached_comments_${postType}_${postId}`;
+        const cachedData = localStorage.getItem(cacheKey);
+        if (cachedData) {
+          return JSON.parse(cachedData);
+        }
+        return [];
+      }
+    };
+
+    // 포인트 전환 신청 함수
+    window.requestExchange = async function() {
+      try {
+        const userId = window.getUserId();
+        const nickname = localStorage.getItem('nickname');
+        const points = await window.getUserPoints();
+        
+        // 5000포인트 미만이면 전환 불가
+        if (points < 5000) {
+          window.showSalonToast('5,000포인트 이상부터 전환 신청이 가능합니다.', 'warning');
+          return;
+        }
+        
+        // 전환 신청 기록 저장
+        await addDoc(collection(db, "exchangeRequests"), {
+          userId: userId,
+          nickname: nickname || '익명',
+          points: points,
+          requestedAt: serverTimestamp(),
+          status: "pending"
+        });
+        
+        // 사용자 포인트 차감
+        await updateDoc(doc(db, 'users', userId), {
+          points: 0,
+          lastExchangeAt: serverTimestamp()
+        });
+        
+        // localStorage 포인트도 초기화
+        localStorage.setItem('points', '0');
+        
+        // UI 업데이트
+        const pointDisplay = document.getElementById('habit-salon-my-point');
+        if (pointDisplay) {
+          pointDisplay.textContent = '0';
+        }
+        
+        // 전환 버튼 숨기기
+        const exchangeButton = document.getElementById('exchange-button');
+        if (exchangeButton) {
+          exchangeButton.style.display = 'none';
+        }
+        
+        window.showSalonToast('전환 신청이 완료되었습니다! 늘봄몰 적립금으로 곧 전환됩니다 🎉', 'success');
+        
+      } catch (error) {
+        console.error('포인트 전환 신청 오류:', error);
+        window.showSalonToast('전환 신청 중 오류가 발생했습니다.', 'error');
+      }
+    };
+
+    // 포인트에 따른 전환 버튼 표시/숨김 처리
+    window.updateExchangeButton = async function() {
+      try {
+        const points = await window.getUserPoints();
+        const exchangeButton = document.getElementById('exchange-button');
+        
+        if (exchangeButton) {
+          if (points >= 5000) {
+            exchangeButton.style.display = 'block';
+          } else {
+            exchangeButton.style.display = 'none';
+          }
+        }
+      } catch (error) {
+        console.error('전환 버튼 업데이트 오류:', error);
+      }
+    };
+
+    // 포인트 변경 시마다 전환 버튼 상태 업데이트
+    window.addEventListener('pointsUpdated', function() {
+      window.updateExchangeButton();
+    });
+  </script>
+  </script>
+  <script src="script.js" onerror="console.error('script.js 로드 실패')" onload="console.log('script.js 로드 성공')"></script>
 </body>
 </html>

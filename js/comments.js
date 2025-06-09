@@ -44,9 +44,9 @@ window.loadComments = async function(postType, postId) {
             <div class="story-comment">
                 <div class="story-comment-header">
                     <div class="story-comment-author">
-                        <div class="story-comment-avatar">익</div>
+                        <div class="story-comment-avatar">${comment.nickname ? comment.nickname[0] : '익'}</div>
                         <div class="story-comment-info">
-                            <div class="story-comment-name">익명</div>
+                            <div class="story-comment-name">${comment.nickname || '익명'}</div>
                             <div class="story-comment-time">${window.formatTime(comment.timestamp)}</div>
                         </div>
                     </div>
