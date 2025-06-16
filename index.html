@@ -1867,6 +1867,78 @@
       }
       
       .card-nav.prev {
+      }
+    }
+
+    /* 브랜드 이야기 카드 텍스트 전체 보이기 (모바일 포함) */
+    .story-card .story-card-text,
+    .story-card-text,
+    .feed-card-preview,
+    .feed-card-text {
+      display: block !important;
+      -webkit-line-clamp: unset !important;
+      -webkit-box-orient: unset !important;
+      overflow: visible !important;
+      max-height: none !important;
+      text-overflow: unset !important;
+      white-space: pre-line !important;
+      height: auto !important;
+    }
+
+    /* 더보기 버튼 숨기기 */
+    .feed-card-more-btn {
+      display: none !important;
+    }
+
+    /* 브랜드 이야기 카드 이미지 스타일 개선 - 모든 기존 스타일 덮어쓰기 */
+    .story-card .story-card-image,
+    .card-slider .story-card-image,
+    .story-card-image {
+      width: 100% !important;
+      height: auto !important;
+      max-height: none !important;
+      min-height: auto !important;
+      object-fit: contain !important;
+      border-radius: 16px !important;
+      background: #f8f9fa !important;
+      display: block !important;
+      margin: 0 auto !important;
+      aspect-ratio: unset !important;
+    }
+
+    /* 모바일에서도 동일하게 적용 */
+    @media screen and (max-width: 768px) {
+      .story-card .story-card-image,
+      .card-slider .story-card-image,
+      .story-card-image {
+        width: 100% !important;
+        height: auto !important;
+        max-height: none !important;
+        aspect-ratio: unset !important;
+        object-fit: contain !important;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .story-card .story-card-image,
+      .card-slider .story-card-image,
+      .story-card-image {
+        width: 100% !important;
+        height: auto !important;
+        max-height: none !important;
+        object-fit: contain !important;
+      }
+    }
+
+    /* 이미지가 없을 때 기본 아이콘 표시 영역 */
+    .story-card .story-card-image[style*="display:flex"] {
+      display: flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      background: linear-gradient(135deg, #356c55 0%, #4a7c59 100%) !important;
+      color: white !important;
+      font-size: 48px !important;
+    }
   </style>
 </head>
 <body>

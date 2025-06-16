@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>늘봄 오늘의 질문 등록</title>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Pretendard', sans-serif;
+            background-color: #f9f7f2;
+            color: #333;
+            line-height: 1.6;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background: white;
+            padding: 32px;
+            border-radius: 16px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.1);
+        }
+
+        h2 {
+            color: #356c55;
+            margin-bottom: 24px;
+            font-size: 24px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #356c55;
+            font-weight: 500;
+        }
+
+        input[type="text"],
+        input[type="date"],
+        textarea {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 15px;
+            margin-bottom: 8px;
+        }
+
+        textarea {
+            min-height: 120px;
+            resize: vertical;
+        }
+
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin: 16px 0;
+        }
+
+        input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+        }
+
+        button {
+            background: #356c55;
+            color: white;
+            border: none;
+            padding: 14px 28px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s;
+            width: 100%;
+        }
+
+        button:hover {
+            background: #2a5644;
+        }
+
+        button:disabled {
+            background: #cccccc;
+            cursor: not-allowed;
+        }
+
+        .message {
+            margin-top: 16px;
+            padding: 12px;
+            border-radius: 8px;
+            text-align: center;
+            font-weight: 500;
+        }
+
+        .option-count {
+            color: #666;
+            font-size: 14px;
+            margin-top: 4px;
+        }
+
+        @media (max-width: 480px) {
+            .container {
+                padding: 20px;
+            }
+
+            h2 {
+                font-size: 20px;
+                margin-bottom: 20px;
+            }
+
+            input[type="text"],
+            input[type="date"],
+            textarea {
+                padding: 10px;
+                font-size: 14px;
+            }
+
+            button {
+                padding: 12px 24px;
+                font-size: 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>📝 오늘의 질문 등록</h2>
+
+        <div class="form-group">
+            <label for="question">질문</label>
+            <input type="text" id="question" placeholder="예: 오늘 스트레칭이나 운동을 하셨나요?" />
+        </div>
+
+        <div class="form-group">
+            <label for="options">선택지 (최대 4개, 각 줄마다 입력)</label>
+            <textarea id="options" placeholder="예시:&#10;30분 이상 운동했어요 💪&#10;가벼운 스트레칭을 했어요 🧘&#10;계단 오르기 정도만 했어요 🚶&#10;거의 움직이지 않았어요 🥱" oninput="updateOptionCount()"></textarea>
+            <div class="option-count" id="optionCount">선택지 수: 0/4</div>
+        </div>
+
+        <div class="form-group">
+            <label for="date">질문 날짜</label>
+            <input type="date" id="date" />
+        </div>
+
+        <div class="checkbox-group">
+            <input type="checkbox" id="isPublished" checked>
+            <label for="isPublished">공개여부</label>
+        </div>
+
+        <button onclick="submitHabitQuestion()" id="submitBtn">등록</button>
+        <div class="message" id="status"></div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+        import { getFirestore, collection, addDoc, serverTimestamp, Timestamp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyDMgQA6mqaXR_qr9Ujy1-VnC-8qkcj3ZBw",
+            authDomain: "neulbom-healt-quiz.firebaseapp.com",
+            projectId: "neulbom-healt-quiz",
+            storageBucket: "neulbom-healt-quiz.firebasestorage.app",
+            messagingSenderId: "300280931247",
+            appId: "1:300280931247:web:5516f3bd8e8834304a055a"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        // 오류 표시 함수
+        function showError(message) {
+            const status = document.getElementById("status");
+            status.textContent = "⚠️ " + message;
+            status.style.color = "#cc0000";
+        }
+
+        function showSuccess(message) {
+            const status = document.getElementById("status");
+            status.textContent = "✅ " + message;
+            status.style.color = "#2e7d32";
+        }
+
+        // 오늘 날짜를 기본값으로 설정
+        const today = new Date().toISOString().split('T')[0];
+        document.getElementById("date").value = today;
+
+        // 선택지 개수 업데이트 함수
+        window.updateOptionCount = function() {
+            const optionsText = document.getElementById("options").value.trim();
+            const options = optionsText.split('\n').map(x => x.trim()).filter(Boolean);
+            const count = options.length;
+            const optionCount = document.getElementById("optionCount");
+            const submitBtn = document.getElementById("submitBtn");
+            
+            optionCount.textContent = `선택지 수: ${count}/4`;
+            
+            if (count > 4) {
+                optionCount.style.color = "#cc0000";
+                submitBtn.disabled = true;
+            } else {
+                optionCount.style.color = "#666";
+                submitBtn.disabled = false;
+            }
+        };
+
+        // 초기 선택지 개수 표시
+        window.updateOptionCount();
+
+        window.submitHabitQuestion = async function() {
+            const question = document.getElementById("question").value.trim();
+            const optionsRaw = document.getElementById("options").value.trim();
+            const options = optionsRaw.split('\n').map(x => x.trim()).filter(Boolean);
+            const dateStr = document.getElementById("date").value;
+            const isPublished = document.getElementById("isPublished").checked;
+            const status = document.getElementById("status");
+            const submitBtn = document.getElementById("submitBtn");
+
+            if (!question) {
+                showError('질문을 입력해주세요.');
+                return;
+            }
+
+            if (options.length < 2) {
+                showError('최소 2개 이상의 선택지를 입력해주세요.');
+                return;
+            }
+
+            if (options.length > 4) {
+                showError('선택지는 최대 4개까지만 입력할 수 있습니다.');
+                return;
+            }
+
+            submitBtn.disabled = true;
+
+            try {
+                await addDoc(collection(db, "health_questions"), {
+                    question,
+                    options,
+                    date: dateStr,
+                    isPublished,
+                    commentCount: 0,
+                    responses: 0,
+                    timestamp: serverTimestamp()
+                });
+
+                showSuccess('오늘의 질문이 등록되었습니다!');
+
+                // 입력 필드 초기화
+                document.getElementById("question").value = "";
+                document.getElementById("options").value = "";
+                document.getElementById("date").value = today;
+                document.getElementById("isPublished").checked = true;
+                window.updateOptionCount();
+
+            } catch (err) {
+                console.error("Error adding document:", err);
+                showError('데이터 저장 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.');
+            } finally {
+                submitBtn.disabled = false;
+            }
+        };
+
+        // 페이지 로드 시 Firestore 연결 테스트
+        (async function testConnection() {
+            try {
+                const testDoc = await addDoc(collection(db, "connection_test"), {
+                    timestamp: serverTimestamp()
+                });
+                console.log("Firestore connection successful");
+            } catch (err) {
+                console.error("Firestore connection error:", err);
+                showError('데이터베이스 연결에 실패했습니다. 페이지를 새로고침해주세요.');
+            }
+        })();
+    </script>
+</body>
+</html> 
