@@ -26,9 +26,9 @@ const soundCorrect = new Audio('assets/sounds/correct.mp3');
 const soundWrong = new Audio('assets/sounds/wrong.mp3');
 
 // 사용자 상호작용 후 효과음 활성화
-document.body.addEventListener('click', () => {
-  soundClick.play().catch(() => {}); // 보안 정책 우회
-}, { once: true });
+// document.body.addEventListener('click', () => {
+//   soundClick.play().catch(() => {}); // 보안 정책 우회
+// }, { once: true });
 
 // 응원 메시지 목록
 const feedbackTexts = {
@@ -310,9 +310,9 @@ function handleAnswer(selected, question) {
   isAnswering = true;
   clearInterval(timer);
 
-  try {
-    soundClick.play().catch(() => {});
-  } catch (e) {}
+  // try {
+  //   soundClick.play().catch(() => {});
+  // } catch (e) {}
 
   const popup = document.getElementById("explanation-popup");
   const popupEmoji = document.getElementById("popup-emoji");
