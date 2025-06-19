@@ -732,58 +732,14 @@ function goToShorts() {
 }
 
 function goBackMain() {
-  const mainSection = document.getElementById('main-section');
-  const shortsSection = document.getElementById('shorts-section');
-  const fullscreenVideo = document.getElementById('fullscreenVideoWrap');
-  
-  // 전체화면 비디오가 있다면 먼저 닫기
-  if (fullscreenVideo) {
-    // 전체화면 종료
-    if (document.exitFullscreen) {
-      document.exitFullscreen();
-    } else if (document.webkitExitFullscreen) {
-      document.webkitExitFullscreen();
-    } else if (document.mozCancelFullScreen) {
-      document.mozCancelFullScreen();
-    } else if (document.msExitFullscreen) {
-      document.msExitFullscreen();
-    }
-    // 비디오 목록으로 돌아가기
-    loadVideoList();
-    return;
-  }
-  
-  // 숏츠 섹션에서 메인으로 돌아가기
-  mainSection.style.display = 'block';
-  shortsSection.style.display = 'none';
+  document.getElementById('main-section').style.display = 'block';
+  document.getElementById('shorts-section').style.display = 'none';
   history.back();
 }
 
 window.addEventListener('popstate', function(event) {
-  const mainSection = document.getElementById('main-section');
-  const shortsSection = document.getElementById('shorts-section');
-  const fullscreenVideo = document.getElementById('fullscreenVideoWrap');
-  
-  // 전체화면 비디오가 있다면 먼저 닫기
-  if (fullscreenVideo) {
-    // 전체화면 종료
-    if (document.exitFullscreen) {
-      document.exitFullscreen();
-    } else if (document.webkitExitFullscreen) {
-      document.webkitExitFullscreen();
-    } else if (document.mozCancelFullScreen) {
-      document.mozCancelFullScreen();
-    } else if (document.msExitFullscreen) {
-      document.msExitFullscreen();
-    }
-    // 비디오 목록으로 돌아가기
-    loadVideoList();
-    return;
-  }
-  
-  // 숏츠 섹션에서 메인으로 돌아가기
   if (!location.search.includes('shorts=1')) {
-    mainSection.style.display = 'block';
-    shortsSection.style.display = 'none';
+    document.getElementById('main-section').style.display = 'block';
+    document.getElementById('shorts-section').style.display = 'none';
   }
 }); 

@@ -115,17 +115,6 @@
         getMyPoints();
       }
     };
-
-    // 메인 섹션으로 돌아가는 함수
-    window.goBackToMain = function() {
-      const mainSection = document.querySelector('.main-sections');
-      const brandSection = document.getElementById('habit-salon-brand-list');
-      
-      if (mainSection && brandSection) {
-        mainSection.style.display = 'block';
-        brandSection.style.display = 'none';
-      }
-    };
   </script>
   <style>
     .link-copy-btn {
@@ -1950,42 +1939,6 @@
       color: white !important;
       font-size: 48px !important;
     }
-
-    /* 모바일 뒤로가기 버튼 스타일 */
-    .mobile-back-btn {
-      position: fixed;
-      top: 16px;
-      left: 16px;
-      width: 40px;
-      height: 40px;
-      background: rgba(255, 255, 255, 0.9);
-      border: none;
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      cursor: pointer;
-      z-index: 1000;
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-      transition: all 0.2s ease;
-    }
-
-    .mobile-back-btn:hover {
-      background: #ffffff;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-    }
-
-    .mobile-back-btn svg {
-      width: 24px;
-      height: 24px;
-      fill: #356c55;
-    }
-
-    @media (min-width: 769px) {
-      .mobile-back-btn {
-        display: none;
-      }
-    }
   </style>
 </head>
 <body>
@@ -2931,11 +2884,6 @@
         currentCardIndex = 0;
         
         container.innerHTML = `
-          <button class="mobile-back-btn" onclick="goBackToMain()">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-              <path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/>
-            </svg>
-          </button>
           <div class="card-slider-container">
             <div class="card-slider" id="brand-card-slider">
               ${posts.map((post, index) => `
@@ -3927,10 +3875,134 @@
     console.log('=====================================');
     console.log('');
     
+    // 페이지 상태 관리 객체
+    const pageState = {
+      currentPage: 'main',
+      previousPage: null,
+      isNavigating: false
+    };
+
+    // 페이지 상태 업데이트 함수
+    function updatePageState(newPage) {
+      pageState.previousPage = pageState.currentPage;
+      pageState.currentPage = newPage;
+      pageState.isNavigating = false;
+      history.pushState({ page: newPage }, '', `#${newPage}`);
+    }
+
+    // 모든 페이지/모달 닫기 (초기화)
+    function closeAllPagesAndModals() {
+      // 브랜드 스토리 페이지 닫기
+      const brandStoryPage = document.getElementById('brand-story-fullscreen');
+      if (brandStoryPage) {
+        brandStoryPage.classList.remove('active');
+      }
+
+      // 질문 페이지 닫기
+      const questionPage = document.getElementById('question-fullscreen');
+      if (questionPage) {
+        questionPage.classList.remove('active');
+      }
+
+      // 습관살롱 자유게시판 닫기
+      const freePage = document.getElementById('habit-salon-free');
+      if (freePage) {
+        freePage.classList.remove('fullscreen');
+        freePage.style.position = '';
+        freePage.style.width = '';
+        freePage.style.height = '';
+        freePage.style.top = '';
+        freePage.style.left = '';
+        freePage.style.background = '';
+        freePage.style.zIndex = '';
+        freePage.style.overflowY = '';
+        freePage.style.margin = '';
+        freePage.style.padding = '';
+      }
+
+      // 글쓰기 모달 닫기
+      const writeModal = document.getElementById('free-write-fullscreen');
+      if (writeModal) {
+        writeModal.classList.remove('active');
+      }
+
+      // 메인 섹션 표시 복원
+      const mainSection = document.getElementById('main-section');
+      const habitSalonMain = document.getElementById('habit-salon-main');
+      if (mainSection) mainSection.style.display = 'block';
+      if (habitSalonMain) habitSalonMain.style.display = 'none';
+
+      // 스크롤 복원
+      document.body.style.overflow = '';
+
+      // 페이지 전환 오버레이 숨김
+      const overlay = document.getElementById('page-transition-overlay');
+      if (overlay) overlay.classList.remove('active');
+    }
+
+    // popstate 이벤트 핸들러 (강화된 버전)
+    window.addEventListener('popstate', function(e) {
+      console.log('popstate 이벤트 발생:', e.state);
+      
+      if (pageState.isNavigating) return; // 중복 실행 방지
+      pageState.isNavigating = true;
+
+      const targetPage = e.state ? e.state.page : 'main';
+      
+      switch (targetPage) {
+        case 'main':
+          closeAllPagesAndModals();
+          break;
+        case 'brand-story':
+          // 다른 페이지들 닫고 브랜드 스토리만 활성화
+          closeAllPagesAndModals();
+          setTimeout(() => {
+            const brandStoryPage = document.getElementById('brand-story-fullscreen');
+            if (brandStoryPage) {
+              brandStoryPage.classList.add('active');
+              document.body.style.overflow = 'hidden';
+            }
+            pageState.isNavigating = false;
+          }, 100);
+          return;
+        case 'question':
+          // 다른 페이지들 닫고 질문 페이지만 활성화
+          closeAllPagesAndModals();
+          setTimeout(() => {
+            const questionPage = document.getElementById('question-fullscreen');
+            if (questionPage) {
+              questionPage.classList.add('active');
+              document.body.style.overflow = 'hidden';
+            }
+            pageState.isNavigating = false;
+          }, 100);
+          return;
+        case 'habit-salon':
+          // 다른 페이지들 닫고 습관살롱만 활성화
+          closeAllPagesAndModals();
+          setTimeout(() => {
+            window.openFreePage();
+            pageState.isNavigating = false;
+          }, 100);
+          return;
+        case 'free-write':
+          // 글쓰기 모달 유지 (다른 건 닫기)
+          const writeModal = document.getElementById('free-write-fullscreen');
+          if (writeModal && writeModal.classList.contains('active')) {
+            pageState.isNavigating = false;
+            return;
+          }
+          break;
+      }
+      
+      pageState.currentPage = targetPage;
+      pageState.isNavigating = false;
+    });
+
     // 전체 화면 브랜드 이야기 페이지 함수들
     window.openBrandStoryPage = async function() {
       try {
-        history.pushState({ page: 'brand-story' }, '');
+        updatePageState('brand-story');
         // 로딩 표시
         const overlay = document.getElementById('page-transition-overlay');
         overlay.classList.add('active');
