@@ -341,9 +341,15 @@ document.addEventListener("DOMContentLoaded", async () => {
   console.log('현재 위치:', window.navigationManager.getCurrentLocation());
   console.log('');
   console.log('🔧 네비게이션 테스트 명령어:');
-  console.log('  window.navigationManager.debugStack()     // 네비게이션 스택 확인');
-  console.log('  window.navigationManager.getCurrentLocation()  // 현재 위치 확인');
-  console.log('  window.navigationManager.safeGoBack()     // 안전한 뒤로가기');
+  console.log('  window.navigationManager.debugStack()        // 네비게이션 스택 확인');
+  console.log('  window.navigationManager.getCurrentLocation() // 현재 위치 확인');
+  console.log('  window.navigationManager.safeGoBack()        // 안전한 뒤로가기');
+  console.log('  window.navigationManager.emergencyGoHome()   // 강제로 홈으로 이동');
+  console.log('');
+  console.log('📱 모바일 디버깅:');
+  console.log('  - 뒤로가기 문제 발생 시 emergencyGoHome() 실행');
+  console.log('  - 콘솔에서 🔙, 🏠, 🎯 이모지가 있는 로그 확인');
+  console.log('  - DOM 상태는 🔍 이모지 로그에서 확인');
   console.log('');
   
   // 앱 종료 방지는 navigationManager.safeGoBack()으로만 처리
@@ -1008,23 +1014,44 @@ window.navigationManager = {
     this.isNavigating = true;
     
     try {
+      console.log('🔙 goBack 진행 중...');
+      console.log('🔙 제거하기 전 스택:', this.navigationStack.map(item => item.page));
+      
       // 현재 페이지를 스택에서 제거
-      this.navigationStack.pop();
+      const removedPage = this.navigationStack.pop();
+      console.log('🔙 제거된 페이지:', removedPage ? removedPage.page : 'null');
       
       // 이전 페이지 정보 가져오기
       const previousPage = this.navigationStack[this.navigationStack.length - 1];
+      console.log('🔙 이동할 이전 페이지:', previousPage ? previousPage.page : 'null');
+      console.log('🔙 제거 후 스택:', this.navigationStack.map(item => item.page));
+      console.log('🔙 새로운 스택 길이:', this.navigationStack.length);
       
-      console.log('네비게이션 백:', previousPage.page, this.navigationStack.length);
+      if (!previousPage) {
+        console.error('🔙 ❌ 이전 페이지가 없습니다! 강제로 메인 페이지로 이동');
+        this.navigationStack = [{ page: 'main', state: { section: 'main' } }];
+        this.navigateToPage('main');
+        return true;
+      }
       
       // 페이지 전환 실행
+      console.log('🔙 ➡️ 페이지 전환 시작:', previousPage.page);
       this.navigateToPage(previousPage.page, previousPage.state);
+      console.log('🔙 ✅ 페이지 전환 완료');
       
       return true;
     } catch (error) {
-      console.error('네비게이션 백 오류:', error);
+      console.error('🔙 ❌ 네비게이션 백 오류:', error);
+      console.error('🔙 ❌ 오류 스택:', error.stack);
+      
+      // 오류 발생 시 안전하게 메인으로
+      console.log('🔙 🛡️ 오류 복구: 메인 페이지로 강제 이동');
+      this.navigationStack = [{ page: 'main', state: { section: 'main' } }];
+      this.navigateToPage('main');
       return false;
     } finally {
       setTimeout(() => {
+        console.log('🔙 🔓 네비게이션 잠금 해제');
         this.isNavigating = false;
       }, 200);
     }
@@ -1032,9 +1059,11 @@ window.navigationManager = {
   
   // 특정 페이지로 이동
   navigateToPage(page, state = {}) {
-    this.currentState = { page, ...state };
+    console.log(`🎯 navigateToPage 시작: ${page}`, state);
+    console.log(`🎯 현재 스택 길이: ${this.navigationStack.length}`);
+    console.log(`🎯 현재 스택: [${this.navigationStack.map(item => item.page).join(' → ')}]`);
     
-    console.log(`📱 페이지 이동: ${page}`, state);
+    this.currentState = { page, ...state };
     
     // 페이지 전환 애니메이션
     const overlay = document.getElementById('page-transition-overlay');
@@ -1049,32 +1078,62 @@ window.navigationManager = {
     // 특정 페이지 활성화
     switch (page) {
       case 'main':
+        console.log('🏠 메인 페이지로 이동 중...');
         this.showMainPage();
+        console.log('🏠 메인 페이지 표시 완료');
         break;
       case 'habit-salon':
+        console.log('🌿 습관살롱 페이지로 이동 중...');
         this.showHabitSalon(state.section);
+        console.log('🌿 습관살롱 페이지 표시 완료');
         break;
       case 'brand-story':
+        console.log('📖 브랜드 스토리 페이지로 이동 중...');
         this.showBrandStoryPage();
+        console.log('📖 브랜드 스토리 페이지 표시 완료');
         break;
       case 'question':
+        console.log('❓ 질문 페이지로 이동 중...');
         this.showQuestionPage();
+        console.log('❓ 질문 페이지 표시 완료');
         break;
       case 'free':
+        console.log('💬 자유게시판 페이지로 이동 중...');
         this.showFreePage();
+        console.log('💬 자유게시판 페이지 표시 완료');
         break;
       case 'shorts':
+        console.log('🎥 숏츠 페이지로 이동 중...');
         this.showShortsPage();
+        console.log('🎥 숏츠 페이지 표시 완료');
         break;
-             case 'quiz':
-         this.showQuizPage();
-         break;
-       case 'write':
-         this.showWritePage();
-         break;
-       default:
-         this.showMainPage();
+      case 'quiz':
+        console.log('🧠 퀴즈 페이지로 이동 중...');
+        this.showQuizPage();
+        console.log('🧠 퀴즈 페이지 표시 완료');
+        break;
+      case 'write':
+        console.log('✏️ 글쓰기 페이지로 이동 중...');
+        this.showWritePage();
+        console.log('✏️ 글쓰기 페이지 표시 완료');
+        break;
+      default:
+        console.log('🏠 알 수 없는 페이지 - 메인으로 리다이렉트');
+        this.showMainPage();
     }
+    
+    console.log(`✅ navigateToPage 완료: ${page}`);
+    
+    // DOM 상태 확인
+    setTimeout(() => {
+      const mainSection = document.getElementById('main-section');
+      const habitSalonMain = document.getElementById('habit-salon-main');
+      console.log(`🔍 DOM 상태 확인:`, {
+        mainSection: mainSection ? mainSection.style.display : 'null',
+        habitSalonMain: habitSalonMain ? habitSalonMain.style.display : 'null',
+        currentPage: page
+      });
+    }, 100);
   },
   
   // 모든 페이지/모달 닫기
@@ -1129,8 +1188,70 @@ window.navigationManager = {
   
   // 메인 페이지 표시
   showMainPage() {
+    console.log('🏠 showMainPage 시작');
+    
     const mainSection = document.getElementById('main-section');
-    if (mainSection) mainSection.style.display = 'block';
+    const habitSalonMain = document.getElementById('habit-salon-main');
+    
+    console.log('🏠 DOM 요소 확인:', {
+      mainSection: mainSection ? 'found' : 'NOT FOUND',
+      habitSalonMain: habitSalonMain ? 'found' : 'NOT FOUND'
+    });
+    
+    if (mainSection) {
+      mainSection.style.display = 'block';
+      console.log('🏠 ✅ 메인 섹션 표시됨');
+    } else {
+      console.error('🏠 ❌ main-section 요소를 찾을 수 없습니다!');
+    }
+    
+    // 다른 섹션들 확실히 숨기기
+    if (habitSalonMain) {
+      habitSalonMain.style.display = 'none';
+      console.log('🏠 습관살롱 메인 숨김');
+    }
+    
+    // 다른 모든 전체화면 요소들도 숨기기
+    const allFullscreenElements = [
+      'brand-story-fullscreen',
+      'question-fullscreen', 
+      'habit-salon-free',
+      'free-write-fullscreen',
+      'shorts-section'
+    ];
+    
+    allFullscreenElements.forEach(id => {
+      const element = document.getElementById(id);
+      if (element) {
+        element.style.display = 'none';
+        element.classList.remove('active', 'fullscreen');
+        console.log(`🏠 ${id} 숨김 처리됨`);
+      }
+    });
+    
+    // 바디 스크롤 복원
+    document.body.style.overflow = '';
+    
+    console.log('🏠 showMainPage 완료');
+    
+    // 2초 후 다시 한번 확인
+    setTimeout(() => {
+      const mainCheck = document.getElementById('main-section');
+      const habitCheck = document.getElementById('habit-salon-main');
+      console.log('🏠 🔍 2초 후 재확인:', {
+        mainDisplay: mainCheck ? mainCheck.style.display : 'null',
+        habitDisplay: habitCheck ? habitCheck.style.display : 'null',
+        bodyOverflow: document.body.style.overflow
+      });
+      
+      // 혹시 메인이 안 보이고 있다면 강제로 다시 표시
+      if (mainCheck && (mainCheck.style.display === 'none' || mainCheck.style.display === '')) {
+        console.log('🏠 🛡️ 메인 섹션 강제 표시');
+        mainCheck.style.display = 'block';
+        mainCheck.style.visibility = 'visible';
+        mainCheck.style.opacity = '1';
+      }
+    }, 2000);
   },
   
   // 습관살롱 표시
@@ -1216,17 +1337,66 @@ window.navigationManager = {
   safeGoBack() {
     console.log('🔙 safeGoBack 호출, 현재 스택 길이:', this.navigationStack.length);
     console.log('🔙 현재 스택:', this.navigationStack.map(item => item.page));
+    console.log('🔙 현재 페이지:', this.currentState.page);
+    
+    // 스택 상태 검증
+    if (!this.navigationStack || this.navigationStack.length === 0) {
+      console.error('🔙 ❌ 네비게이션 스택이 비어있음! 강제 초기화');
+      this.navigationStack = [{ page: 'main', state: { section: 'main' } }];
+      this.navigateToPage('main');
+      return false;
+    }
     
     // 스택이 2개 이상이면 정상적인 뒤로가기 수행
     if (this.navigationStack.length > 1) {
       console.log('📱 정상적인 뒤로가기 수행');
-      return this.goBack();
+      const result = this.goBack();
+      
+      // 만약 goBack이 실패했다면 안전하게 메인으로
+      if (!result) {
+        console.log('🔙 ⚠️ goBack 실패 - 안전하게 메인으로 이동');
+        this.navigationStack = [{ page: 'main', state: { section: 'main' } }];
+        this.navigateToPage('main');
+      }
+      
+      return result;
     }
     
     // 스택이 1개뿐이면 (메인 페이지에 있으면) 앱 종료 방지
     console.log('📱 메인 페이지에서 뒤로가기 - 앱 종료 방지');
-    // 이미 메인 페이지인 경우 아무것도 하지 않음
-    this.navigateToPage('main');
+    
+    // 현재 페이지가 메인이 아니라면 강제로 메인으로
+    if (this.currentState.page !== 'main') {
+      console.log('🔙 🛡️ 현재 페이지가 메인이 아님 - 강제로 메인으로 이동');
+      this.navigationStack = [{ page: 'main', state: { section: 'main' } }];
+      this.navigateToPage('main');
+    } else {
+      console.log('🔙 ✅ 이미 메인 페이지 - 아무 동작 없음');
+    }
+    
     return false;
+  },
+  
+  // 모바일 환경에서 추가 안전장치
+  emergencyGoHome() {
+    console.log('🚨 emergencyGoHome 호출 - 강제로 홈으로 이동');
+    
+    // 모든 상태 초기화
+    this.navigationStack = [{ page: 'main', state: { section: 'main' } }];
+    this.currentState = { page: 'main', section: 'main' };
+    this.isNavigating = false;
+    
+    // 강제로 모든 페이지 숨기고 메인만 표시
+    this.closeAllPages();
+    this.showMainPage();
+    
+    // URL도 초기화
+    try {
+      history.replaceState({ page: 'main', fromNavigationManager: true }, '', '#main');
+    } catch (e) {
+      console.error('URL 초기화 실패:', e);
+    }
+    
+    console.log('🚨 emergencyGoHome 완료');
   }
 }; 
