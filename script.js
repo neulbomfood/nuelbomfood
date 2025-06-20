@@ -346,16 +346,8 @@ document.addEventListener("DOMContentLoaded", async () => {
   console.log('  window.navigationManager.safeGoBack()     // 안전한 뒤로가기');
   console.log('');
   
-  // PWA/TWA 앱 종료 방지 추가 보호장치
-  let backButtonPressed = false;
-  window.addEventListener('beforeunload', function (e) {
-    // 메인 페이지에서 나가려 할 때만 확인
-    if (window.navigationManager.getCurrentLocation().stackDepth <= 1) {
-      e.preventDefault();
-      e.returnValue = '';
-      return '';
-    }
-  });
+  // 앱 종료 방지는 navigationManager.safeGoBack()으로만 처리
+  // beforeunload 팝업은 사용자 경험에 좋지 않으므로 제거
   
   // 방문 포인트 지급
   giveDailyVisitPoints();
@@ -914,14 +906,28 @@ function goBackMain() {
 
 // 통합 popstate 이벤트 리스너
 window.addEventListener('popstate', function(event) {
-  console.log('popstate 이벤트 발생:', event.state);
+  console.log('🔄 popstate 이벤트 발생:', event.state);
+  console.log('🔄 현재 스택 상태:', window.navigationManager.navigationStack.map(item => item.page));
+  console.log('🔄 현재 URL:', window.location.href);
+  
+  // 네비게이션 중이면 무시
+  if (window.navigationManager.isNavigating) {
+    console.log('🔄 이미 네비게이션 중 - popstate 무시');
+    return;
+  }
   
   // 통합 네비게이션 시스템으로 뒤로가기 처리
-  if (event.state && event.state.page) {
-    // 브라우저 뒤로가기 버튼으로 인한 이동
+  if (event.state && event.state.page && event.state.fromNavigationManager) {
+    console.log('🔄 네비게이션 매니저가 생성한 히스토리 - 직접 이동:', event.state.page);
+    // 우리가 만든 히스토리 엔트리로의 이동
     window.navigationManager.navigateToPage(event.state.page, event.state);
+  } else if (event.state && event.state.page) {
+    console.log('🔄 외부에서 생성된 히스토리 - 안전한 뒤로가기');
+    // 외부에서 만든 히스토리 엔트리
+    window.navigationManager.safeGoBack();
   } else {
-    // 직접 URL 접근이나 처음 로드 시 - 안전한 뒤로가기 사용
+    console.log('🔄 히스토리 상태 없음 - 안전한 뒤로가기');
+    // 상태가 없는 경우 (직접 URL 접근 등)
     window.navigationManager.safeGoBack();
   }
 });
@@ -945,10 +951,17 @@ window.navigationManager = {
   
   // 페이지 이동
   pushPage(pageInfo) {
-    if (this.isNavigating) return;
+    if (this.isNavigating) {
+      console.log('⚠️ pushPage 호출됐지만 이미 네비게이션 중 - 무시');
+      return;
+    }
+    
     this.isNavigating = true;
     
     try {
+      console.log('➡️ pushPage 호출:', pageInfo.page);
+      console.log('➡️ 현재 스택:', this.navigationStack.map(item => item.page));
+      
       // 현재 상태를 스택에 추가
       this.navigationStack.push({
         page: pageInfo.page,
@@ -959,15 +972,17 @@ window.navigationManager = {
       // 브라우저 히스토리에 추가
       const stateData = {
         page: pageInfo.page,
-        ...pageInfo.state
+        ...pageInfo.state,
+        fromNavigationManager: true  // 우리가 추가한 것임을 표시
       };
       
       history.pushState(stateData, '', `#${pageInfo.page}`);
       this.currentState = { page: pageInfo.page, ...pageInfo.state };
       
-      console.log('네비게이션 푸시:', pageInfo.page, this.navigationStack.length);
+      console.log('✅ 네비게이션 푸시 완료:', pageInfo.page, '스택 길이:', this.navigationStack.length);
+      console.log('✅ 새로운 스택:', this.navigationStack.map(item => item.page));
     } catch (error) {
-      console.error('네비게이션 푸시 오류:', error);
+      console.error('❌ 네비게이션 푸시 오류:', error);
     } finally {
       setTimeout(() => {
         this.isNavigating = false;
@@ -977,12 +992,16 @@ window.navigationManager = {
   
   // 뒤로가기
   goBack() {
-    if (this.isNavigating || this.navigationStack.length <= 1) {
-      // 메인 페이지에서 뒤로가기 시 앱 종료 방지
-      if (this.navigationStack.length <= 1) {
-        console.log('📱 메인 페이지에서 뒤로가기 - 앱 종료 방지');
-        return false;
-      }
+    console.log('🔙 goBack 호출, 현재 스택 길이:', this.navigationStack.length);
+    console.log('🔙 isNavigating:', this.isNavigating);
+    
+    if (this.isNavigating) {
+      console.log('🔙 이미 네비게이션 중 - 무시');
+      return false;
+    }
+    
+    if (this.navigationStack.length <= 1) {
+      console.log('🔙 스택이 1개 이하 - 뒤로갈 곳이 없음');
       return false;
     }
     
@@ -1195,12 +1214,19 @@ window.navigationManager = {
   
   // 안전한 뒤로가기 (앱 종료 방지)
   safeGoBack() {
-    if (this.navigationStack.length <= 1) {
-      console.log('📱 메인 페이지에서 뒤로가기 시도 - 앱 종료 방지');
-      // 메인 페이지로 확실히 이동
-      this.navigateToPage('main');
-      return false;
+    console.log('🔙 safeGoBack 호출, 현재 스택 길이:', this.navigationStack.length);
+    console.log('🔙 현재 스택:', this.navigationStack.map(item => item.page));
+    
+    // 스택이 2개 이상이면 정상적인 뒤로가기 수행
+    if (this.navigationStack.length > 1) {
+      console.log('📱 정상적인 뒤로가기 수행');
+      return this.goBack();
     }
-    return this.goBack();
+    
+    // 스택이 1개뿐이면 (메인 페이지에 있으면) 앱 종료 방지
+    console.log('📱 메인 페이지에서 뒤로가기 - 앱 종료 방지');
+    // 이미 메인 페이지인 경우 아무것도 하지 않음
+    this.navigateToPage('main');
+    return false;
   }
 }; 
