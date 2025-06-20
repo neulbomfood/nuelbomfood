@@ -84,7 +84,7 @@
       }
     }
 
-    // 포인트 조회 함수
+    // 포인트 조회 함수 (통합 시스템 사용)
     async function getMyPoints() {
       const userId = localStorage.getItem("userId");
       if (!userId) {
@@ -93,6 +93,13 @@
       }
 
       try {
+        // 통합 포인트 시스템이 있으면 사용
+        if (window.pointsManager) {
+          await window.pointsManager.init();
+          return;
+        }
+        
+        // 기존 방식 유지 (백업)
         const doc = await db.collection("users").doc(userId).get();
         if (doc.exists) {
           const points = doc.data().points || 0;
@@ -105,7 +112,12 @@
     }
 
     // 페이지 로드 시 실행
-    window.onload = function() {
+    window.onload = async function() {
+      // 통합 포인트 시스템 초기화
+      if (window.pointsManager) {
+        await window.pointsManager.init();
+      }
+      
       const userId = localStorage.getItem("userId");
       const nickname = localStorage.getItem("nickname");
       
@@ -2153,7 +2165,7 @@
     <!-- 전체 화면 브랜드 이야기 페이지 -->
     <div id="brand-story-fullscreen" class="fullscreen-page">
       <div class="fullscreen-page-header">
-        <button class="fullscreen-back-btn" onclick="window.closeBrandStoryPage()">
+        <button class="fullscreen-back-btn" onclick="window.navigationManager.safeGoBack()">
           ← 뒤로가기
         </button>
         <h1 class="fullscreen-page-title">📖 브랜드 이야기</h1>
@@ -2169,7 +2181,7 @@
     <!-- 전체 화면 오늘의 질문 페이지 -->
     <div id="question-fullscreen" class="fullscreen-page">
       <div class="fullscreen-page-header">
-        <button class="fullscreen-back-btn" onclick="window.closeQuestionPage()">
+        <button class="fullscreen-back-btn" onclick="window.navigationManager.safeGoBack()">
           ← 뒤로가기
         </button>
         <h1 class="fullscreen-page-title">📔 오늘의 질문</h1>
@@ -2418,9 +2430,15 @@
       window.checkNickname();
     });
 
-    // 포인트 관리 (기존 script.js와 연동 + 오프라인 지원)
+    // 포인트 관리 (통합 시스템 우선 사용)
     window.getUserPoints = async function() {
       try {
+        // 통합 포인트 시스템이 있으면 사용
+        if (window.pointsManager) {
+          return window.pointsManager.getPoints();
+        }
+        
+        // 기존 로직 유지 (백업)
         // 오프라인 상태 체크
         if (!window.isOnline) {
           console.log('오프라인 상태 - 로컬 포인트 사용');
@@ -2475,6 +2493,12 @@
     
     window.addUserPoints = async function(pointsToAdd, source = 'habit_salon', actionId = null) {
       try {
+        // 통합 포인트 시스템이 있으면 사용
+        if (window.pointsManager) {
+          return await window.pointsManager.addPoints(pointsToAdd);
+        }
+        
+        // 기존 로직 유지 (백업)
         const userId = window.getUserId();
         
         // 오프라인 상태에서도 로컬 포인트는 업데이트
@@ -2809,11 +2833,20 @@
         // 이벤트 리스너 초기화
         window.initializeEventListeners();
         
-        // 포인트 동기화
-        const points = await window.getUserPoints();
-        const pointDisplay = document.getElementById('habit-salon-my-point');
-        if (pointDisplay) {
-          pointDisplay.textContent = points;
+        // 포인트 동기화 (통합 시스템 사용)
+        if (window.pointsManager) {
+          await window.pointsManager.init();
+          const points = window.pointsManager.getPoints();
+          const pointDisplay = document.getElementById('habit-salon-my-point');
+          if (pointDisplay) {
+            pointDisplay.textContent = points;
+          }
+        } else {
+          const points = await window.getUserPoints();
+          const pointDisplay = document.getElementById('habit-salon-my-point');
+          if (pointDisplay) {
+            pointDisplay.textContent = points;
+          }
         }
         
         
@@ -3807,8 +3840,12 @@
       if (enterBtn) {
         enterBtn.addEventListener('click', async function() {
           try {
-            document.getElementById('main-section').style.display = 'none';
-            document.getElementById('habit-salon-main').style.display = 'block';
+            // 통합 네비게이션 시스템 사용
+            window.navigationManager.pushPage({
+              page: 'habit-salon',
+              state: { section: 'main' }
+            });
+            window.navigationManager.navigateToPage('habit-salon', { section: 'main' });
             await window.initHabitSalon();
           } catch (error) {
             console.error('습관살롱 진입 오류:', error);
@@ -3940,69 +3977,16 @@
       if (overlay) overlay.classList.remove('active');
     }
 
-    // popstate 이벤트 핸들러 (강화된 버전)
-    window.addEventListener('popstate', function(e) {
-      console.log('popstate 이벤트 발생:', e.state);
-      
-      if (pageState.isNavigating) return; // 중복 실행 방지
-      pageState.isNavigating = true;
-
-      const targetPage = e.state ? e.state.page : 'main';
-      
-      switch (targetPage) {
-        case 'main':
-          closeAllPagesAndModals();
-          break;
-        case 'brand-story':
-          // 다른 페이지들 닫고 브랜드 스토리만 활성화
-          closeAllPagesAndModals();
-          setTimeout(() => {
-            const brandStoryPage = document.getElementById('brand-story-fullscreen');
-            if (brandStoryPage) {
-              brandStoryPage.classList.add('active');
-              document.body.style.overflow = 'hidden';
-            }
-            pageState.isNavigating = false;
-          }, 100);
-          return;
-        case 'question':
-          // 다른 페이지들 닫고 질문 페이지만 활성화
-          closeAllPagesAndModals();
-          setTimeout(() => {
-            const questionPage = document.getElementById('question-fullscreen');
-            if (questionPage) {
-              questionPage.classList.add('active');
-              document.body.style.overflow = 'hidden';
-            }
-            pageState.isNavigating = false;
-          }, 100);
-          return;
-        case 'habit-salon':
-          // 다른 페이지들 닫고 습관살롱만 활성화
-          closeAllPagesAndModals();
-          setTimeout(() => {
-            window.openFreePage();
-            pageState.isNavigating = false;
-          }, 100);
-          return;
-        case 'free-write':
-          // 글쓰기 모달 유지 (다른 건 닫기)
-          const writeModal = document.getElementById('free-write-fullscreen');
-          if (writeModal && writeModal.classList.contains('active')) {
-            pageState.isNavigating = false;
-            return;
-          }
-          break;
-      }
-      
-      pageState.currentPage = targetPage;
-      pageState.isNavigating = false;
-    });
+    // 통합 네비게이션 시스템으로 popstate 이벤트 처리 (중복 제거됨)
 
     // 전체 화면 브랜드 이야기 페이지 함수들
     window.openBrandStoryPage = async function() {
       try {
-        updatePageState('brand-story');
+        // 통합 네비게이션 시스템 사용
+        window.navigationManager.pushPage({
+          page: 'brand-story',
+          state: { section: 'brand' }
+        });
         // 로딩 표시
         const overlay = document.getElementById('page-transition-overlay');
         overlay.classList.add('active');
@@ -4119,10 +4103,8 @@
     // ESC 키로 전체 화면 페이지 닫기
     document.addEventListener('keydown', function(e) {
       if (e.key === 'Escape') {
-        const fullscreenPage = document.getElementById('brand-story-fullscreen');
-        if (fullscreenPage.classList.contains('active')) {
-          window.closeBrandStoryPage();
-        }
+        // 통합 네비게이션 시스템으로 뒤로가기
+        window.navigationManager.safeGoBack();
       }
     });
     
@@ -4131,7 +4113,11 @@
     // 전체 화면 오늘의 질문 페이지
     window.openQuestionPage = async function() {
       try {
-        history.pushState({ page: 'question' }, '');
+        // 통합 네비게이션 시스템 사용
+        window.navigationManager.pushPage({
+          page: 'question',
+          state: { section: 'question' }
+        });
         const overlay = document.getElementById('page-transition-overlay');
         overlay.classList.add('active');
 
@@ -4231,18 +4217,15 @@
       }
     };
 
-    // ESC 키로 전체 화면 페이지 닫기 (브랜드/자유글과 동일하게 question도 적용)
-    document.addEventListener('keydown', function(e) {
-      if (e.key === 'Escape') {
-        const fullscreenPage = document.getElementById('question-fullscreen');
-        if (fullscreenPage && fullscreenPage.classList.contains('active')) {
-          window.closeQuestionPage();
-        }
-      }
-    });
+    // ESC 키 이벤트는 통합 네비게이션 시스템에서 처리됨 (중복 제거)
 
     // 전체 화면 자유글(건강 한마당) 페이지
     window.openFreePage = async function() {
+      // 통합 네비게이션 시스템 사용
+      window.navigationManager.pushPage({
+        page: 'free',
+        state: { section: 'free' }
+      });
       // 모든 섹션 숨김
       document.getElementById('main-section').style.display = 'none';
       document.getElementById('habit-salon-main').style.display = 'none';
@@ -4295,7 +4278,9 @@
         backBtn.className = 'fullscreen-back-btn';
         backBtn.id = 'free-back-btn';
         backBtn.innerText = '← 뒤로가기';
-        backBtn.onclick = window.closeFreePage;
+        backBtn.onclick = function() {
+          window.navigationManager.safeGoBack();
+        };
         free.insertBefore(backBtn, free.firstChild);
       }
 
@@ -4369,19 +4354,16 @@
       }
     };
 
-    // ESC 키로 전체 화면 페이지 닫기
-    document.addEventListener('keydown', function(e) {
-      if (e.key === 'Escape') {
-        const free = document.getElementById('habit-salon-free');
-        if (free && free.style.position === 'fixed') {
-          window.closeFreePage();
-        }
-      }
-    });
+    // ESC 키 이벤트는 통합 네비게이션 시스템에서 처리됨 (중복 제거)
 
     window.openWriteModal = function() {
       try {
-        history.pushState({ page: 'write' }, '');
+        // 통합 네비게이션 시스템 사용
+        window.navigationManager.pushPage({
+          page: 'write',
+          state: { section: 'write', from: 'free' }
+        });
+        
         const modal = document.getElementById('free-write-fullscreen');
         if (modal) {
           modal.classList.add('active');
@@ -4400,39 +4382,7 @@
       }
     };
 
-    // 모바일 뒤로가기 버튼 처리
-    window.addEventListener('popstate', function(e) {
-      // 메인 섹션 표시
-      const mainSection = document.getElementById('habit-salon-main');
-      if (mainSection) {
-        mainSection.style.display = 'block';
-      }
-      
-      // 각 섹션 닫기
-      const brandStoryPage = document.getElementById('brand-story-fullscreen');
-      const questionPage = document.getElementById('question-fullscreen');
-      const freePage = document.getElementById('habit-salon-free');
-      const writeModal = document.getElementById('free-write-fullscreen');
-      
-      if (brandStoryPage?.classList.contains('active')) {
-        window.closeBrandStoryPage();
-      }
-      
-      if (questionPage?.classList.contains('active')) {
-        window.closeQuestionPage();
-      }
-      
-      if (freePage?.style.position === 'fixed') {
-        window.closeFreePage();
-      }
-      
-      if (writeModal?.classList.contains('active')) {
-        window.closeWriteModal();
-      }
-      
-      // 스크롤 복원
-      document.body.style.overflow = '';
-    });
+    // 중복된 popstate 리스너 제거됨 (통합 네비게이션 시스템에서 처리)
     // ... existing code ...
 
     // 이벤트 리스너 초기화 함수
@@ -4480,8 +4430,7 @@
       const backBtn = document.getElementById('habit-salon-main-back-btn');
       if (backBtn) {
         backBtn.addEventListener('click', function() {
-          document.getElementById('habit-salon-main').style.display = 'none';
-          document.getElementById('main-section').style.display = 'block';
+          window.navigationManager.safeGoBack();
         });
       }
       

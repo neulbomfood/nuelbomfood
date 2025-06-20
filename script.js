@@ -9,6 +9,170 @@ const bgList = [
 // 개발 중 포인트 리셋 (주석 해제하여 사용)
 // localStorage.removeItem('points');
 
+// 통합 포인트 관리 시스템
+window.pointsManager = {
+  // 현재 포인트 캐시
+  currentPoints: 0,
+  
+  // 포인트 초기화
+  async init() {
+    try {
+      // 우선순위: Firestore > localStorage
+      const firestorePoints = await this.getFirestorePoints();
+      const localPoints = parseInt(localStorage.getItem('points') || '0');
+      
+      // 더 큰 값을 사용 (데이터 손실 방지)
+      this.currentPoints = Math.max(firestorePoints, localPoints);
+      
+      // 동기화
+      await this.syncPoints();
+      this.updateAllDisplays();
+      
+      console.log('포인트 시스템 초기화 완료:', this.currentPoints);
+    } catch (error) {
+      console.error('포인트 초기화 오류:', error);
+      // 오류 시 localStorage 값 사용
+      this.currentPoints = parseInt(localStorage.getItem('points') || '0');
+      this.updateAllDisplays();
+    }
+  },
+  
+  // Firestore에서 포인트 조회
+  async getFirestorePoints() {
+    try {
+      const userId = localStorage.getItem('userId');
+      if (!userId || !window.db) return 0;
+      
+      const doc = await window.db.collection('users').doc(userId).get();
+      return doc.exists ? (doc.data().points || 0) : 0;
+    } catch (error) {
+      console.error('Firestore 포인트 조회 오류:', error);
+      return 0;
+    }
+  },
+  
+  // 포인트 동기화 (양방향)
+  async syncPoints() {
+    try {
+      // localStorage 업데이트
+      localStorage.setItem('points', this.currentPoints.toString());
+      
+      // Firestore 업데이트 (userId가 있을 때만)
+      const userId = localStorage.getItem('userId');
+      if (userId && window.db) {
+        await window.db.collection('users').doc(userId).update({
+          points: this.currentPoints,
+          lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
+        });
+      }
+    } catch (error) {
+      console.error('포인트 동기화 오류:', error);
+      // 최소한 localStorage는 업데이트
+      localStorage.setItem('points', this.currentPoints.toString());
+    }
+  },
+  
+  // 포인트 추가/차감
+  async addPoints(amount) {
+    const oldPoints = this.currentPoints;
+    this.currentPoints = Math.max(0, this.currentPoints + amount);
+    
+    // 동기화
+    await this.syncPoints();
+    
+    // 모든 화면 업데이트
+    this.updateAllDisplays();
+    
+    // 변경 이벤트 발생
+    this.triggerPointsChange(oldPoints, this.currentPoints, amount);
+    
+    return this.currentPoints;
+  },
+  
+  // 포인트 설정 (직접 설정)
+  async setPoints(newPoints) {
+    const oldPoints = this.currentPoints;
+    this.currentPoints = Math.max(0, newPoints);
+    
+    await this.syncPoints();
+    this.updateAllDisplays();
+    
+    this.triggerPointsChange(oldPoints, this.currentPoints, newPoints - oldPoints);
+    
+    return this.currentPoints;
+  },
+  
+  // 현재 포인트 반환
+  getPoints() {
+    return this.currentPoints;
+  },
+  
+  // 모든 포인트 표시 요소 업데이트
+  updateAllDisplays() {
+    const pointsElements = [
+      '#points',                    // 메인/퀴즈 페이지
+      '#habit-salon-my-point',      // 습관살롱
+      '#currentPoints',             // 교환 모달
+      '#modalCurrentPoints',        // 교환 모달2
+      '#final-points'               // 퀴즈 완료
+    ];
+    
+    pointsElements.forEach(selector => {
+      const element = document.querySelector(selector);
+      if (element) {
+        if (selector === '#points') {
+          element.textContent = this.currentPoints;
+        } else {
+          element.textContent = this.currentPoints;
+        }
+      }
+    });
+    
+    // 전환 버튼 상태 업데이트
+    this.updateExchangeButtons();
+    
+    // script.js의 points 변수도 동기화
+    if (typeof window.points !== 'undefined') {
+      window.points = this.currentPoints;
+    }
+  },
+  
+  // 전환 버튼 상태 업데이트
+  updateExchangeButtons() {
+    const exchangeButton = document.getElementById('exchange-button');
+    const exchangePointsBtn = document.getElementById('exchangePointsBtn');
+    const pointsInsufficient = document.getElementById('points-insufficient');
+    
+    const isEligible = this.currentPoints >= 5000;
+    
+    // 퀴즈/메인 페이지 전환 버튼
+    if (exchangeButton) {
+      exchangeButton.style.display = isEligible ? 'block' : 'none';
+    }
+    
+    // 포인트 모달 전환 버튼
+    if (exchangePointsBtn) {
+      exchangePointsBtn.style.display = isEligible ? 'block' : 'none';
+    }
+    
+    // 부족 알림
+    if (pointsInsufficient) {
+      pointsInsufficient.style.display = isEligible ? 'none' : 'block';
+    }
+  },
+  
+  // 포인트 변경 이벤트 발생
+  triggerPointsChange(oldPoints, newPoints, change) {
+    // 커스텀 이벤트 발생
+    const event = new CustomEvent('pointsChanged', {
+      detail: { oldPoints, newPoints, change }
+    });
+    window.dispatchEvent(event);
+    
+    console.log(`포인트 변경: ${oldPoints} → ${newPoints} (${change > 0 ? '+' : ''}${change})`);
+  }
+};
+
 let currentIndex = 0;
 let points = parseInt(localStorage.getItem('points')) || 0;
 let questions = [];
@@ -168,7 +332,31 @@ document.addEventListener('DOMContentLoaded', () => {
   showInstallBanner();
 });
 
-document.addEventListener("DOMContentLoaded", () => {
+document.addEventListener("DOMContentLoaded", async () => {
+  // 통합 포인트 시스템 초기화
+  await window.pointsManager.init();
+  
+  // 통합 네비게이션 시스템 초기화
+  console.log('🧭 통합 네비게이션 시스템 초기화 완료');
+  console.log('현재 위치:', window.navigationManager.getCurrentLocation());
+  console.log('');
+  console.log('🔧 네비게이션 테스트 명령어:');
+  console.log('  window.navigationManager.debugStack()     // 네비게이션 스택 확인');
+  console.log('  window.navigationManager.getCurrentLocation()  // 현재 위치 확인');
+  console.log('  window.navigationManager.safeGoBack()     // 안전한 뒤로가기');
+  console.log('');
+  
+  // PWA/TWA 앱 종료 방지 추가 보호장치
+  let backButtonPressed = false;
+  window.addEventListener('beforeunload', function (e) {
+    // 메인 페이지에서 나가려 할 때만 확인
+    if (window.navigationManager.getCurrentLocation().stackDepth <= 1) {
+      e.preventDefault();
+      e.returnValue = '';
+      return '';
+    }
+  });
+  
   // 방문 포인트 지급
   giveDailyVisitPoints();
   // 초대 리워드 지급
@@ -305,7 +493,7 @@ function showQuestion() {
   if (timerBar) timerBar.style.display = "none";
 }
 
-function handleAnswer(selected, question) {
+async function handleAnswer(selected, question) {
   if (isAnswering) return;
   isAnswering = true;
   clearInterval(timer);
@@ -333,16 +521,16 @@ function handleAnswer(selected, question) {
 
   if (selected === question.correct) {
     correctAnswers++;
-    points += 15;
-    if (points < 0) points = 0;
-    localStorage.setItem("points", points);
+    await addPoints(15);  // 통합 시스템 사용
+    
+    const currentPoints = window.pointsManager ? window.pointsManager.getPoints() : points;
     
     popupEmoji.textContent = "🎉";
     popupResult.textContent = "정답이에요!";
     popupExplanation.textContent = question.explanation;
     popupPoints.innerHTML = `
       <div class="point-change">+15P</div>
-      <div class="total-points">현재 총 ${points}P</div>
+      <div class="total-points">현재 총 ${currentPoints}P</div>
     `;
     popupPoints.style.color = "#28a745";
     
@@ -350,16 +538,16 @@ function handleAnswer(selected, question) {
       soundCorrect.play().catch(() => {});
     } catch (e) {}
   } else {
-    points -= 5;
-    if (points < 0) points = 0;
-    localStorage.setItem("points", points);
+    await addPoints(-5);  // 통합 시스템 사용
+    
+    const currentPoints = window.pointsManager ? window.pointsManager.getPoints() : points;
     
     popupEmoji.textContent = "💪";
     popupResult.textContent = "아쉽지만 틀렸어요";
     popupExplanation.textContent = `정답: ${question.correct}\n${question.explanation}`;
     popupPoints.innerHTML = `
       <div class="point-change">-5P</div>
-      <div class="total-points">현재 총 ${points}P</div>
+      <div class="total-points">현재 총 ${currentPoints}P</div>
     `;
     popupPoints.style.color = "#dc3545";
     
@@ -381,36 +569,22 @@ function handleAnswer(selected, question) {
 }
 
 function updatePoints() {
-  const pointsDisplay = document.getElementById("points");
-  if (!pointsDisplay) return;  // points 요소가 없으면 함수 종료
-  
-  const oldPoints = parseInt(pointsDisplay.textContent);
-  const diff = points - oldPoints;
-  
-  if (diff > 0) {
-    animatePoints(oldPoints, points, 1000);
-  } else {
-    pointsDisplay.textContent = points;
+  // 통합 포인트 관리자를 사용하여 모든 표시 업데이트
+  if (window.pointsManager) {
+    window.pointsManager.updateAllDisplays();
   }
-
-  // 현재 페이지가 quiz.html인 경우에만 exchange 버튼 업데이트
-  if (window.location.pathname.includes('quiz.html')) {
-    const pointsAction = document.getElementById("points-action");
-    const exchangeButton = document.getElementById("exchange-button");
-    const pointsInsufficient = document.getElementById("points-insufficient");
+  
+  // 애니메이션 효과를 위해 기존 로직 유지
+  const pointsDisplay = document.getElementById("points");
+  if (pointsDisplay) {
+    const currentPoints = window.pointsManager ? window.pointsManager.getPoints() : points;
+    const oldPoints = parseInt(pointsDisplay.textContent);
+    const diff = currentPoints - oldPoints;
     
-    if (pointsAction) {
-      pointsAction.style.display = "block";
-      
-      if (exchangeButton && pointsInsufficient) {
-        if (points >= 5000) {
-          exchangeButton.style.display = "block";
-          pointsInsufficient.style.display = "none";
-        } else {
-          exchangeButton.style.display = "none";
-          pointsInsufficient.style.display = "block";
-        }
-      }
+    if (diff > 0) {
+      animatePoints(oldPoints, currentPoints, 1000);
+    } else {
+      pointsDisplay.textContent = currentPoints;
     }
   }
 }
@@ -440,7 +614,8 @@ function finishQuiz() {
   const timeTaken = Math.floor((Date.now() - startTime) / 1000);
   const accuracy = Math.round((correctAnswers / currentIndex) * 100);
   
-  document.getElementById('final-points').textContent = points;
+  const currentPoints = window.pointsManager ? window.pointsManager.getPoints() : points;
+  document.getElementById('final-points').textContent = currentPoints;
   document.getElementById('accuracy').textContent = accuracy;
   document.getElementById('time-taken').textContent = timeTaken;
   
@@ -458,11 +633,11 @@ function finishQuiz() {
   
   // 환전 버튼 표시 조건
   const exchangeBox = document.getElementById('exchange-box');
-  if (points >= 5000) {
+  if (currentPoints >= 5000) {
     exchangeBox.style.display = 'block';
     exchangeBox.innerHTML = `
       <div style="margin-bottom: 16px">
-        🎉 축하합니다! ${points}P를 모으셨네요!<br/>
+        🎉 축하합니다! ${currentPoints}P를 모으셨네요!<br/>
         늘봄몰에서 적립금으로 전환하실 수 있습니다.
       </div>
       <button onclick="requestExchange()" class="primary-button">
@@ -474,7 +649,7 @@ function finishQuiz() {
     exchangeBox.innerHTML = `
       <div style="color: #666; margin: 16px 0">
         5,000P 이상이면 늘봄몰에서 적립금으로 바꿀 수 있어요!<br/>
-        (현재 ${points}P / 목표 5,000P)
+        (현재 ${currentPoints}P / 목표 5,000P)
       </div>
     `;
   }
@@ -657,11 +832,9 @@ function showDailyQuizReminder() {
   }
 }
 
-function addPoints(amount) {
-  points += amount;
-  if (points < 0) points = 0;
-  localStorage.setItem("points", points);
-  if (typeof updatePoints === 'function') updatePoints();
+// 기존 addPoints 함수를 통합 시스템으로 리다이렉트
+async function addPoints(amount) {
+  await window.pointsManager.addPoints(amount);
 }
 
 function showShortsSection() {
@@ -725,10 +898,12 @@ function loadVideoList() {
 }
 
 function goToShorts() {
-  document.getElementById('main-section').style.display = 'none';
-  document.getElementById('shorts-section').style.display = 'block';
-  loadVideoList(); // 숏츠 화면 진입 시마다 영상 목록 불러오기
-  history.pushState({page: 'shorts'}, '', '?shorts=1');
+  // 통합 네비게이션 시스템 사용
+  window.navigationManager.pushPage({
+    page: 'shorts',
+    state: { section: 'shorts' }
+  });
+  window.navigationManager.navigateToPage('shorts');
 }
 
 function goBackMain() {
@@ -737,9 +912,295 @@ function goBackMain() {
   history.back();
 }
 
+// 통합 popstate 이벤트 리스너
 window.addEventListener('popstate', function(event) {
-  if (!location.search.includes('shorts=1')) {
-    document.getElementById('main-section').style.display = 'block';
-    document.getElementById('shorts-section').style.display = 'none';
+  console.log('popstate 이벤트 발생:', event.state);
+  
+  // 통합 네비게이션 시스템으로 뒤로가기 처리
+  if (event.state && event.state.page) {
+    // 브라우저 뒤로가기 버튼으로 인한 이동
+    window.navigationManager.navigateToPage(event.state.page, event.state);
+  } else {
+    // 직접 URL 접근이나 처음 로드 시 - 안전한 뒤로가기 사용
+    window.navigationManager.safeGoBack();
   }
-}); 
+});
+
+// 통합 네비게이션 관리 시스템
+window.navigationManager = {
+  // 네비게이션 스택
+  navigationStack: [{
+    page: 'main',
+    state: { section: 'main' }
+  }],
+  
+  // 현재 페이지 상태
+  currentState: {
+    page: 'main',
+    section: 'main'
+  },
+  
+  // 네비게이션 중인지 체크 (중복 실행 방지)
+  isNavigating: false,
+  
+  // 페이지 이동
+  pushPage(pageInfo) {
+    if (this.isNavigating) return;
+    this.isNavigating = true;
+    
+    try {
+      // 현재 상태를 스택에 추가
+      this.navigationStack.push({
+        page: pageInfo.page,
+        state: pageInfo.state || {},
+        timestamp: Date.now()
+      });
+      
+      // 브라우저 히스토리에 추가
+      const stateData = {
+        page: pageInfo.page,
+        ...pageInfo.state
+      };
+      
+      history.pushState(stateData, '', `#${pageInfo.page}`);
+      this.currentState = { page: pageInfo.page, ...pageInfo.state };
+      
+      console.log('네비게이션 푸시:', pageInfo.page, this.navigationStack.length);
+    } catch (error) {
+      console.error('네비게이션 푸시 오류:', error);
+    } finally {
+      setTimeout(() => {
+        this.isNavigating = false;
+      }, 100);
+    }
+  },
+  
+  // 뒤로가기
+  goBack() {
+    if (this.isNavigating || this.navigationStack.length <= 1) {
+      // 메인 페이지에서 뒤로가기 시 앱 종료 방지
+      if (this.navigationStack.length <= 1) {
+        console.log('📱 메인 페이지에서 뒤로가기 - 앱 종료 방지');
+        return false;
+      }
+      return false;
+    }
+    
+    this.isNavigating = true;
+    
+    try {
+      // 현재 페이지를 스택에서 제거
+      this.navigationStack.pop();
+      
+      // 이전 페이지 정보 가져오기
+      const previousPage = this.navigationStack[this.navigationStack.length - 1];
+      
+      console.log('네비게이션 백:', previousPage.page, this.navigationStack.length);
+      
+      // 페이지 전환 실행
+      this.navigateToPage(previousPage.page, previousPage.state);
+      
+      return true;
+    } catch (error) {
+      console.error('네비게이션 백 오류:', error);
+      return false;
+    } finally {
+      setTimeout(() => {
+        this.isNavigating = false;
+      }, 200);
+    }
+  },
+  
+  // 특정 페이지로 이동
+  navigateToPage(page, state = {}) {
+    this.currentState = { page, ...state };
+    
+    console.log(`📱 페이지 이동: ${page}`, state);
+    
+    // 페이지 전환 애니메이션
+    const overlay = document.getElementById('page-transition-overlay');
+    if (overlay) {
+      overlay.classList.add('active');
+      setTimeout(() => overlay.classList.remove('active'), 200);
+    }
+    
+    // 모든 페이지/모달 초기화
+    this.closeAllPages();
+    
+    // 특정 페이지 활성화
+    switch (page) {
+      case 'main':
+        this.showMainPage();
+        break;
+      case 'habit-salon':
+        this.showHabitSalon(state.section);
+        break;
+      case 'brand-story':
+        this.showBrandStoryPage();
+        break;
+      case 'question':
+        this.showQuestionPage();
+        break;
+      case 'free':
+        this.showFreePage();
+        break;
+      case 'shorts':
+        this.showShortsPage();
+        break;
+             case 'quiz':
+         this.showQuizPage();
+         break;
+       case 'write':
+         this.showWritePage();
+         break;
+       default:
+         this.showMainPage();
+    }
+  },
+  
+  // 모든 페이지/모달 닫기
+  closeAllPages() {
+    // 습관살롱 메인
+    const habitSalonMain = document.getElementById('habit-salon-main');
+    if (habitSalonMain) habitSalonMain.style.display = 'none';
+    
+    // 브랜드 스토리 전체화면
+    const brandStoryPage = document.getElementById('brand-story-fullscreen');
+    if (brandStoryPage) brandStoryPage.classList.remove('active');
+    
+    // 질문 전체화면
+    const questionPage = document.getElementById('question-fullscreen');
+    if (questionPage) questionPage.classList.remove('active');
+    
+    // 자유게시판 전체화면
+    const freePage = document.getElementById('habit-salon-free');
+    if (freePage) {
+      freePage.classList.remove('fullscreen');
+      freePage.style.position = '';
+      freePage.style.width = '';
+      freePage.style.height = '';
+      freePage.style.top = '';
+      freePage.style.left = '';
+      freePage.style.background = '';
+      freePage.style.zIndex = '';
+      freePage.style.overflowY = '';
+      freePage.style.margin = '';
+      freePage.style.padding = '';
+    }
+    
+    // 글쓰기 모달
+    const writeModal = document.getElementById('free-write-fullscreen');
+    if (writeModal) writeModal.classList.remove('active');
+    
+    // 숏츠 섹션
+    const shortsSection = document.getElementById('shorts-section');
+    if (shortsSection) shortsSection.style.display = 'none';
+    
+    // 퀴즈 박스 (quiz.html용)
+    const quizBox = document.getElementById('quiz-box');
+    if (quizBox) quizBox.style.display = 'none';
+    
+    // 바디 스크롤 복원
+    document.body.style.overflow = '';
+    
+    // 페이지 전환 오버레이 숨김
+    const overlay = document.getElementById('page-transition-overlay');
+    if (overlay) overlay.classList.remove('active');
+  },
+  
+  // 메인 페이지 표시
+  showMainPage() {
+    const mainSection = document.getElementById('main-section');
+    if (mainSection) mainSection.style.display = 'block';
+  },
+  
+  // 습관살롱 표시
+  showHabitSalon(section = 'main') {
+    const habitSalonMain = document.getElementById('habit-salon-main');
+    const mainSection = document.getElementById('main-section');
+    
+    if (habitSalonMain) habitSalonMain.style.display = 'block';
+    if (mainSection) mainSection.style.display = 'none';
+    
+    // 특정 섹션이 있으면 해당 섹션으로
+    if (section !== 'main' && window.showHabitSalonSection) {
+      window.showHabitSalonSection(section);
+    }
+  },
+  
+  // 브랜드 스토리 페이지 표시
+  showBrandStoryPage() {
+    if (window.openBrandStoryPage) {
+      window.openBrandStoryPage();
+    }
+  },
+  
+  // 질문 페이지 표시
+  showQuestionPage() {
+    if (window.openQuestionPage) {
+      window.openQuestionPage();
+    }
+  },
+  
+  // 자유게시판 페이지 표시
+  showFreePage() {
+    if (window.openFreePage) {
+      window.openFreePage();
+    }
+  },
+  
+  // 숏츠 페이지 표시
+  showShortsPage() {
+    const mainSection = document.getElementById('main-section');
+    const shortsSection = document.getElementById('shorts-section');
+    
+    if (mainSection) mainSection.style.display = 'none';
+    if (shortsSection) {
+      shortsSection.style.display = 'block';
+      if (typeof loadVideoList === 'function') {
+        loadVideoList();
+      }
+    }
+  },
+  
+  // 퀴즈 페이지 표시
+  showQuizPage() {
+    const quizBox = document.getElementById('quiz-box');
+    if (quizBox) quizBox.style.display = 'block';
+  },
+  
+  // 글쓰기 모달 표시
+  showWritePage() {
+    const writeModal = document.getElementById('free-write-fullscreen');
+    if (writeModal) {
+      writeModal.classList.add('active');
+      document.body.style.overflow = 'hidden';
+    }
+  },
+  
+  // 현재 위치 정보 반환
+  getCurrentLocation() {
+    return {
+      page: this.currentState.page,
+      section: this.currentState.section,
+      stackDepth: this.navigationStack.length
+    };
+  },
+  
+  // 디버깅용 - 네비게이션 스택 출력
+  debugStack() {
+    console.log('네비게이션 스택:', this.navigationStack);
+    console.log('현재 상태:', this.currentState);
+  },
+  
+  // 안전한 뒤로가기 (앱 종료 방지)
+  safeGoBack() {
+    if (this.navigationStack.length <= 1) {
+      console.log('📱 메인 페이지에서 뒤로가기 시도 - 앱 종료 방지');
+      // 메인 페이지로 확실히 이동
+      this.navigateToPage('main');
+      return false;
+    }
+    return this.goBack();
+  }
+}; 
