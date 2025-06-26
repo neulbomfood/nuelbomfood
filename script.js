@@ -297,7 +297,7 @@ function closeInstallBanner() {
 function showInstallBanner() {
   const banner = document.getElementById('install-banner');
   if (!banner) {
-    console.error('배너 엘리먼트를 찾을 수 없음');
+    console.log('배너 엘리먼트가 없음 - 스킵');
     return;
   }
 
@@ -871,12 +871,22 @@ function loadVideoList() {
     .then(res => res.json())
     .then(videos => {
       const section = document.getElementById('shorts-section');
+      if (!section) {
+        console.log('shorts-section 엘리먼트가 없음 - 스킵');
+        return;
+      }
+      
       section.innerHTML = `
         <h3 class="video-title">🎥 1분 건강 숏츠</h3>
         <ul id="videoList" class="video-list"></ul>
         <button onclick="goBackMain()" class="secondary-button" style="margin-top:20px;">← 뒤로가기</button>
       `;
       const list = document.getElementById('videoList');
+      if (!list) {
+        console.log('videoList 엘리먼트가 없음 - 스킵');
+        return;
+      }
+      
       videos.forEach(video => {
         const li = document.createElement('li');
         li.className = 'video-item';
@@ -892,6 +902,9 @@ function loadVideoList() {
         li.onclick = () => openVideoFullScreen(video.id);
         list.appendChild(li);
       });
+    })
+    .catch(error => {
+      console.log('videos.json 로드 실패:', error);
     });
 }
 
