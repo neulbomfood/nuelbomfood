@@ -4657,6 +4657,11 @@
           return;
         }
         
+        // 확인 대화상자
+        if (!confirm('포인트는 초기화됩니다. 정말 전환 신청하시겠습니까?')) {
+          return;
+        }
+        
         // 전환 신청 기록 저장
         await addDoc(collection(db, "exchangeRequests"), {
           userId: userId,
@@ -4666,11 +4671,12 @@
           status: "pending"
         });
         
-        // 사용자 포인트 차감
-        await updateDoc(doc(db, 'users', userId), {
+        // 사용자 포인트 차감 (문서가 없으면 생성)
+        await setDoc(doc(db, 'users', userId), {
           points: 0,
-          lastExchangeAt: serverTimestamp()
-        });
+          lastExchangeAt: serverTimestamp(),
+          nickname: nickname || '익명'
+        }, { merge: true });
         
         // localStorage 포인트도 초기화
         localStorage.setItem('points', '0');
@@ -4687,7 +4693,10 @@
           exchangeButton.style.display = 'none';
         }
         
-        window.showSalonToast('전환 신청이 완료되었습니다! 늘봄몰 적립금으로 곧 전환됩니다 🎉', 'success');
+        // 구글폼 열기
+        window.open('https://docs.google.com/forms/d/e/1FAIpQLSf79U4uayn49L_SMV3KgjnAp8vlP7gx-XJ-v6AnBxveqlIPxg/viewform?usp=dialog', '_blank');
+        
+        window.showSalonToast('전환 신청이 완료되었습니다! 구글폼에서 상세 정보를 입력해주세요 🎉', 'success');
         
       } catch (error) {
         console.error('포인트 전환 신청 오류:', error);
