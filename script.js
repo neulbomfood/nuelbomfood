@@ -923,31 +923,67 @@ function goBackMain() {
   history.back();
 }
 
-// 통합 popstate 이벤트 리스너
+// 모바일 뒤로가기 지원 강화 - popstate 이벤트 리스너
 window.addEventListener('popstate', function(event) {
-  console.log('🔄 popstate 이벤트 발생:', event.state);
-  console.log('🔄 현재 스택 상태:', window.navigationManager.navigationStack.map(item => item.page));
-  console.log('🔄 현재 URL:', window.location.href);
+  console.log('📱 모바일 뒤로가기 감지:', event.state);
+  console.log('📱 현재 스택 상태:', window.navigationManager.navigationStack.map(item => item.page));
+  console.log('📱 현재 URL:', window.location.href);
   
-  // 네비게이션 중이면 무시
+  // 네비게이션 중이면 잠시 대기 후 처리
   if (window.navigationManager.isNavigating) {
-    console.log('🔄 이미 네비게이션 중 - popstate 무시');
+    console.log('📱 네비게이션 중 - 100ms 후 재시도');
+    setTimeout(() => {
+      if (!window.navigationManager.isNavigating) {
+        window.navigationManager.safeGoBack();
+      }
+    }, 100);
     return;
   }
   
-  // 통합 네비게이션 시스템으로 뒤로가기 처리
-  if (event.state && event.state.page && event.state.fromNavigationManager) {
-    console.log('🔄 네비게이션 매니저가 생성한 히스토리 - 직접 이동:', event.state.page);
-    // 우리가 만든 히스토리 엔트리로의 이동
-    window.navigationManager.navigateToPage(event.state.page, event.state);
-  } else if (event.state && event.state.page) {
-    console.log('🔄 외부에서 생성된 히스토리 - 안전한 뒤로가기');
-    // 외부에서 만든 히스토리 엔트리
-    window.navigationManager.safeGoBack();
-  } else {
-    console.log('🔄 히스토리 상태 없음 - 안전한 뒤로가기');
-    // 상태가 없는 경우 (직접 URL 접근 등)
-    window.navigationManager.safeGoBack();
+  // 강제로 뒤로가기 처리 (모바일 환경 고려)
+  console.log('📱 강제 뒤로가기 실행');
+  const success = window.navigationManager.safeGoBack();
+  
+  // 뒤로가기가 실패하면 홈으로 이동
+  if (!success) {
+    console.log('📱 뒤로가기 실패 - 홈으로 이동');
+    window.navigationManager.emergencyGoHome();
+  }
+});
+
+// 모바일 환경에서 추가 뒤로가기 지원
+let backPressedOnce = false;
+
+// Android 환경에서 뒤로가기 버튼 감지 강화
+document.addEventListener('keydown', function(event) {
+  // Android 뒤로가기 키 (keyCode 4) 또는 ESC 키
+  if (event.keyCode === 4 || event.key === 'Escape') {
+    event.preventDefault();
+    console.log('📱 하드웨어 뒤로가기 키 감지');
+    
+    const success = window.navigationManager.safeGoBack();
+    if (!success && !backPressedOnce) {
+      // 메인 페이지에서 첫 번째 뒤로가기 시 앱 종료 확인
+      backPressedOnce = true;
+      if (typeof showToast === 'function') {
+        showToast('한 번 더 누르시면 앱이 종료됩니다');
+      } else if (typeof window.showSalonToast === 'function') {
+        window.showSalonToast('한 번 더 누르시면 앱이 종료됩니다', 'warning');
+      } else {
+        alert('한 번 더 누르시면 앱이 종료됩니다');
+      }
+      setTimeout(() => {
+        backPressedOnce = false;
+      }, 2000);
+    } else if (!success && backPressedOnce) {
+      // 두 번째 뒤로가기 시 앱 종료 (또는 홈으로)
+      if (window.confirm('앱을 종료하시겠습니까?')) {
+        window.close();
+      }
+      backPressedOnce = false;
+    }
+    
+    return false;
   }
 });
 
@@ -1412,4 +1448,131 @@ window.navigationManager = {
     
     console.log('🚨 emergencyGoHome 완료');
   }
-}; 
+};
+
+// 모바일 환경 추가 지원 기능들
+// PWA 및 모바일 브라우저에서 뒤로가기 동작 개선
+let lastBackTime = 0;
+const BACK_COOLDOWN = 300; // 300ms 쿨다운
+
+// 페이지 가시성 변경 감지 (앱이 백그라운드로 가거나 돌아올 때)
+document.addEventListener('visibilitychange', function() {
+  if (document.visibilityState === 'visible') {
+    console.log('📱 앱이 포그라운드로 돌아옴');
+    // 네비게이션 상태 검증
+    if (window.navigationManager && window.navigationManager.currentState.page !== 'main') {
+      const currentElement = document.getElementById('main-section');
+      if (currentElement && currentElement.style.display === 'none') {
+        console.log('📱 메인 페이지가 숨겨져 있음 - 복원 시도');
+        window.navigationManager.showMainPage();
+      }
+    }
+  } else {
+    console.log('📱 앱이 백그라운드로 이동');
+  }
+});
+
+// beforeunload 이벤트로 의도치 않은 앱 종료 방지
+window.addEventListener('beforeunload', function(event) {
+  // 메인 페이지가 아닌 곳에서 새로고침이나 종료 시도 시에만 경고
+  if (window.navigationManager && window.navigationManager.navigationStack.length > 1) {
+    const message = '페이지를 벗어나시겠습니까? 진행 중인 내용이 사라질 수 있습니다.';
+    event.returnValue = message;
+    return message;
+  }
+});
+
+// 모바일 환경에서 스와이프 제스처 감지 (뒤로가기)
+let touchStartX = 0;
+let touchStartY = 0;
+let touchEndX = 0;
+let touchEndY = 0;
+
+document.addEventListener('touchstart', function(event) {
+  touchStartX = event.changedTouches[0].screenX;
+  touchStartY = event.changedTouches[0].screenY;
+}, { passive: true });
+
+document.addEventListener('touchend', function(event) {
+  touchEndX = event.changedTouches[0].screenX;
+  touchEndY = event.changedTouches[0].screenY;
+  
+  // 화면 왼쪽 가장자리에서 시작하는 오른쪽 스와이프 감지
+  const swipeDistance = touchEndX - touchStartX;
+  const verticalDistance = Math.abs(touchEndY - touchStartY);
+  
+  // 조건: 화면 왼쪽 10% 이내에서 시작, 100px 이상 오른쪽으로 스와이프, 세로 이동은 50px 이하
+  if (touchStartX < window.innerWidth * 0.1 && 
+      swipeDistance > 100 && 
+      verticalDistance < 50) {
+    
+    console.log('📱 왼쪽 가장자리 스와이프 감지 - 뒤로가기 실행');
+    const currentTime = Date.now();
+    
+    // 쿨다운 체크
+    if (currentTime - lastBackTime > BACK_COOLDOWN) {
+      lastBackTime = currentTime;
+      window.navigationManager.safeGoBack();
+    }
+  }
+}, { passive: true });
+
+// 모바일에서 더블탭으로 홈 가기 (비상용)
+let lastTapTime = 0;
+let tapCount = 0;
+
+document.addEventListener('touchend', function(event) {
+  const currentTime = Date.now();
+  const tapLength = currentTime - lastTapTime;
+  
+  if (tapLength < 500 && tapLength > 0) {
+    tapCount++;
+    if (tapCount === 3) { // 3번 연속 탭
+      console.log('📱 3번 연속 탭 감지 - 홈으로 이동');
+      window.navigationManager.emergencyGoHome();
+      tapCount = 0;
+    }
+  } else {
+    tapCount = 1;
+  }
+  
+  lastTapTime = currentTime;
+}, { passive: true });
+
+// 모바일에서 장시간 터치로 응급 홈 가기
+let longPressTimer;
+let isLongPressing = false;
+
+document.addEventListener('touchstart', function(event) {
+  isLongPressing = false;
+  longPressTimer = setTimeout(() => {
+    isLongPressing = true;
+    console.log('📱 장시간 터치 감지 - 응급 홈 가기 대기 중');
+    
+    // 진동이 지원되면 진동으로 알림
+    if (navigator.vibrate) {
+      navigator.vibrate([100, 50, 100]);
+    }
+  }, 2000); // 2초 장압
+}, { passive: true });
+
+document.addEventListener('touchend', function(event) {
+  clearTimeout(longPressTimer);
+  
+  if (isLongPressing) {
+    console.log('📱 장시간 터치 종료 - 응급 홈 가기 실행');
+    window.navigationManager.emergencyGoHome();
+    
+    if (typeof showToast === 'function') {
+      showToast('응급 모드: 홈으로 이동됨');
+    }
+  }
+  
+  isLongPressing = false;
+}, { passive: true });
+
+document.addEventListener('touchmove', function(event) {
+  // 터치가 이동하면 장압 취소
+  clearTimeout(longPressTimer);
+  isLongPressing = false;
+}, { passive: true }); 
