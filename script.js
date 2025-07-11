@@ -37,33 +37,40 @@ window.pointsManager = {
     }
   },
   
-  // Firestore에서 포인트 조회
+  // Firestore에서 포인트 조회 (index.html의 통합 시스템 사용)
   async getFirestorePoints() {
     try {
-      const userId = localStorage.getItem('userId');
-      if (!userId || !window.db) return 0;
+      // index.html의 통합 포인트 시스템이 있으면 사용
+      if (window.getUserPoints) {
+        return await window.getUserPoints();
+      }
       
-      const doc = await window.db.collection('users').doc(userId).get();
-      return doc.exists ? (doc.data().points || 0) : 0;
+      // 백업: localStorage만 사용
+      const userId = localStorage.getItem('userId');
+      if (!userId) return 0;
+      
+      return parseInt(localStorage.getItem('points') || '0');
     } catch (error) {
       console.error('Firestore 포인트 조회 오류:', error);
-      return 0;
+      return parseInt(localStorage.getItem('points') || '0');
     }
   },
   
-  // 포인트 동기화 (양방향)
+  // 포인트 동기화 (index.html의 통합 시스템 사용)
   async syncPoints() {
     try {
       // localStorage 업데이트
       localStorage.setItem('points', this.currentPoints.toString());
       
-      // Firestore 업데이트 (userId가 있을 때만)
-      const userId = localStorage.getItem('userId');
-      if (userId && window.db) {
-        await window.db.collection('users').doc(userId).update({
-          points: this.currentPoints,
-          lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
-        });
+      // index.html의 통합 포인트 시스템이 있으면 사용
+      if (window.addUserPoints && window.getUserPoints) {
+        // 현재 포인트와 목표 포인트 차이 계산
+        const currentFirestorePoints = await window.getUserPoints();
+        const diff = this.currentPoints - currentFirestorePoints;
+        
+        if (diff !== 0) {
+          await window.addUserPoints(diff, 'sync', `sync_${Date.now()}`);
+        }
       }
     } catch (error) {
       console.error('포인트 동기화 오류:', error);
@@ -335,25 +342,6 @@ document.addEventListener('DOMContentLoaded', () => {
 document.addEventListener("DOMContentLoaded", async () => {
   // 통합 포인트 시스템 초기화
   await window.pointsManager.init();
-  
-  // 통합 네비게이션 시스템 초기화
-  console.log('🧭 통합 네비게이션 시스템 초기화 완료');
-  console.log('현재 위치:', window.navigationManager.getCurrentLocation());
-  console.log('');
-  console.log('🔧 네비게이션 테스트 명령어:');
-  console.log('  window.navigationManager.debugStack()        // 네비게이션 스택 확인');
-  console.log('  window.navigationManager.getCurrentLocation() // 현재 위치 확인');
-  console.log('  window.navigationManager.safeGoBack()        // 안전한 뒤로가기');
-  console.log('  window.navigationManager.emergencyGoHome()   // 강제로 홈으로 이동');
-  console.log('');
-  console.log('📱 모바일 디버깅:');
-  console.log('  - 뒤로가기 문제 발생 시 emergencyGoHome() 실행');
-  console.log('  - 콘솔에서 🔙, 🏠, 🎯 이모지가 있는 로그 확인');
-  console.log('  - DOM 상태는 🔍 이모지 로그에서 확인');
-  console.log('');
-  
-  // 앱 종료 방지는 navigationManager.safeGoBack()으로만 처리
-  // beforeunload 팝업은 사용자 경험에 좋지 않으므로 제거
   
   // 방문 포인트 지급
   giveDailyVisitPoints();
@@ -909,12 +897,10 @@ function loadVideoList() {
 }
 
 function goToShorts() {
-  // 통합 네비게이션 시스템 사용
-  window.navigationManager.pushPage({
-    page: 'shorts',
-    state: { section: 'shorts' }
-  });
-  window.navigationManager.navigateToPage('shorts');
+  // 간단한 show/hide 방식
+  document.getElementById('main-section').style.display = 'none';
+  document.getElementById('shorts-section').style.display = 'block';
+  history.pushState({page: 'shorts'}, '', '#shorts');
 }
 
 function goBackMain() {
@@ -923,656 +909,17 @@ function goBackMain() {
   history.back();
 }
 
-// 모바일 뒤로가기 지원 강화 - popstate 이벤트 리스너
-window.addEventListener('popstate', function(event) {
-  console.log('📱 모바일 뒤로가기 감지:', event.state);
-  console.log('📱 현재 스택 상태:', window.navigationManager.navigationStack.map(item => item.page));
-  console.log('📱 현재 URL:', window.location.href);
-  
-  // 네비게이션 중이면 잠시 대기 후 처리
-  if (window.navigationManager.isNavigating) {
-    console.log('📱 네비게이션 중 - 100ms 후 재시도');
-    setTimeout(() => {
-      if (!window.navigationManager.isNavigating) {
-        window.navigationManager.safeGoBack();
-      }
-    }, 100);
-    return;
-  }
-  
-  // 강제로 뒤로가기 처리 (모바일 환경 고려)
-  console.log('📱 강제 뒤로가기 실행');
-  const success = window.navigationManager.safeGoBack();
-  
-  // 뒤로가기가 실패하면 홈으로 이동
-  if (!success) {
-    console.log('📱 뒤로가기 실패 - 홈으로 이동');
-    window.navigationManager.emergencyGoHome();
-  }
-});
+// script.js의 popstate 이벤트는 index.html에서 처리하므로 제거
 
-// 모바일 환경에서 추가 뒤로가기 지원
-let backPressedOnce = false;
-
-// Android 환경에서 뒤로가기 버튼 감지 강화
+// Android 뒤로가기 키 감지 (간단 버전)
 document.addEventListener('keydown', function(event) {
-  // Android 뒤로가기 키 (keyCode 4) 또는 ESC 키
   if (event.keyCode === 4 || event.key === 'Escape') {
     event.preventDefault();
     console.log('📱 하드웨어 뒤로가기 키 감지');
-    
-    const success = window.navigationManager.safeGoBack();
-    if (!success && !backPressedOnce) {
-      // 메인 페이지에서 첫 번째 뒤로가기 시 앱 종료 확인
-      backPressedOnce = true;
-      if (typeof showToast === 'function') {
-        showToast('한 번 더 누르시면 앱이 종료됩니다');
-      } else if (typeof window.showSalonToast === 'function') {
-        window.showSalonToast('한 번 더 누르시면 앱이 종료됩니다', 'warning');
-      } else {
-        alert('한 번 더 누르시면 앱이 종료됩니다');
-      }
-      setTimeout(() => {
-        backPressedOnce = false;
-      }, 2000);
-    } else if (!success && backPressedOnce) {
-      // 두 번째 뒤로가기 시 앱 종료 (또는 홈으로)
-      if (window.confirm('앱을 종료하시겠습니까?')) {
-        window.close();
-      }
-      backPressedOnce = false;
-    }
-    
+    history.back();
     return false;
   }
 });
 
-// 통합 네비게이션 관리 시스템
-window.navigationManager = {
-  // 네비게이션 스택
-  navigationStack: [{
-    page: 'main',
-    state: { section: 'main' }
-  }],
-  
-  // 현재 페이지 상태
-  currentState: {
-    page: 'main',
-    section: 'main'
-  },
-  
-  // 네비게이션 중인지 체크 (중복 실행 방지)
-  isNavigating: false,
-  
-  // 페이지 이동
-  pushPage(pageInfo) {
-    if (this.isNavigating) {
-      console.log('⚠️ pushPage 호출됐지만 이미 네비게이션 중 - 무시');
-      return;
-    }
-    
-    this.isNavigating = true;
-    
-    try {
-      console.log('➡️ pushPage 호출:', pageInfo.page);
-      console.log('➡️ 현재 스택:', this.navigationStack.map(item => item.page));
-      
-      // 현재 상태를 스택에 추가
-      this.navigationStack.push({
-        page: pageInfo.page,
-        state: pageInfo.state || {},
-        timestamp: Date.now()
-      });
-      
-      // 브라우저 히스토리에 추가
-      const stateData = {
-        page: pageInfo.page,
-        ...pageInfo.state,
-        fromNavigationManager: true  // 우리가 추가한 것임을 표시
-      };
-      
-      history.pushState(stateData, '', `#${pageInfo.page}`);
-      this.currentState = { page: pageInfo.page, ...pageInfo.state };
-      
-      console.log('✅ 네비게이션 푸시 완료:', pageInfo.page, '스택 길이:', this.navigationStack.length);
-      console.log('✅ 새로운 스택:', this.navigationStack.map(item => item.page));
-    } catch (error) {
-      console.error('❌ 네비게이션 푸시 오류:', error);
-    } finally {
-      setTimeout(() => {
-        this.isNavigating = false;
-      }, 100);
-    }
-  },
-  
-  // 뒤로가기
-  goBack() {
-    console.log('🔙 goBack 호출, 현재 스택 길이:', this.navigationStack.length);
-    console.log('🔙 isNavigating:', this.isNavigating);
-    
-    if (this.isNavigating) {
-      console.log('🔙 이미 네비게이션 중 - 무시');
-      return false;
-    }
-    
-    if (this.navigationStack.length <= 1) {
-      console.log('🔙 스택이 1개 이하 - 뒤로갈 곳이 없음');
-      return false;
-    }
-    
-    this.isNavigating = true;
-    
-    try {
-      console.log('🔙 goBack 진행 중...');
-      console.log('🔙 제거하기 전 스택:', this.navigationStack.map(item => item.page));
-      
-      // 현재 페이지를 스택에서 제거
-      const removedPage = this.navigationStack.pop();
-      console.log('🔙 제거된 페이지:', removedPage ? removedPage.page : 'null');
-      
-      // 이전 페이지 정보 가져오기
-      const previousPage = this.navigationStack[this.navigationStack.length - 1];
-      console.log('🔙 이동할 이전 페이지:', previousPage ? previousPage.page : 'null');
-      console.log('🔙 제거 후 스택:', this.navigationStack.map(item => item.page));
-      console.log('🔙 새로운 스택 길이:', this.navigationStack.length);
-      
-      if (!previousPage) {
-        console.error('🔙 ❌ 이전 페이지가 없습니다! 강제로 메인 페이지로 이동');
-        this.navigationStack = [{ page: 'main', state: { section: 'main' } }];
-        this.navigateToPage('main');
-        return true;
-      }
-      
-      // 페이지 전환 실행
-      console.log('🔙 ➡️ 페이지 전환 시작:', previousPage.page);
-      this.navigateToPage(previousPage.page, previousPage.state);
-      console.log('🔙 ✅ 페이지 전환 완료');
-      
-      return true;
-    } catch (error) {
-      console.error('🔙 ❌ 네비게이션 백 오류:', error);
-      console.error('🔙 ❌ 오류 스택:', error.stack);
-      
-      // 오류 발생 시 안전하게 메인으로
-      console.log('🔙 🛡️ 오류 복구: 메인 페이지로 강제 이동');
-      this.navigationStack = [{ page: 'main', state: { section: 'main' } }];
-      this.navigateToPage('main');
-      return false;
-    } finally {
-      setTimeout(() => {
-        console.log('🔙 🔓 네비게이션 잠금 해제');
-        this.isNavigating = false;
-      }, 200);
-    }
-  },
-  
-  // 특정 페이지로 이동
-  navigateToPage(page, state = {}) {
-    console.log(`🎯 navigateToPage 시작: ${page}`, state);
-    console.log(`🎯 현재 스택 길이: ${this.navigationStack.length}`);
-    console.log(`🎯 현재 스택: [${this.navigationStack.map(item => item.page).join(' → ')}]`);
-    
-    this.currentState = { page, ...state };
-    
-    // 페이지 전환 애니메이션
-    const overlay = document.getElementById('page-transition-overlay');
-    if (overlay) {
-      overlay.classList.add('active');
-      setTimeout(() => overlay.classList.remove('active'), 200);
-    }
-    
-    // 모든 페이지/모달 초기화
-    this.closeAllPages();
-    
-    // 특정 페이지 활성화
-    switch (page) {
-      case 'main':
-        console.log('🏠 메인 페이지로 이동 중...');
-        this.showMainPage();
-        console.log('🏠 메인 페이지 표시 완료');
-        break;
-      case 'habit-salon':
-        console.log('🌿 습관살롱 페이지로 이동 중...');
-        this.showHabitSalon(state.section);
-        console.log('🌿 습관살롱 페이지 표시 완료');
-        break;
-      case 'brand-story':
-        console.log('📖 브랜드 스토리 페이지로 이동 중...');
-        this.showBrandStoryPage();
-        console.log('📖 브랜드 스토리 페이지 표시 완료');
-        break;
-      case 'question':
-        console.log('❓ 질문 페이지로 이동 중...');
-        this.showQuestionPage();
-        console.log('❓ 질문 페이지 표시 완료');
-        break;
-      case 'free':
-        console.log('💬 자유게시판 페이지로 이동 중...');
-        this.showFreePage();
-        console.log('💬 자유게시판 페이지 표시 완료');
-        break;
-      case 'shorts':
-        console.log('🎥 숏츠 페이지로 이동 중...');
-        this.showShortsPage();
-        console.log('🎥 숏츠 페이지 표시 완료');
-        break;
-      case 'quiz':
-        console.log('🧠 퀴즈 페이지로 이동 중...');
-        this.showQuizPage();
-        console.log('🧠 퀴즈 페이지 표시 완료');
-        break;
-      case 'write':
-        console.log('✏️ 글쓰기 페이지로 이동 중...');
-        this.showWritePage();
-        console.log('✏️ 글쓰기 페이지 표시 완료');
-        break;
-      default:
-        console.log('🏠 알 수 없는 페이지 - 메인으로 리다이렉트');
-        this.showMainPage();
-    }
-    
-    console.log(`✅ navigateToPage 완료: ${page}`);
-    
-    // DOM 상태 확인
-    setTimeout(() => {
-      const mainSection = document.getElementById('main-section');
-      const habitSalonMain = document.getElementById('habit-salon-main');
-      console.log(`🔍 DOM 상태 확인:`, {
-        mainSection: mainSection ? mainSection.style.display : 'null',
-        habitSalonMain: habitSalonMain ? habitSalonMain.style.display : 'null',
-        currentPage: page
-      });
-    }, 100);
-  },
-  
-  // 모든 페이지/모달 닫기
-  closeAllPages() {
-    // 습관살롱 메인
-    const habitSalonMain = document.getElementById('habit-salon-main');
-    if (habitSalonMain) habitSalonMain.style.display = 'none';
-    
-    // 브랜드 스토리 전체화면
-    const brandStoryPage = document.getElementById('brand-story-fullscreen');
-    if (brandStoryPage) brandStoryPage.classList.remove('active');
-    
-    // 질문 전체화면
-    const questionPage = document.getElementById('question-fullscreen');
-    if (questionPage) questionPage.classList.remove('active');
-    
-    // 자유게시판 전체화면
-    const freePage = document.getElementById('habit-salon-free');
-    if (freePage) {
-      freePage.classList.remove('fullscreen');
-      freePage.style.position = '';
-      freePage.style.width = '';
-      freePage.style.height = '';
-      freePage.style.top = '';
-      freePage.style.left = '';
-      freePage.style.background = '';
-      freePage.style.zIndex = '';
-      freePage.style.overflowY = '';
-      freePage.style.margin = '';
-      freePage.style.padding = '';
-    }
-    
-    // 글쓰기 모달
-    const writeModal = document.getElementById('free-write-fullscreen');
-    if (writeModal) writeModal.classList.remove('active');
-    
-    // 숏츠 섹션
-    const shortsSection = document.getElementById('shorts-section');
-    if (shortsSection) shortsSection.style.display = 'none';
-    
-    // 퀴즈 박스 (quiz.html용)
-    const quizBox = document.getElementById('quiz-box');
-    if (quizBox) quizBox.style.display = 'none';
-    
-    // 바디 스크롤 복원
-    document.body.style.overflow = '';
-    
-    // 페이지 전환 오버레이 숨김
-    const overlay = document.getElementById('page-transition-overlay');
-    if (overlay) overlay.classList.remove('active');
-  },
-  
-  // 메인 페이지 표시
-  showMainPage() {
-    console.log('🏠 showMainPage 시작');
-    
-    const mainSection = document.getElementById('main-section');
-    const habitSalonMain = document.getElementById('habit-salon-main');
-    
-    console.log('🏠 DOM 요소 확인:', {
-      mainSection: mainSection ? 'found' : 'NOT FOUND',
-      habitSalonMain: habitSalonMain ? 'found' : 'NOT FOUND'
-    });
-    
-    if (mainSection) {
-      mainSection.style.display = 'block';
-      console.log('🏠 ✅ 메인 섹션 표시됨');
-    } else {
-      console.error('🏠 ❌ main-section 요소를 찾을 수 없습니다!');
-    }
-    
-    // 다른 섹션들 확실히 숨기기
-    if (habitSalonMain) {
-      habitSalonMain.style.display = 'none';
-      console.log('🏠 습관살롱 메인 숨김');
-    }
-    
-    // 다른 모든 전체화면 요소들도 숨기기
-    const allFullscreenElements = [
-      'brand-story-fullscreen',
-      'question-fullscreen', 
-      'habit-salon-free',
-      'free-write-fullscreen',
-      'shorts-section'
-    ];
-    
-    allFullscreenElements.forEach(id => {
-      const element = document.getElementById(id);
-      if (element) {
-        element.style.display = 'none';
-        element.classList.remove('active', 'fullscreen');
-        console.log(`🏠 ${id} 숨김 처리됨`);
-      }
-    });
-    
-    // 바디 스크롤 복원
-    document.body.style.overflow = '';
-    
-    console.log('🏠 showMainPage 완료');
-    
-    // 2초 후 다시 한번 확인
-    setTimeout(() => {
-      const mainCheck = document.getElementById('main-section');
-      const habitCheck = document.getElementById('habit-salon-main');
-      console.log('🏠 🔍 2초 후 재확인:', {
-        mainDisplay: mainCheck ? mainCheck.style.display : 'null',
-        habitDisplay: habitCheck ? habitCheck.style.display : 'null',
-        bodyOverflow: document.body.style.overflow
-      });
-      
-      // 혹시 메인이 안 보이고 있다면 강제로 다시 표시
-      if (mainCheck && (mainCheck.style.display === 'none' || mainCheck.style.display === '')) {
-        console.log('🏠 🛡️ 메인 섹션 강제 표시');
-        mainCheck.style.display = 'block';
-        mainCheck.style.visibility = 'visible';
-        mainCheck.style.opacity = '1';
-      }
-    }, 2000);
-  },
-  
-  // 습관살롱 표시
-  showHabitSalon(section = 'main') {
-    const habitSalonMain = document.getElementById('habit-salon-main');
-    const mainSection = document.getElementById('main-section');
-    
-    if (habitSalonMain) habitSalonMain.style.display = 'block';
-    if (mainSection) mainSection.style.display = 'none';
-    
-    // 특정 섹션이 있으면 해당 섹션으로
-    if (section !== 'main' && window.showHabitSalonSection) {
-      window.showHabitSalonSection(section);
-    }
-  },
-  
-  // 브랜드 스토리 페이지 표시
-  showBrandStoryPage() {
-    if (window.openBrandStoryPage) {
-      window.openBrandStoryPage();
-    }
-  },
-  
-  // 질문 페이지 표시
-  showQuestionPage() {
-    if (window.openQuestionPage) {
-      window.openQuestionPage();
-    }
-  },
-  
-  // 자유게시판 페이지 표시
-  showFreePage() {
-    if (window.openFreePage) {
-      window.openFreePage();
-    }
-  },
-  
-  // 숏츠 페이지 표시
-  showShortsPage() {
-    const mainSection = document.getElementById('main-section');
-    const shortsSection = document.getElementById('shorts-section');
-    
-    if (mainSection) mainSection.style.display = 'none';
-    if (shortsSection) {
-      shortsSection.style.display = 'block';
-      if (typeof loadVideoList === 'function') {
-        loadVideoList();
-      }
-    }
-  },
-  
-  // 퀴즈 페이지 표시
-  showQuizPage() {
-    const quizBox = document.getElementById('quiz-box');
-    if (quizBox) quizBox.style.display = 'block';
-  },
-  
-  // 글쓰기 모달 표시
-  showWritePage() {
-    const writeModal = document.getElementById('free-write-fullscreen');
-    if (writeModal) {
-      writeModal.classList.add('active');
-      document.body.style.overflow = 'hidden';
-    }
-  },
-  
-  // 현재 위치 정보 반환
-  getCurrentLocation() {
-    return {
-      page: this.currentState.page,
-      section: this.currentState.section,
-      stackDepth: this.navigationStack.length
-    };
-  },
-  
-  // 디버깅용 - 네비게이션 스택 출력
-  debugStack() {
-    console.log('네비게이션 스택:', this.navigationStack);
-    console.log('현재 상태:', this.currentState);
-  },
-  
-  // 안전한 뒤로가기 (앱 종료 방지)
-  safeGoBack() {
-    console.log('🔙 safeGoBack 호출, 현재 스택 길이:', this.navigationStack.length);
-    console.log('🔙 현재 스택:', this.navigationStack.map(item => item.page));
-    console.log('🔙 현재 페이지:', this.currentState.page);
-    
-    // 스택 상태 검증
-    if (!this.navigationStack || this.navigationStack.length === 0) {
-      console.error('🔙 ❌ 네비게이션 스택이 비어있음! 강제 초기화');
-      this.navigationStack = [{ page: 'main', state: { section: 'main' } }];
-      this.navigateToPage('main');
-      return false;
-    }
-    
-    // 스택이 2개 이상이면 정상적인 뒤로가기 수행
-    if (this.navigationStack.length > 1) {
-      console.log('📱 정상적인 뒤로가기 수행');
-      const result = this.goBack();
-      
-      // 만약 goBack이 실패했다면 안전하게 메인으로
-      if (!result) {
-        console.log('🔙 ⚠️ goBack 실패 - 안전하게 메인으로 이동');
-        this.navigationStack = [{ page: 'main', state: { section: 'main' } }];
-        this.navigateToPage('main');
-      }
-      
-      return result;
-    }
-    
-    // 스택이 1개뿐이면 (메인 페이지에 있으면) 앱 종료 방지
-    console.log('📱 메인 페이지에서 뒤로가기 - 앱 종료 방지');
-    
-    // 현재 페이지가 메인이 아니라면 강제로 메인으로
-    if (this.currentState.page !== 'main') {
-      console.log('🔙 🛡️ 현재 페이지가 메인이 아님 - 강제로 메인으로 이동');
-      this.navigationStack = [{ page: 'main', state: { section: 'main' } }];
-      this.navigateToPage('main');
-    } else {
-      console.log('🔙 ✅ 이미 메인 페이지 - 아무 동작 없음');
-    }
-    
-    return false;
-  },
-  
-  // 모바일 환경에서 추가 안전장치
-  emergencyGoHome() {
-    console.log('🚨 emergencyGoHome 호출 - 강제로 홈으로 이동');
-    
-    // 모든 상태 초기화
-    this.navigationStack = [{ page: 'main', state: { section: 'main' } }];
-    this.currentState = { page: 'main', section: 'main' };
-    this.isNavigating = false;
-    
-    // 강제로 모든 페이지 숨기고 메인만 표시
-    this.closeAllPages();
-    this.showMainPage();
-    
-    // URL도 초기화
-    try {
-      history.replaceState({ page: 'main', fromNavigationManager: true }, '', '#main');
-    } catch (e) {
-      console.error('URL 초기화 실패:', e);
-    }
-    
-    console.log('🚨 emergencyGoHome 완료');
-  }
-};
-
-// 모바일 환경 추가 지원 기능들
-// PWA 및 모바일 브라우저에서 뒤로가기 동작 개선
-let lastBackTime = 0;
-const BACK_COOLDOWN = 300; // 300ms 쿨다운
-
-// 페이지 가시성 변경 감지 (앱이 백그라운드로 가거나 돌아올 때)
-document.addEventListener('visibilitychange', function() {
-  if (document.visibilityState === 'visible') {
-    console.log('📱 앱이 포그라운드로 돌아옴');
-    // 네비게이션 상태 검증
-    if (window.navigationManager && window.navigationManager.currentState.page !== 'main') {
-      const currentElement = document.getElementById('main-section');
-      if (currentElement && currentElement.style.display === 'none') {
-        console.log('📱 메인 페이지가 숨겨져 있음 - 복원 시도');
-        window.navigationManager.showMainPage();
-      }
-    }
-  } else {
-    console.log('📱 앱이 백그라운드로 이동');
-  }
-});
-
-// beforeunload 이벤트로 의도치 않은 앱 종료 방지
-window.addEventListener('beforeunload', function(event) {
-  // 메인 페이지가 아닌 곳에서 새로고침이나 종료 시도 시에만 경고
-  if (window.navigationManager && window.navigationManager.navigationStack.length > 1) {
-    const message = '페이지를 벗어나시겠습니까? 진행 중인 내용이 사라질 수 있습니다.';
-    event.returnValue = message;
-    return message;
-  }
-});
-
-// 모바일 환경에서 스와이프 제스처 감지 (뒤로가기)
-let touchStartX = 0;
-let touchStartY = 0;
-let touchEndX = 0;
-let touchEndY = 0;
-
-document.addEventListener('touchstart', function(event) {
-  touchStartX = event.changedTouches[0].screenX;
-  touchStartY = event.changedTouches[0].screenY;
-}, { passive: true });
-
-document.addEventListener('touchend', function(event) {
-  touchEndX = event.changedTouches[0].screenX;
-  touchEndY = event.changedTouches[0].screenY;
-  
-  // 화면 왼쪽 가장자리에서 시작하는 오른쪽 스와이프 감지
-  const swipeDistance = touchEndX - touchStartX;
-  const verticalDistance = Math.abs(touchEndY - touchStartY);
-  
-  // 조건: 화면 왼쪽 10% 이내에서 시작, 100px 이상 오른쪽으로 스와이프, 세로 이동은 50px 이하
-  if (touchStartX < window.innerWidth * 0.1 && 
-      swipeDistance > 100 && 
-      verticalDistance < 50) {
-    
-    console.log('📱 왼쪽 가장자리 스와이프 감지 - 뒤로가기 실행');
-    const currentTime = Date.now();
-    
-    // 쿨다운 체크
-    if (currentTime - lastBackTime > BACK_COOLDOWN) {
-      lastBackTime = currentTime;
-      window.navigationManager.safeGoBack();
-    }
-  }
-}, { passive: true });
-
-// 모바일에서 더블탭으로 홈 가기 (비상용)
-let lastTapTime = 0;
-let tapCount = 0;
-
-document.addEventListener('touchend', function(event) {
-  const currentTime = Date.now();
-  const tapLength = currentTime - lastTapTime;
-  
-  if (tapLength < 500 && tapLength > 0) {
-    tapCount++;
-    if (tapCount === 3) { // 3번 연속 탭
-      console.log('📱 3번 연속 탭 감지 - 홈으로 이동');
-      window.navigationManager.emergencyGoHome();
-      tapCount = 0;
-    }
-  } else {
-    tapCount = 1;
-  }
-  
-  lastTapTime = currentTime;
-}, { passive: true });
-
-// 모바일에서 장시간 터치로 응급 홈 가기
-let longPressTimer;
-let isLongPressing = false;
-
-document.addEventListener('touchstart', function(event) {
-  isLongPressing = false;
-  longPressTimer = setTimeout(() => {
-    isLongPressing = true;
-    console.log('📱 장시간 터치 감지 - 응급 홈 가기 대기 중');
-    
-    // 진동이 지원되면 진동으로 알림
-    if (navigator.vibrate) {
-      navigator.vibrate([100, 50, 100]);
-    }
-  }, 2000); // 2초 장압
-}, { passive: true });
-
-document.addEventListener('touchend', function(event) {
-  clearTimeout(longPressTimer);
-  
-  if (isLongPressing) {
-    console.log('📱 장시간 터치 종료 - 응급 홈 가기 실행');
-    window.navigationManager.emergencyGoHome();
-    
-    if (typeof showToast === 'function') {
-      showToast('응급 모드: 홈으로 이동됨');
-    }
-  }
-  
-  isLongPressing = false;
-}, { passive: true });
-
-document.addEventListener('touchmove', function(event) {
-  // 터치가 이동하면 장압 취소
-  clearTimeout(longPressTimer);
-  isLongPressing = false;
-}, { passive: true }); 
+// script.js 간단화 완료 - 모든 복잡한 NavigationManager 제거
+console.log('✅ script.js 로드 완료 - 간단한 뒤로가기 지원'); 

@@ -2094,7 +2094,7 @@
     <div class="video-section" id="shorts-section" style="display:none;">
       <h3 class="video-title">🎥 1분 건강 숏츠</h3>
       <ul id="videoList" class="video-list"></ul>
-      <button onclick="goBackMain()" class="secondary-button" style="margin-top:20px;">← 뒤로가기</button>
+      <button onclick="window.goBackMain()" class="secondary-button" style="margin-top:20px;">← 뒤로가기</button>
     </div>
 
     <!-- 늘봄 습관살롱 메인 섹션 (초기에는 숨김) -->
@@ -2165,7 +2165,7 @@
     <!-- 전체 화면 브랜드 이야기 페이지 -->
     <div id="brand-story-fullscreen" class="fullscreen-page">
       <div class="fullscreen-page-header">
-        <button class="fullscreen-back-btn" onclick="window.navigationManager.safeGoBack()">
+        <button class="fullscreen-back-btn" onclick="window.goBackMain()">
           ← 뒤로가기
         </button>
         <h1 class="fullscreen-page-title">📖 브랜드 이야기</h1>
@@ -2181,7 +2181,7 @@
     <!-- 전체 화면 오늘의 질문 페이지 -->
     <div id="question-fullscreen" class="fullscreen-page">
       <div class="fullscreen-page-header">
-        <button class="fullscreen-back-btn" onclick="window.navigationManager.safeGoBack()">
+        <button class="fullscreen-back-btn" onclick="window.goBackMain()">
           ← 뒤로가기
         </button>
         <h1 class="fullscreen-page-title">📔 오늘의 질문</h1>
@@ -3835,17 +3835,20 @@
         window.showSalonToast('오프라인 상태입니다. 일부 기능이 제한될 수 있습니다.', 'warning');
       });
       
-      // 습관살롱 진입 버튼 초기화
+      // 습관살롱 진입 버튼 초기화 (원본 방식 복원)
       const enterBtn = document.getElementById('habit-salon-enter-btn');
       if (enterBtn) {
         enterBtn.addEventListener('click', async function() {
           try {
-            // 통합 네비게이션 시스템 사용
-            window.navigationManager.pushPage({
-              page: 'habit-salon',
-              state: { section: 'main' }
-            });
-            window.navigationManager.navigateToPage('habit-salon', { section: 'main' });
+            // 원본 방식: 간단한 show/hide
+            document.getElementById('main-section').style.display = 'none';
+            document.getElementById('habit-salon-main').style.display = 'block';
+            
+            // 뒤로가기 히스토리 추가 (최소한의 수정)
+            history.pushState({page: 'habit-salon'}, '', '#habit-salon');
+            
+            // 이벤트 리스너 초기화를 여기서도 실행
+            window.initializeEventListeners();
             await window.initHabitSalon();
           } catch (error) {
             console.error('습관살롱 진입 오류:', error);
@@ -3912,82 +3915,63 @@
     console.log('=====================================');
     console.log('');
     
-    // 페이지 상태 관리 객체
-    const pageState = {
-      currentPage: 'main',
-      previousPage: null,
-      isNavigating: false
+    // 📱 간단한 뒤로가기 처리 (원본 기능 유지)
+    let currentPage = 'main';
+    
+         // 뒤로가기 버튼 처리 (최소한의 수정)
+     window.addEventListener('popstate', function(event) {
+       console.log('📱 뒤로가기 감지:', event.state);
+       
+       const state = event.state;
+       
+       // 모든 전체화면 요소들 닫기
+       const fullscreenElements = [
+         'brand-story-fullscreen',
+         'question-fullscreen', 
+         'free-write-fullscreen'
+       ];
+       fullscreenElements.forEach(id => {
+         const element = document.getElementById(id);
+         if (element) {
+           element.classList.remove('active');
+         }
+       });
+       
+       // 자유게시판 전체화면 처리
+       const freeSection = document.getElementById('habit-salon-free');
+       if (freeSection && freeSection.classList.contains('fullscreen')) {
+         freeSection.classList.remove('fullscreen');
+         freeSection.style.display = 'none';
+         // 원래 위치로 복원
+         const habitSalonMain = document.getElementById('habit-salon-main');
+         if (habitSalonMain && freeSection.parentElement !== habitSalonMain) {
+           habitSalonMain.appendChild(freeSection);
+         }
+       }
+       
+       document.body.style.overflow = '';
+       
+       if (state && state.page === 'habit-salon') {
+         // 습간살롱 표시
+         document.getElementById('main-section').style.display = 'none';
+         document.getElementById('habit-salon-main').style.display = 'block';
+         currentPage = 'habit-salon';
+       } else {
+         // 메인 페이지 표시
+         document.getElementById('main-section').style.display = 'block';
+         document.getElementById('habit-salon-main').style.display = 'none';
+         currentPage = 'main';
+       }
+     });
+
+    // 🔙 원본 뒤로가기 함수 (간단한 방식)
+    window.goBackMain = function() {
+      history.back();
     };
 
-    // 페이지 상태 업데이트 함수
-    function updatePageState(newPage) {
-      pageState.previousPage = pageState.currentPage;
-      pageState.currentPage = newPage;
-      pageState.isNavigating = false;
-      history.pushState({ page: newPage }, '', `#${newPage}`);
-    }
-
-    // 모든 페이지/모달 닫기 (초기화)
-    function closeAllPagesAndModals() {
-      // 브랜드 스토리 페이지 닫기
-      const brandStoryPage = document.getElementById('brand-story-fullscreen');
-      if (brandStoryPage) {
-        brandStoryPage.classList.remove('active');
-      }
-
-      // 질문 페이지 닫기
-      const questionPage = document.getElementById('question-fullscreen');
-      if (questionPage) {
-        questionPage.classList.remove('active');
-      }
-
-      // 습관살롱 자유게시판 닫기
-      const freePage = document.getElementById('habit-salon-free');
-      if (freePage) {
-        freePage.classList.remove('fullscreen');
-        freePage.style.position = '';
-        freePage.style.width = '';
-        freePage.style.height = '';
-        freePage.style.top = '';
-        freePage.style.left = '';
-        freePage.style.background = '';
-        freePage.style.zIndex = '';
-        freePage.style.overflowY = '';
-        freePage.style.margin = '';
-        freePage.style.padding = '';
-      }
-
-      // 글쓰기 모달 닫기
-      const writeModal = document.getElementById('free-write-fullscreen');
-      if (writeModal) {
-        writeModal.classList.remove('active');
-      }
-
-      // 메인 섹션 표시 복원
-      const mainSection = document.getElementById('main-section');
-      const habitSalonMain = document.getElementById('habit-salon-main');
-      if (mainSection) mainSection.style.display = 'block';
-      if (habitSalonMain) habitSalonMain.style.display = 'none';
-
-      // 스크롤 복원
-      document.body.style.overflow = '';
-
-      // 페이지 전환 오버레이 숨김
-      const overlay = document.getElementById('page-transition-overlay');
-      if (overlay) overlay.classList.remove('active');
-    }
-
-    // 통합 네비게이션 시스템으로 popstate 이벤트 처리 (중복 제거됨)
-
-    // 전체 화면 브랜드 이야기 페이지 함수들
+    // 전체 화면 브랜드 이야기 페이지 함수들 (NavigationManager 통합)
     window.openBrandStoryPage = async function() {
       try {
-        // 통합 네비게이션 시스템 사용
-        window.navigationManager.pushPage({
-          page: 'brand-story',
-          state: { section: 'brand' }
-        });
-        // 로딩 표시
         const overlay = document.getElementById('page-transition-overlay');
         overlay.classList.add('active');
         
@@ -4071,17 +4055,13 @@
           ` : ''}
         `;
         
-        // 페이지 전환 애니메이션
+        // 전체화면으로 이동 (원본 방식)
         setTimeout(() => {
           overlay.classList.remove('active');
-          const fullscreenPage = document.getElementById('brand-story-fullscreen');
-          fullscreenPage.classList.add('active');
-          
-          // 카드 네비게이션 업데이트
-          window.updateCardNavigation();
-          
-          // 바디 스크롤 방지
+          document.getElementById('brand-story-fullscreen').classList.add('active');
           document.body.style.overflow = 'hidden';
+          history.pushState({page: 'brand-story'}, '', '#brand-story');
+          window.updateCardNavigation();
         }, 200);
         
       } catch (error) {
@@ -4092,37 +4072,24 @@
       }
     };
     
-    window.closeBrandStoryPage = function() {
-      const fullscreenPage = document.getElementById('brand-story-fullscreen');
-      if (fullscreenPage) {
-        fullscreenPage.classList.remove('active');
-        document.body.style.overflow = '';
-      }
-    };
-    
     // ESC 키로 전체 화면 페이지 닫기
     document.addEventListener('keydown', function(e) {
       if (e.key === 'Escape') {
-        // 통합 네비게이션 시스템으로 뒤로가기
-        window.navigationManager.safeGoBack();
+        window.goBackMain();
       }
     });
     
     // 카드 슬라이더 네비게이션 함수들
 
-    // 전체 화면 오늘의 질문 페이지
+    // 전체 화면 오늘의 질문 페이지 (NavigationManager 통합)
     window.openQuestionPage = async function() {
       try {
-        // 통합 네비게이션 시스템 사용
-        window.navigationManager.pushPage({
-          page: 'question',
-          state: { section: 'question' }
-        });
         const overlay = document.getElementById('page-transition-overlay');
         overlay.classList.add('active');
 
         // 질문 데이터 로딩
         const questions = await window.loadHealthQuestions();
+        
         // 카드 슬라이더 형태로 렌더링
         const container = document.querySelector('#question-fullscreen .fullscreen-page-content');
         if (!container) return;
@@ -4188,16 +4155,14 @@
           setTimeout(() => { window.updateCardNavigation(); }, 0);
         }
 
-        // 기존 작은 리스트 UI 숨김
-        const mainSection = document.getElementById('habit-salon-main');
-        if (mainSection) mainSection.style.display = 'none';
-
+        // 전체화면으로 이동 (원본 방식)
         setTimeout(() => {
           overlay.classList.remove('active');
-          const fullscreenPage = document.getElementById('question-fullscreen');
-          fullscreenPage.classList.add('active');
+          document.getElementById('question-fullscreen').classList.add('active');
           document.body.style.overflow = 'hidden';
+          history.pushState({page: 'question'}, '', '#question');
         }, 200);
+        
       } catch (error) {
         console.error('질문 페이지 열기 오류:', error);
         window.showSalonToast('페이지를 불러올 수 없습니다.', 'error');
@@ -4206,180 +4171,73 @@
       }
     };
 
-    window.closeQuestionPage = function() {
-      const fullscreenPage = document.getElementById('question-fullscreen');
-      if (fullscreenPage) {
-        fullscreenPage.classList.remove('active');
-        document.body.style.overflow = '';
-        // 네비게이션 섹션 복귀
-        const mainSection = document.getElementById('habit-salon-main');
-        if (mainSection) mainSection.style.display = 'block';
-      }
-    };
-
     // ESC 키 이벤트는 통합 네비게이션 시스템에서 처리됨 (중복 제거)
 
-    // 전체 화면 자유글(건강 한마당) 페이지
+    // 전체 화면 자유글(건강 한마당) 페이지 (원본 방식)
     window.openFreePage = async function() {
-      // 통합 네비게이션 시스템 사용
-      window.navigationManager.pushPage({
-        page: 'free',
-        state: { section: 'free' }
-      });
-      // 모든 섹션 숨김
-      document.getElementById('main-section').style.display = 'none';
-      document.getElementById('habit-salon-main').style.display = 'none';
-      document.getElementById('habit-salon-brand').style.display = 'none';
-      document.getElementById('habit-salon-question').style.display = 'none';
-      document.getElementById('habit-salon-challenge').style.display = 'none';
+      // 자유게시판 전체화면 표시
+      const freeSection = document.getElementById('habit-salon-free');
+      if (!freeSection) return;
+
+      // body로 이동하고 전체화면 스타일 적용
+      if (freeSection.parentElement !== document.body) {
+        document.body.appendChild(freeSection);
+      }
+
+      freeSection.classList.add('fullscreen');
+      freeSection.style.display = 'block';
+      document.body.style.overflow = 'hidden';
+      history.pushState({page: 'free'}, '', '#free');
       
-      // habit-salon-free 섹션도 일단 숨김 (전체화면으로 표시하기 전에)
-      const originalFree = document.getElementById('habit-salon-free');
-      if (originalFree && originalFree.parentElement === document.getElementById('habit-salon-main')) {
-        originalFree.style.display = 'none';
-      }
-
-      // 플로팅 버튼을 임시 저장
-      const floatingBtn = document.getElementById('floating-write-btn');
-      if (floatingBtn) {
-        floatingBtn.remove(); // 기존 위치에서 제거
-      }
-
-      // habit-salon-free를 body로 이동 (중복 방지를 위해 기존 위치에서 제거)
-      const free = document.getElementById('habit-salon-free');
-      if (free && free.parentElement !== document.body) {
-        document.body.appendChild(free);
-        // 플로팅 버튼을 habit-salon-free의 마지막 자식으로 다시 추가
-        if (floatingBtn) {
-          free.appendChild(floatingBtn);
-        }
-      }
-
-      // 자유게시판 전체화면 스타일 적용
-      free.style.display = 'block';
-      free.style.position = 'fixed';
-      free.style.width = '100vw';
-      free.style.height = '100vh';
-      free.style.top = '0';
-      free.style.left = '0';
-      free.style.background = '#fcfaf5';
-      free.style.zIndex = '99990';
-      free.style.overflowY = 'auto';
-      free.style.margin = '0';
-      free.style.padding = '0';
-
-      // 불필요한 요소 숨김
-      const elementsToHide = free.querySelectorAll('.logo, h2:not(#free-title), p:not(.point-text)');
-      elementsToHide.forEach(el => el.style.display = 'none');
-
-      // 뒤로가기 버튼 추가 (없는 경우에만)
-      if (!document.getElementById('free-back-btn')) {
-        const backBtn = document.createElement('button');
-        backBtn.className = 'fullscreen-back-btn';
-        backBtn.id = 'free-back-btn';
-        backBtn.innerText = '← 뒤로가기';
-        backBtn.onclick = function() {
-          window.navigationManager.safeGoBack();
-        };
-        free.insertBefore(backBtn, free.firstChild);
-      }
-
-      // 타이틀 추가 (없는 경우에만)
-      if (!document.getElementById('free-title')) {
-        const title = document.createElement('h1');
-        title.className = 'fullscreen-page-title';
-        title.id = 'free-title';
-        title.innerText = '💬 건강 한마당';
-        free.insertBefore(title, free.children[1]);
-      }
-
       // 피드 로드
       await window.loadFreeSection();
-
-      // habit-salon-free-list로 스크롤
-      const freeList = document.getElementById('habit-salon-free-list');
-      if (freeList) freeList.scrollIntoView();
-    };
-
-    window.closeFreePage = function() {
-      // habit-salon-free 스타일 초기화
-      const free = document.getElementById('habit-salon-free');
-      if (!free) return;
-
-      // 모든 스타일 초기화
-      free.style.display = '';
-      free.style.position = '';
-      free.style.width = '';
-      free.style.height = '';
-      free.style.top = '';
-      free.style.left = '';
-      free.style.background = '';
-      free.style.zIndex = '';
-      free.style.overflowY = '';
-      free.style.margin = '';
-      free.style.padding = '';
-      free.classList.remove('fullscreen');
-
-      // 숨겨진 요소들 복원
-      const hiddenElements = free.querySelectorAll('.logo, h2, p');
-      hiddenElements.forEach(el => el.style.display = '');
-
-      // 뒤로가기/타이틀 제거
-      const backBtn = document.getElementById('free-back-btn');
-      if (backBtn) backBtn.remove();
-      const title = document.getElementById('free-title');
-      if (title) title.remove();
-
-      // 네비게이션 섹션 복원
-      document.getElementById('habit-salon-main').style.display = 'block';
-      document.getElementById('main-section').style.display = 'block';
-
-      // 플로팅 버튼을 임시 저장
-      const floatingBtn = document.getElementById('floating-write-btn');
-      if (floatingBtn) {
-        floatingBtn.remove(); // 현재 위치에서 제거
-      }
-
-      // habit-salon-free를 원래 위치로 이동
-      const habitSalonMain = document.getElementById('habit-salon-main');
-      if (habitSalonMain) {
-        const freeSection = habitSalonMain.querySelector('#habit-salon-free');
-        if (!freeSection) {
-          habitSalonMain.appendChild(free);
-          // 플로팅 버튼을 habit-salon-free의 마지막 자식으로 다시 추가
-          if (floatingBtn) {
-            free.appendChild(floatingBtn);
-          }
-        }
-      }
     };
 
     // ESC 키 이벤트는 통합 네비게이션 시스템에서 처리됨 (중복 제거)
 
+    // 글쓰기 모달 (원본 방식)
     window.openWriteModal = function() {
       try {
-        // 통합 네비게이션 시스템 사용
-        window.navigationManager.pushPage({
-          page: 'write',
-          state: { section: 'write', from: 'free' }
-        });
-        
-        const modal = document.getElementById('free-write-fullscreen');
-        if (modal) {
-          modal.classList.add('active');
-          document.body.style.overflow = 'hidden';
-        }
+        document.getElementById('free-write-fullscreen').classList.add('active');
+        document.body.style.overflow = 'hidden';
+        history.pushState({page: 'write'}, '', '#write');
       } catch (error) {
         console.error('글쓰기 모달 열기 오류:', error);
       }
     };
 
     window.closeWriteModal = function() {
-      const modal = document.getElementById('free-write-fullscreen');
-      if (modal) {
-        modal.classList.remove('active');
-        document.body.style.overflow = '';
+      document.getElementById('free-write-fullscreen').classList.remove('active');
+      document.body.style.overflow = '';
+      history.back();
+    };
+
+    // 모든 close 함수들을 간단한 방식으로 변경
+    window.closeBrandStoryPage = function() {
+      document.getElementById('brand-story-fullscreen').classList.remove('active');
+      document.body.style.overflow = '';
+      history.back();
+    };
+    
+    window.closeQuestionPage = function() {
+      document.getElementById('question-fullscreen').classList.remove('active');
+      document.body.style.overflow = '';
+      history.back();
+    };
+    
+    window.closeFreePage = function() {
+      const freeSection = document.getElementById('habit-salon-free');
+      if (freeSection) {
+        freeSection.classList.remove('fullscreen');
+        freeSection.style.display = 'none';
+        // 원래 위치로 복원
+        const habitSalonMain = document.getElementById('habit-salon-main');
+        if (habitSalonMain && freeSection.parentElement !== habitSalonMain) {
+          habitSalonMain.appendChild(freeSection);
+        }
       }
+      document.body.style.overflow = '';
+      history.back();
     };
 
     // 중복된 popstate 리스너 제거됨 (통합 네비게이션 시스템에서 처리)
@@ -4430,39 +4288,14 @@
       const backBtn = document.getElementById('habit-salon-main-back-btn');
       if (backBtn) {
         backBtn.addEventListener('click', function() {
-          window.navigationManager.safeGoBack();
+          window.goBackMain();
         });
       }
       
       console.log('이벤트 리스너 초기화 완료');
     };
 
-    // DOM이 로드된 후 이벤트 리스너 초기화
-    document.addEventListener('DOMContentLoaded', function() {
-      // 초기 네트워크 상태 설정
-      window.isOnline = navigator.onLine;
-      console.log('초기 네트워크 상태:', window.isOnline ? '온라인' : '오프라인');
-      
-      // 습관살롱 진입 버튼 초기화
-      const enterBtn = document.getElementById('habit-salon-enter-btn');
-      if (enterBtn) {
-        enterBtn.addEventListener('click', async function() {
-          try {
-            document.getElementById('main-section').style.display = 'none';
-            document.getElementById('habit-salon-main').style.display = 'block';
-            // 이벤트 리스너 초기화를 여기서도 실행
-            window.initializeEventListeners();
-            await window.initHabitSalon();
-          } catch (error) {
-            console.error('습관살롱 진입 오류:', error);
-            window.showSalonToast('오류가 발생했습니다. 다시 시도해주세요.', 'error');
-          }
-        });
-      }
-      
-      // 초기 이벤트 리스너 설정
-      window.initializeEventListeners();
-    });
+    // 중복 제거됨 - 이미 위에서 DOMContentLoaded 처리함
 
     // 자유 게시판 게시글 로딩
     window.loadUserPosts = async function() {
@@ -4726,6 +4559,8 @@
     window.addEventListener('pointsUpdated', function() {
       window.updateExchangeButton();
     });
+
+    console.log('✅ 늘봄 습관살롱 초기화 완료 - 뒤로가기 지원');
   </script>
   </script>
   <script src="script.js" onerror="console.error('script.js 로드 실패')" onload="console.log('script.js 로드 성공')"></script>
