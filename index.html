@@ -1570,7 +1570,7 @@
       display: block !important;
     }
     #habit-salon-free.fullscreen .fullscreen-back-btn {
-      display: flex;
+      display: flex !important;
       align-items: center;
       gap: 8px;
       padding: 16px 20px;
@@ -1583,6 +1583,7 @@
       cursor: pointer;
       margin: 20px 0 0 20px;
       z-index: 10001;
+      position: relative;
     }
     #habit-salon-free.fullscreen .fullscreen-back-btn:hover {
       background: #2a5544;
@@ -1591,13 +1592,23 @@
       font-size: 22px;
       font-weight: 700;
       color: #356c55;
-      margin: 0 0 24px 0;
+      margin: 16px 0 24px 0;
       padding-left: 20px;
+      display: block !important;
     }
-    #habit-salon-free.fullscreen .habit-salon-free-list {
+    #habit-salon-free.fullscreen #habit-salon-free-list {
       max-width: 600px;
       margin: 0 auto;
       padding: 0 16px 40px 16px;
+      position: relative;
+    }
+    
+    /* 전체화면 모드에서 플로팅 버튼 위치 조정 */
+    #habit-salon-free.fullscreen .floating-write-btn {
+      position: fixed !important;
+      right: 24px !important;
+      bottom: 24px !important;
+      z-index: 10002 !important;
     }
 
     /* 전체 레이아웃 */
@@ -3101,7 +3112,25 @@
         posts.sort((a, b) => (b.timestamp?.seconds || 0) - (a.timestamp?.seconds || 0));
         function renderFeed() {
           if (posts.length === 0) {
-            container.innerHTML = '<div style="text-align:center;padding:40px;color:#666;">첫 번째 건강 이야기를 남겨보세요!</div>';
+            container.innerHTML = `
+              <div style="text-align:center;padding:60px 20px;color:#666;">
+                <div style="font-size:48px;margin-bottom:20px;">💬</div>
+                <h3 style="color:#356c55;margin-bottom:16px;font-size:20px;">건강 이야기를 나눠보세요!</h3>
+                <p style="margin-bottom:24px;line-height:1.6;">
+                  여러분의 건강 경험과 노하우를<br>
+                  첫 번째로 공유해보세요.
+                </p>
+                <div style="background:#f8f9fa;padding:20px;border-radius:12px;margin:20px 0;">
+                  <p style="margin:0;color:#4CAF50;font-weight:600;">✍️ 100자 이상 작성 시 100P 적립!</p>
+                </div>
+                <p style="color:#999;font-size:14px;">
+                  우측 하단의 + 버튼을 눌러 글을 작성해보세요
+                </p>
+                <button onclick="window.addSampleHealthStory()" style="margin-top:20px;padding:12px 24px;background:#4CAF50;color:white;border:none;border-radius:8px;cursor:pointer;">
+                  💡 샘플 건강 이야기 추가하기 (테스트용)
+                </button>
+              </div>
+            `;
             return;
           }
           container.innerHTML = posts.map((post, index) => `
@@ -3876,13 +3905,54 @@
       return;
     };
 
+    // 샘플 건강 이야기 추가 함수 (테스트용)
+    window.addSampleHealthStory = async function() {
+      try {
+        const sampleStories = [
+          "매일 아침 일어나자마자 물 한 잔을 마시는 습관을 기른 후로 피부가 정말 좋아졌어요! 처음엔 잊어버리기 쉬웠는데 침대 옆에 물컵을 미리 준비해두니까 자연스럽게 마시게 되더라고요. 3개월 정도 지속하니 몸도 가벼워지고 변비도 개선됐습니다.",
+          "스쿼트 운동을 꾸준히 한 지 6개월이 넘었는데, 정말 효과가 놀라워요! 처음에는 10개도 힘들었는데 지금은 50개씩 3세트도 거뜬합니다. 허리 통증도 많이 줄어들었고 계단 오르기도 한결 수월해졌어요. 하루 5분이면 충분하니 정말 추천드려요!",
+          "금연한 지 1년이 되었는데, 가장 도움이 됐던 건 대체 습관 만들기였어요. 담배 생각날 때마다 껌을 씹거나 물을 마시고, 스트레스 받을 때는 심호흡을 10번씩 했습니다. 처음 한 달이 가장 힘들었지만 지금은 냄새도 싫어요. 금연 후 체력도 좋아지고 감기도 잘 안 걸려요!",
+          "밤 10시 이후 스마트폰 사용을 중단하니 잠이 정말 깊게 와요. 대신 독서나 일기 쓰기로 바꿨는데 생각도 정리되고 마음도 편안해집니다. 수면의 질이 좋아지니 다음 날 컨디션도 훨씬 좋아져요. 블루라이트 차단이 이렇게 중요한 줄 몰랐네요."
+        ];
+        
+        const randomStory = sampleStories[Math.floor(Math.random() * sampleStories.length)];
+        
+        // 샘플 닉네임 목록
+        const sampleNicknames = ['건강맨', '운동러버', '웰빙족', '힐링타임', '헬시라이프'];
+        const randomNickname = sampleNicknames[Math.floor(Math.random() * sampleNicknames.length)];
+        
+        // 임시 닉네임 설정 (기존 닉네임 백업)
+        const originalNickname = localStorage.getItem('nickname');
+        localStorage.setItem('nickname', randomNickname);
+        
+        await window.addUserPost(randomStory);
+        
+        // 기존 닉네임 복원
+        if (originalNickname) {
+          localStorage.setItem('nickname', originalNickname);
+        } else {
+          localStorage.removeItem('nickname');
+        }
+        
+        window.showSalonToast('샘플 건강 이야기가 추가되었습니다! 🎉', 'success');
+        
+        // 피드 새로고침
+        await window.loadFreeSection();
+        
+      } catch (error) {
+        console.error('샘플 이야기 추가 오류:', error);
+        window.showSalonToast('샘플 이야기 추가 중 오류가 발생했습니다.', 'error');
+      }
+    };
+
     // 콘솔에서 사용할 수 있는 유틸리티 함수들 (데이터 관리 기능 제외)
     window.habitSalonUtils = {
       getUserPoints: window.getUserPoints,
       loadBrandPosts: window.loadBrandPosts,
       loadHealthQuestions: window.loadHealthQuestions,
       loadUserPosts: window.loadUserPosts,
-      syncOfflineActions: window.syncOfflineActions
+      syncOfflineActions: window.syncOfflineActions,
+      addSampleHealthStory: window.addSampleHealthStory
     };
     
     console.log('🚨 Firestore 연결 문제 완전 해결!');
@@ -3949,17 +4019,30 @@
          }
        }
        
+       // 숏츠 섹션 처리
+       const shortsSection = document.getElementById('shorts-section');
+       if (shortsSection) {
+         shortsSection.style.display = 'none';
+       }
+       
        document.body.style.overflow = '';
        
        if (state && state.page === 'habit-salon') {
-         // 습간살롱 표시
+         // 습관살롱 표시
          document.getElementById('main-section').style.display = 'none';
          document.getElementById('habit-salon-main').style.display = 'block';
          currentPage = 'habit-salon';
-       } else {
-         // 메인 페이지 표시
+       } else if (state && state.page === 'shorts') {
+         // 숏츠 표시 (하지만 실제로는 뒤로가기이므로 메인으로)
          document.getElementById('main-section').style.display = 'block';
          document.getElementById('habit-salon-main').style.display = 'none';
+         if (shortsSection) shortsSection.style.display = 'none';
+         currentPage = 'main';
+       } else {
+         // 메인 페이지 표시 (기본값)
+         document.getElementById('main-section').style.display = 'block';
+         document.getElementById('habit-salon-main').style.display = 'none';
+         if (shortsSection) shortsSection.style.display = 'none';
          currentPage = 'main';
        }
      });
@@ -4175,22 +4258,68 @@
 
     // 전체 화면 자유글(건강 한마당) 페이지 (원본 방식)
     window.openFreePage = async function() {
+      console.log('🏠 건강한마당 전체화면 진입 시작');
+      
       // 자유게시판 전체화면 표시
       const freeSection = document.getElementById('habit-salon-free');
-      if (!freeSection) return;
+      if (!freeSection) {
+        console.error('habit-salon-free 요소를 찾을 수 없습니다');
+        return;
+      }
+
+      // 다른 섹션들 숨기기
+      document.getElementById('main-section').style.display = 'none';
+      document.getElementById('habit-salon-main').style.display = 'none';
 
       // body로 이동하고 전체화면 스타일 적용
       if (freeSection.parentElement !== document.body) {
         document.body.appendChild(freeSection);
+        console.log('건강한마당 섹션을 body로 이동');
       }
 
+      // 기존 뒤로가기 버튼과 타이틀 제거 (중복 방지)
+      const existingBackBtn = document.getElementById('free-back-btn');
+      if (existingBackBtn) existingBackBtn.remove();
+      const existingTitle = document.getElementById('free-title');
+      if (existingTitle) existingTitle.remove();
+
+      // 전체화면 모드에서 뒤로가기 버튼과 타이틀 추가
+      const backBtn = document.createElement('button');
+      backBtn.id = 'free-back-btn';
+      backBtn.className = 'fullscreen-back-btn';
+      backBtn.onclick = window.goBackMain;
+      backBtn.innerHTML = '← 뒤로가기';
+      backBtn.style.display = 'flex';
+      freeSection.insertBefore(backBtn, freeSection.firstChild);
+
+      const title = document.createElement('h1');
+      title.id = 'free-title';
+      title.className = 'fullscreen-page-title';
+      title.innerHTML = '💬 건강 한마당';
+      title.style.display = 'block';
+      freeSection.insertBefore(title, freeSection.children[1]);
+
+      // 전체화면 클래스 추가 및 표시
       freeSection.classList.add('fullscreen');
       freeSection.style.display = 'block';
+      freeSection.style.position = 'fixed';
+      freeSection.style.top = '0';
+      freeSection.style.left = '0';
+      freeSection.style.width = '100vw';
+      freeSection.style.height = '100vh';
+      freeSection.style.zIndex = '9999';
+      freeSection.style.background = 'linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%)';
+      freeSection.style.overflow = 'auto';
+      
       document.body.style.overflow = 'hidden';
       history.pushState({page: 'free'}, '', '#free');
       
+      console.log('🏠 건강한마당 전체화면 UI 설정 완료');
+      
       // 피드 로드
       await window.loadFreeSection();
+      
+      console.log('🏠 건강한마당 데이터 로딩 완료');
     };
 
     // ESC 키 이벤트는 통합 네비게이션 시스템에서 처리됨 (중복 제거)

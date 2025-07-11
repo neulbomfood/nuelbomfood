@@ -412,8 +412,8 @@ document.addEventListener("DOMContentLoaded", async () => {
     });
   }
 
-  // 유튜브 영상 리스트 동적 로딩
-  loadVideoList();
+  // 유튜브 영상 리스트는 숏츠 버튼 클릭 시에만 로딩
+  // loadVideoList();
 });
 
 function showLoading(show) {
@@ -901,11 +901,22 @@ function goToShorts() {
   document.getElementById('main-section').style.display = 'none';
   document.getElementById('shorts-section').style.display = 'block';
   history.pushState({page: 'shorts'}, '', '#shorts');
+  
+  // 비디오 목록 로드
+  loadVideoList();
 }
 
 function goBackMain() {
+  // 확실하게 메인 페이지 표시
   document.getElementById('main-section').style.display = 'block';
   document.getElementById('shorts-section').style.display = 'none';
+  
+  // 습관살롱도 숨기기 (혹시나 해서)
+  const habitSalonMain = document.getElementById('habit-salon-main');
+  if (habitSalonMain) {
+    habitSalonMain.style.display = 'none';
+  }
+  
   history.back();
 }
 
