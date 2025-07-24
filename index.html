@@ -1479,6 +1479,289 @@
       color: #666;
     }
 
+    /* 이미지 첨부 섹션 스타일 */
+    .image-upload-section {
+      margin: 24px 0;
+      padding: 20px;
+      background: #f8f9fa;
+      border-radius: 12px;
+      border: 2px dashed #e0ede3;
+      transition: all 0.3s ease;
+    }
+
+    .image-upload-section:hover {
+      border-color: #4CAF50;
+      background: #f5f9f6;
+    }
+
+    .image-upload-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+    }
+
+    .image-upload-title {
+      font-size: 16px;
+      font-weight: 600;
+      color: #356c55;
+    }
+
+    .image-upload-guide {
+      font-size: 12px;
+      color: #666;
+      background: rgba(255, 255, 255, 0.8);
+      padding: 4px 8px;
+      border-radius: 6px;
+    }
+
+    .image-upload-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .image-upload-btn {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 16px 24px;
+      background: #fff;
+      border: 2px solid #e0ede3;
+      border-radius: 12px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      font-size: 15px;
+      font-weight: 600;
+      color: #356c55;
+    }
+
+    .image-upload-btn:hover {
+      border-color: #4CAF50;
+      background: #f0f8f0;
+      transform: translateY(-2px);
+    }
+
+    .upload-icon {
+      font-size: 20px;
+    }
+
+    .upload-text {
+      font-weight: 600;
+    }
+
+    .image-preview-container {
+      position: relative;
+      width: 100%;
+      max-width: 300px;
+      border-radius: 12px;
+      overflow: hidden;
+      background: #f0f0f0;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+
+    #habit-salon-image-preview {
+      width: 100%;
+      height: auto;
+      max-height: 200px;
+      object-fit: cover;
+      display: block;
+    }
+
+    .image-remove-btn {
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: rgba(0, 0, 0, 0.7);
+      color: white;
+      border: none;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+      font-weight: bold;
+      transition: all 0.2s ease;
+    }
+
+    .image-remove-btn:hover {
+      background: rgba(255, 0, 0, 0.8);
+      transform: scale(1.1);
+    }
+
+    .upload-status {
+      width: 100%;
+      text-align: center;
+    }
+
+    .upload-progress {
+      width: 100%;
+      height: 6px;
+      background: #e0e0e0;
+      border-radius: 3px;
+      overflow: hidden;
+      margin-bottom: 8px;
+    }
+
+    .progress-bar {
+      height: 100%;
+      background: linear-gradient(90deg, #4CAF50, #45a049);
+      width: 0%;
+      transition: width 0.3s ease;
+      position: relative;
+    }
+
+    .progress-bar::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      bottom: 0;
+      right: 0;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+      animation: progressShine 1.5s infinite;
+    }
+
+    @keyframes progressShine {
+      0% { transform: translateX(-100%); }
+      100% { transform: translateX(100%); }
+    }
+
+    .upload-status-text {
+      font-size: 14px;
+      color: #666;
+      font-weight: 500;
+    }
+
+    /* 이미지 확대 보기 모달 스타일 */
+    .image-modal {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100vh;
+      z-index: 10000;
+      background: rgba(0, 0, 0, 0.9);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      backdrop-filter: blur(4px);
+      -webkit-backdrop-filter: blur(4px);
+      opacity: 0;
+      visibility: hidden;
+      transition: all 0.3s ease;
+    }
+
+    .image-modal.active {
+      opacity: 1;
+      visibility: visible;
+    }
+
+    .image-modal-overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      cursor: pointer;
+    }
+
+    .image-modal-content {
+      position: relative;
+      max-width: 90vw;
+      max-height: 90vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .image-modal-close {
+      position: absolute;
+      top: -40px;
+      right: 0;
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.9);
+      color: #333;
+      border: none;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      font-weight: bold;
+      transition: all 0.2s ease;
+      z-index: 10001;
+    }
+
+    .image-modal-close:hover {
+      background: rgba(255, 255, 255, 1);
+      transform: scale(1.1);
+    }
+
+    #image-modal-img {
+      max-width: 100%;
+      max-height: 100%;
+      object-fit: contain;
+      border-radius: 8px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+    }
+
+    /* 피드 카드 이미지 호버 효과 */
+    .feed-card-image:hover {
+      transform: scale(1.02);
+      transition: transform 0.2s ease;
+    }
+
+    .feed-card-image-container:hover {
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      transition: box-shadow 0.2s ease;
+    }
+
+    /* 모바일 최적화 */
+    @media (max-width: 768px) {
+      .image-upload-section {
+        margin: 16px 0;
+        padding: 16px;
+      }
+
+      .image-upload-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+      }
+
+      .image-upload-btn {
+        padding: 14px 20px;
+        font-size: 14px;
+      }
+
+      .image-preview-container {
+        max-width: 100%;
+      }
+
+      #habit-salon-image-preview {
+        max-height: 150px;
+      }
+
+      .image-modal-close {
+        top: -30px;
+        width: 32px;
+        height: 32px;
+        font-size: 18px;
+      }
+
+      .image-modal-content {
+        max-width: 95vw;
+        max-height: 85vh;
+      }
+    }
+
     .write-modal-footer {
       display: flex;
       justify-content: space-between;
@@ -1984,43 +2267,7 @@
     </div>
   </div>
 
-  <!-- 글쓰기 모달 -->
-  <div id="free-write-fullscreen" class="modal-overlay">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h2>✍️ 건강 이야기 쓰기</h2>
-        <button class="modal-close-btn" onclick="window.closeWriteModal()">×</button>
-      </div>
-      <div class="modal-body">
-        <form id="habit-salon-free-form">
-          <div class="write-guide">
-            <p>💡 100자 이상 작성 시 100P가 적립됩니다!</p>
-            <ul>
-              <li>실제 경험한 건강 관리 방법</li>
-              <li>효과를 본 운동이나 식단</li>
-              <li>나만의 건강 습관과 꿀팁</li>
-            </ul>
-          </div>
-          <div class="write-textarea-container">
-            <textarea id="habit-salon-free-content" 
-                      placeholder="건강과 관련된 경험과 노하우를 100자 이상 작성해주세요."
-                      maxlength="500"></textarea>
-            <div class="char-counter">0/500</div>
-          </div>
-          <div class="char-count-guide">더 자세한 이야기를 들려주세요! (100자 필요)</div>
-          <div class="modal-footer">
-            <div class="modal-actions">
-              <button type="button" class="cancel-btn" onclick="window.closeWriteModal()">취소</button>
-              <button type="submit" class="submit-btn" disabled>
-                <span>건강 이야기 공유하기</span>
-                <span class="point-badge">+100P</span>
-              </button>
-            </div>
-          </div>
-        </form>
-      </div>
-    </div>
-  </div>
+
 
   <div class="container">
     <img src="assets/img/logo.png" alt="늘봄 로고" class="logo">
@@ -2209,6 +2456,15 @@
     <!-- 페이지 전환 오버레이 -->
     <div id="page-transition-overlay" class="page-transition-overlay"></div>
 
+    <!-- 이미지 확대 보기 모달 -->
+    <div id="image-modal" class="image-modal" style="display: none;">
+      <div class="image-modal-overlay" onclick="window.closeImageModal()"></div>
+      <div class="image-modal-content">
+        <button class="image-modal-close" onclick="window.closeImageModal()">×</button>
+        <img id="image-modal-img" src="" alt="이미지 확대 보기">
+      </div>
+    </div>
+
     <!-- 글쓰기 모달 -->
     <div id="free-write-fullscreen" class="modal-overlay">
       <div class="modal-content">
@@ -2231,6 +2487,30 @@
                         placeholder="건강과 관련된 경험과 노하우를 100자 이상 작성해주세요."
                         maxlength="500"></textarea>
               <div class="char-counter">0/500</div>
+            </div>
+            <!-- 이미지 첨부 섹션 -->
+            <div class="image-upload-section">
+              <div class="image-upload-header">
+                <span class="image-upload-title">📷 이미지 첨부 (선택사항)</span>
+                <span class="image-upload-guide">3MB 이하 JPG, PNG 파일</span>
+              </div>
+              <div class="image-upload-container">
+                <input type="file" id="habit-salon-free-image" accept="image/*" style="display: none;">
+                <button type="button" class="image-upload-btn" onclick="document.getElementById('habit-salon-free-image').click()">
+                  <span class="upload-icon">📷</span>
+                  <span class="upload-text">이미지 선택</span>
+                </button>
+                <div class="image-preview-container" id="image-preview-container" style="display: none;">
+                  <img id="habit-salon-image-preview" src="" alt="미리보기">
+                  <button type="button" class="image-remove-btn" onclick="window.removeImagePreview()" title="이미지 제거">×</button>
+                </div>
+              </div>
+              <div class="upload-status" id="upload-status" style="display: none;">
+                <div class="upload-progress">
+                  <div class="progress-bar" id="upload-progress-bar"></div>
+                </div>
+                <span class="upload-status-text" id="upload-status-text">업로드 중...</span>
+              </div>
             </div>
             <div class="char-count-guide">더 자세한 이야기를 들려주세요! (100자 필요)</div>
             <div class="modal-footer">
@@ -2281,6 +2561,7 @@
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-app.js";
     import { getFirestore, collection, addDoc, getDocs, getDoc, setDoc, updateDoc, doc, query, where, orderBy, serverTimestamp, deleteDoc, writeBatch, increment, enableNetwork, disableNetwork, connectFirestoreEmulator } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-firestore.js";
+    import { getStorage, ref, uploadBytesResumable, getDownloadURL, deleteObject } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-storage.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyDMgQA6mqaXR_qr9Uyj1-VnC-8qkcj3ZBw",
@@ -2294,6 +2575,7 @@
     console.log('Firebase 앱 초기화 중...');
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
+    const storage = getStorage(app);
     
     // 🔥 Firestore 오프라인 지원 활성화
     try {
@@ -2352,6 +2634,11 @@
 
     // 전역 변수로 사용할 수 있도록 window 객체에 할당
     window.db = db;
+    window.storage = storage;
+    window.storageRef = ref;
+    window.uploadBytesResumable = uploadBytesResumable;
+    window.getDownloadURL = getDownloadURL;
+    window.deleteObject = deleteObject;
     
     // 사용자 ID 관리 (기존 script.js와 통일)
     window.getUserId = function() {
@@ -3140,6 +3427,7 @@
                 <span class="feed-card-time" style="font-size:13px;color:#999;">${window.formatTime(post.timestamp)}</span>
               </div>
               <div class="feed-card-content" style="margin:16px 0;">
+                ${post.imageUrl ? `<div class="feed-card-image-container" style="margin-bottom:16px;border-radius:12px;overflow:hidden;"><img src="${post.imageUrl}" alt="건강 이야기 이미지" class="feed-card-image" style="width:100%;height:auto;max-height:300px;object-fit:cover;display:block;cursor:pointer;" onclick="window.openImageModal('${post.imageUrl}')"></div>` : ''}
                 <div class="feed-card-text" id="feed-card-text-${index}" style="font-size:16px;color:#333;line-height:1.7;max-height:72px;overflow:hidden;position:relative;">${post.content.length > 100 ? post.content.slice(0, 100) + '...' : post.content}</div>
                 ${post.content.length > 100 ? `<button class="feed-card-more-btn" onclick="window.toggleFeedMore(${index})" style="background:none;border:none;color:#4CAF50;font-size:14px;cursor:pointer;">더보기</button>` : ''}
               </div>
@@ -3196,7 +3484,7 @@
       }
     };
 
-    // 자유글 작성 처리
+    // 자유글 작성 처리 (이미지 지원)
     window.handleFreePostSubmit = async function(e) {
       e.preventDefault();
       
@@ -3210,13 +3498,29 @@
       
       try {
         const submitBtn = e.target.querySelector('button[type="submit"]');
+        const originalText = submitBtn.innerHTML;
         submitBtn.disabled = true;
-        submitBtn.textContent = '작성 중...';
         
-        await window.addUserPost(content);
+        // 이미지가 있는지 확인
+        const hasImage = selectedImageFile !== null;
         
+        if (hasImage) {
+          submitBtn.innerHTML = '<span>이미지 업로드 중...</span>';
+        } else {
+          submitBtn.innerHTML = '<span>작성 중...</span>';
+        }
+        
+        // 게시글 작성 (이미지 포함)
+        await window.addUserPost(content, selectedImageFile);
+        
+        // 폼 초기화
         textarea.value = '';
-        window.showSalonToast('자유글이 작성되었습니다! +100P 적립 🎉');
+        window.removeImagePreview(); // 이미지 미리보기 제거
+        
+        const message = hasImage ? 
+          '건강 이야기가 이미지와 함께 공유되었습니다! +100P 적립 🎉' : 
+          '건강 이야기가 공유되었습니다! +100P 적립 🎉';
+        window.showSalonToast(message);
         
         // 포인트 표시 업데이트
         const points = await window.getUserPoints();
@@ -3225,16 +3529,22 @@
           pointDisplay.textContent = points;
         }
         
+        // 모달 닫기
+        window.closeWriteModal();
+        
         // 자유 섹션 새로고침
         await window.loadFreeSection();
         
       } catch (error) {
         console.error('자유글 작성 오류:', error);
-        window.showSalonToast('작성 중 오류가 발생했습니다.', 'error');
+        const errorMsg = error.message?.includes('storage') ? 
+          '이미지 업로드 중 오류가 발생했습니다.' : 
+          '작성 중 오류가 발생했습니다.';
+        window.showSalonToast(errorMsg, 'error');
       } finally {
         const submitBtn = e.target.querySelector('button[type="submit"]');
         submitBtn.disabled = false;
-        submitBtn.textContent = '자유글 작성 (+100P)';
+        submitBtn.innerHTML = '<span>건강 이야기 공유하기</span><span class="point-badge">+100P</span>';
       }
     };
 
@@ -4477,11 +4787,20 @@
       }
     };
 
-    // 자유글 작성 함수
-    window.addUserPost = async function(content) {
+    // 자유글 작성 함수 (이미지 지원)
+    window.addUserPost = async function(content, imageFile = null) {
       try {
         const userId = window.getUserId();
         const nickname = localStorage.getItem('nickname');
+        
+        let imageUrl = null;
+        
+        // 이미지가 있으면 먼저 업로드
+        if (imageFile) {
+          console.log('이미지 업로드 시작...');
+          imageUrl = await window.uploadImageToStorage(imageFile);
+          console.log('이미지 업로드 완료:', imageUrl);
+        }
         
         const postData = {
           userId: userId,
@@ -4492,6 +4811,11 @@
           commentCount: 0
         };
         
+        // 이미지 URL이 있으면 추가
+        if (imageUrl) {
+          postData.imageUrl = imageUrl;
+        }
+        
         // Firestore에 저장
         const docRef = await addDoc(collection(db, 'user_posts'), postData);
         
@@ -4499,6 +4823,7 @@
         const actionId = `post_${docRef.id}`;
         await window.addUserPoints(100, 'post', actionId);
         
+        console.log('게시글 작성 완료:', docRef.id, imageUrl ? '(이미지 포함)' : '(텍스트만)');
         return docRef.id;
       } catch (error) {
         console.error('자유글 작성 오류:', error);
@@ -4689,7 +5014,260 @@
       window.updateExchangeButton();
     });
 
+    // 이미지 관리 함수들
+    let selectedImageFile = null;
+    let uploadedImageUrl = null;
+
+    // 이미지 파일 선택 처리
+    window.handleImageSelect = function() {
+      const fileInput = document.getElementById('habit-salon-free-image');
+      const file = fileInput.files[0];
+      
+      if (!file) return;
+      
+      // 파일 크기 체크 (3MB)
+      const maxSize = 3 * 1024 * 1024; // 3MB
+      if (file.size > maxSize) {
+        window.showSalonToast('파일 크기는 3MB 이하로 선택해주세요.', 'warning');
+        fileInput.value = '';
+        return;
+      }
+      
+      // 파일 타입 체크
+      const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
+      if (!allowedTypes.includes(file.type)) {
+        window.showSalonToast('JPG, PNG, GIF, WebP 파일만 업로드 가능합니다.', 'warning');
+        fileInput.value = '';
+        return;
+      }
+      
+      selectedImageFile = file;
+      
+      // 이미지 미리보기 표시
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        const previewContainer = document.getElementById('image-preview-container');
+        const previewImage = document.getElementById('habit-salon-image-preview');
+        const uploadBtn = document.querySelector('.image-upload-btn');
+        
+        previewImage.src = e.target.result;
+        previewContainer.style.display = 'block';
+        uploadBtn.style.display = 'none';
+        
+        // 업로드 버튼 텍스트 변경
+        const uploadText = document.querySelector('.upload-text');
+        if (uploadText) {
+          uploadText.textContent = '이미지 변경';
+        }
+      };
+      reader.readAsDataURL(file);
+      
+      console.log('이미지 파일 선택됨:', file.name, file.size, 'bytes');
+    };
+
+    // 이미지 미리보기 제거
+    window.removeImagePreview = function() {
+      const previewContainer = document.getElementById('image-preview-container');
+      const uploadBtn = document.querySelector('.image-upload-btn');
+      const fileInput = document.getElementById('habit-salon-free-image');
+      const uploadText = document.querySelector('.upload-text');
+      
+      previewContainer.style.display = 'none';
+      uploadBtn.style.display = 'flex';
+      fileInput.value = '';
+      selectedImageFile = null;
+      uploadedImageUrl = null;
+      
+      if (uploadText) {
+        uploadText.textContent = '이미지 선택';
+      }
+      
+      console.log('이미지 미리보기 제거됨');
+    };
+
+    // Firebase Storage에 이미지 업로드
+    window.uploadImageToStorage = async function(file) {
+      if (!file) return null;
+      
+      try {
+        const uploadStatus = document.getElementById('upload-status');
+        const progressBar = document.getElementById('upload-progress-bar');
+        const statusText = document.getElementById('upload-status-text');
+        
+        // 업로드 상태 표시
+        uploadStatus.style.display = 'block';
+        statusText.textContent = '이미지 업로드 중...';
+        progressBar.style.width = '0%';
+        
+        // 파일명 생성 (중복 방지)
+        const timestamp = Date.now();
+        const randomId = Math.random().toString(36).substr(2, 9);
+        const extension = file.name.split('.').pop();
+        const fileName = `health_posts/${timestamp}_${randomId}.${extension}`;
+        
+        // Storage 레퍼런스 생성
+        const storageRef = window.storageRef(window.storage, fileName);
+        
+        // 업로드 진행
+        const uploadTask = window.uploadBytesResumable(storageRef, file);
+        
+        return new Promise((resolve, reject) => {
+          uploadTask.on('state_changed', 
+            (snapshot) => {
+              // 업로드 진행률 업데이트
+              const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+              progressBar.style.width = progress + '%';
+              statusText.textContent = `업로드 중... ${Math.round(progress)}%`;
+              
+              console.log('업로드 진행률:', progress + '%');
+            },
+            (error) => {
+              console.error('이미지 업로드 오류:', error);
+              uploadStatus.style.display = 'none';
+              window.showSalonToast('이미지 업로드 중 오류가 발생했습니다.', 'error');
+              reject(error);
+            },
+            async () => {
+              try {
+                // 업로드 완료 - 다운로드 URL 가져오기
+                const downloadURL = await window.getDownloadURL(uploadTask.snapshot.ref);
+                
+                progressBar.style.width = '100%';
+                statusText.textContent = '업로드 완료!';
+                
+                setTimeout(() => {
+                  uploadStatus.style.display = 'none';
+                }, 1500);
+                
+                console.log('이미지 업로드 완료:', downloadURL);
+                resolve(downloadURL);
+              } catch (error) {
+                console.error('다운로드 URL 가져오기 오류:', error);
+                uploadStatus.style.display = 'none';
+                window.showSalonToast('이미지 URL 생성 중 오류가 발생했습니다.', 'error');
+                reject(error);
+              }
+            }
+          );
+        });
+      } catch (error) {
+        console.error('이미지 업로드 시작 오류:', error);
+        const uploadStatus = document.getElementById('upload-status');
+        uploadStatus.style.display = 'none';
+        window.showSalonToast('이미지 업로드를 시작할 수 없습니다.', 'error');
+        throw error;
+      }
+    };
+
+    // 이미지 모달 함수들
+    window.openImageModal = function(imageUrl) {
+      const modal = document.getElementById('image-modal');
+      const modalImg = document.getElementById('image-modal-img');
+      
+      modalImg.src = imageUrl;
+      modal.style.display = 'flex';
+      modal.classList.add('active');
+      document.body.style.overflow = 'hidden';
+      
+      // ESC 키로 닫기
+      const handleEsc = function(e) {
+        if (e.key === 'Escape') {
+          window.closeImageModal();
+          document.removeEventListener('keydown', handleEsc);
+        }
+      };
+      document.addEventListener('keydown', handleEsc);
+      
+      console.log('이미지 모달 열림:', imageUrl);
+    };
+
+    window.closeImageModal = function() {
+      const modal = document.getElementById('image-modal');
+      modal.classList.remove('active');
+      document.body.style.overflow = '';
+      
+      setTimeout(() => {
+        modal.style.display = 'none';
+      }, 300);
+      
+      console.log('이미지 모달 닫힘');
+    };
+
+    // 글쓰기 폼 검증 강화
+    window.validateWriteForm = function() {
+      const textarea = document.getElementById('habit-salon-free-content');
+      const content = textarea?.value?.trim() || '';
+      const submitBtn = document.querySelector('#habit-salon-free-form button[type="submit"]');
+      const charCounter = document.querySelector('.char-counter');
+      const charGuide = document.querySelector('.char-count-guide');
+      
+      // 글자 수 업데이트
+      if (charCounter) {
+        charCounter.textContent = `${content.length}/500`;
+        
+        if (content.length > 450) {
+          charCounter.style.color = '#f59e0b';
+        } else if (content.length > 480) {
+          charCounter.style.color = '#ef4444';
+        } else {
+          charCounter.style.color = '#666';
+        }
+      }
+      
+      // 제출 버튼 활성화/비활성화
+      if (submitBtn) {
+        if (content.length >= 50) {
+          submitBtn.disabled = false;
+          submitBtn.style.opacity = '1';
+          submitBtn.style.cursor = 'pointer';
+        } else {
+          submitBtn.disabled = true;
+          submitBtn.style.opacity = '0.6';
+          submitBtn.style.cursor = 'not-allowed';
+        }
+      }
+      
+      // 안내 메시지 업데이트
+      if (charGuide) {
+        if (content.length === 0) {
+          charGuide.textContent = '건강 경험을 자세히 공유해주세요! (50자 필요)';
+          charGuide.style.color = '#666';
+        } else if (content.length < 50) {
+          const remaining = 50 - content.length;
+          charGuide.textContent = `더 자세한 이야기를 들려주세요! (${remaining}자 더 필요)`;
+          charGuide.style.color = '#f59e0b';
+        } else {
+          charGuide.textContent = '완성! 이제 건강 이야기를 공유할 수 있습니다 ✨';
+          charGuide.style.color = '#4CAF50';
+        }
+      }
+    };
+
+    // 이미지 파일 입력 이벤트 리스너 추가
+    document.addEventListener('DOMContentLoaded', function() {
+      const fileInput = document.getElementById('habit-salon-free-image');
+      if (fileInput) {
+        fileInput.addEventListener('change', window.handleImageSelect);
+      }
+      
+      // 글쓰기 폼 검증 이벤트 리스너
+      const textarea = document.getElementById('habit-salon-free-content');
+      if (textarea) {
+        textarea.addEventListener('input', window.validateWriteForm);
+        textarea.addEventListener('keyup', window.validateWriteForm);
+        // 초기 검증
+        window.validateWriteForm();
+      }
+      
+      // 글쓰기 폼 제출 이벤트 리스너
+      const writeForm = document.getElementById('habit-salon-free-form');
+      if (writeForm) {
+        writeForm.addEventListener('submit', window.handleFreePostSubmit);
+      }
+    });
+
     console.log('✅ 늘봄 습관살롱 초기화 완료 - 뒤로가기 지원');
+    console.log('✅ 이미지 업로드 기능 초기화 완료');
   </script>
   </script>
   <script src="script.js" onerror="console.error('script.js 로드 실패')" onload="console.log('script.js 로드 성공')"></script>
