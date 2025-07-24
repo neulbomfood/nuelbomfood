@@ -26,6 +26,48 @@ service cloud.firestore {
       allow write: if isAuthenticated();
     }
     
+    // 브랜드 게시물에 대한 규칙
+    match /brand_posts/{postId} {
+      allow read: if true;  // 모든 사용자가 읽기 가능
+      allow write: if true;  // 관리자용 - 실제로는 더 엄격한 규칙 적용 필요
+    }
+
+    // 사용자 게시물에 대한 규칙  
+    match /user_posts/{postId} {
+      allow read: if true;  // 모든 사용자가 읽기 가능
+      allow write: if isAuthenticated();  // 인증된 사용자만 쓰기 가능
+    }
+
+    // 자가체크 게시물에 대한 규칙
+    match /self_check_posts/{postId} {
+      allow read: if true;  // 모든 사용자가 읽기 가능
+      allow write: if true;  // 관리자용 - 실제로는 더 엄격한 규칙 적용 필요
+    }
+
+    // 건강 질문에 대한 규칙
+    match /health_questions/{questionId} {
+      allow read: if true;  // 모든 사용자가 읽기 가능
+      allow write: if true;  // 관리자용
+    }
+
+    // 댓글에 대한 규칙들
+    match /{collection}_comments/{commentId} {
+      allow read: if true;  // 모든 사용자가 읽기 가능
+      allow write: if isAuthenticated();  // 인증된 사용자만 쓰기 가능
+    }
+
+    // 좋아요에 대한 규칙
+    match /likes/{likeId} {
+      allow read: if true;  // 모든 사용자가 읽기 가능
+      allow write: if isAuthenticated();  // 인증된 사용자만 쓰기 가능
+    }
+
+    // 포인트 히스토리에 대한 규칙
+    match /pointsHistory/{historyId} {
+      allow read: if isAuthenticated();
+      allow write: if isAuthenticated();
+    }
+
     // 포인트 교환 요청에 대한 규칙
     match /exchangeRequests/{requestId} {
       allow read: if isAuthenticated();

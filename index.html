@@ -1123,6 +1123,92 @@
       color: rgba(255,255,255,0.9);
     }
 
+    /* 자가체크 카드 스타일 */
+    .selfcheck-card {
+      background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+      border: 2px solid #e0ede3;
+      transition: all 0.3s ease;
+    }
+
+    .selfcheck-card:hover {
+      border-color: #4CAF50;
+      box-shadow: 0 8px 25px rgba(76, 175, 80, 0.15);
+    }
+
+    .selfcheck-card .story-card-title {
+      color: #356c55;
+      font-size: 20px;
+      font-weight: 700;
+      margin-bottom: 16px;
+    }
+
+    .selfcheck-card .story-card-text {
+      color: #333;
+      line-height: 1.7;
+      font-size: 15px;
+    }
+
+    .selfcheck-engagement {
+      animation: pulseGlow 3s infinite;
+    }
+
+    @keyframes pulseGlow {
+      0%, 100% {
+        background: #f0f8f0;
+      }
+      50% {
+        background: #e8f5e8;
+      }
+    }
+
+    .selfcheck-card .story-action-btn {
+      background: rgba(76, 175, 80, 0.1);
+      border-radius: 20px;
+      padding: 8px 14px;
+      transition: all 0.2s ease;
+    }
+
+    .selfcheck-card .story-action-btn:hover {
+      background: rgba(76, 175, 80, 0.2);
+      transform: translateY(-1px);
+    }
+
+    /* 메인 자가체크 버튼 스타일 */
+    #selfcheck-enter-btn {
+      box-shadow: 0 4px 15px rgba(76, 175, 80, 0.3);
+      transition: all 0.3s ease;
+      font-weight: 600;
+      border: none;
+      position: relative;
+      overflow: hidden;
+    }
+
+    #selfcheck-enter-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(76, 175, 80, 0.4);
+    }
+
+    #selfcheck-enter-btn:active {
+      transform: translateY(0);
+      box-shadow: 0 2px 10px rgba(76, 175, 80, 0.3);
+    }
+
+    /* 자가체크 버튼 빛나는 효과 */
+    #selfcheck-enter-btn::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+      transition: left 0.5s;
+    }
+
+    #selfcheck-enter-btn:hover::before {
+      left: 100%;
+    }
+
     .question-options {
       display: flex;
       flex-direction: column;
@@ -2310,6 +2396,10 @@
             </p>
           </div>
           <div id="points-action">
+            <button id="selfcheck-enter-btn" class="primary-button" style="margin-bottom:12px;background:linear-gradient(135deg,#4CAF50,#356c55);color:white;display:flex;align-items:center;justify-content:center;gap:8px;">
+              <span style="font-size:18px;">🔍</span>
+              <span>하루 1분 자가체크</span>
+            </button>
             <button id="habit-salon-enter-btn" class="primary-button" style="margin-bottom:12px;background:#356c55;">🌿 늘봄 습관살롱</button>
             <button onclick="location.href='quiz.html'" class="primary-button">
               오늘의 건강 루틴 시작하기 →
@@ -2368,6 +2458,11 @@
           <img src="assets/img/brand-icon.png" alt="브랜드 이야기" style="width:48px;height:48px;margin-bottom:10px;object-fit:contain;"/>
           <div style="font-weight:700;font-size:1.05rem;color:#356c55;">브랜드 이야기</div>
         </div>
+        <!-- 자가체크는 메인 홈에 배치되어 있으므로 숨김 처리 -->
+        <!-- <div class="habit-salon-nav-card" data-section="selfcheck" style="display:none;">
+          <div style="width:48px;height:48px;margin-bottom:10px;display:flex;align-items:center;justify-content:center;font-size:28px;background:linear-gradient(135deg,#4CAF50,#356c55);border-radius:50%;color:white;">🔍</div>
+          <div style="font-weight:700;font-size:1.05rem;color:#356c55;text-align:center;">하루 1분<br>자가체크</div>
+        </div> -->
         <div class="habit-salon-nav-card" data-section="question" style="flex:1 1 140px;min-width:140px;max-width:180px;background:#fff;border-radius:16px;box-shadow:0 2px 8px #e0ede3;padding:18px 10px;display:flex;flex-direction:column;align-items:center;cursor:pointer;transition:box-shadow 0.2s;">
           <img src="assets/img/question-icon%20.png" alt="오늘의 질문" style="width:48px;height:48px;margin-bottom:10px;object-fit:contain;"/>
           <div style="font-weight:700;font-size:1.05rem;color:#356c55;">오늘의 질문</div>
@@ -2387,7 +2482,14 @@
         <div id="habit-salon-brand-list" style="display:flex;flex-direction:column;gap:20px;padding:12px 0 8px 0;"></div>
       </section>
 
-      <!-- 2️⃣ 오늘의 질문 -->
+      <!-- 2️⃣ 하루 1분 자가체크 -->
+      <section id="habit-salon-selfcheck" style="display:none;margin-bottom:40px;">
+        <h2 style="font-size:1.3rem;color:#356c55;font-weight:700;">🔍 하루 1분 자가체크</h2>
+        <p style="color:#666;font-size:14px;margin:8px 0 20px;text-align:center;">지금 내 몸, 괜찮은 걸까? 놓치기 쉬운 몸의 신호를 1분만 확인해보세요</p>
+        <div id="habit-salon-selfcheck-list" style="display:flex;flex-direction:column;gap:20px;padding:12px 0 8px 0;"></div>
+      </section>
+
+      <!-- 3️⃣ 오늘의 질문 -->
       <section id="habit-salon-question" style="display:none;margin-bottom:40px;">
         <h2 style="font-size:1.3rem;color:#356c55;font-weight:700;">📔 오늘의 질문</h2>
         <div id="habit-salon-question-card" style="background:#f8f9fa;padding:20px;border-radius:12px;margin-bottom:12px;"></div>
@@ -2433,6 +2535,26 @@
         <div class="brand-story-container">
           <div id="brand-story-content"></div>
         </div>
+      </div>
+    </div>
+
+    <!-- 전체 화면 하루 1분 자가체크 페이지 -->
+    <div id="selfcheck-fullscreen" class="fullscreen-page">
+      <div class="fullscreen-page-header">
+        <button class="fullscreen-back-btn" onclick="window.goBackMain()">
+          ← 뒤로가기
+        </button>
+        <h1 class="fullscreen-page-title">🔍 하루 1분 자가체크</h1>
+        <div></div>
+      </div>
+      <div class="fullscreen-page-content">
+        <div style="text-align:center;margin-bottom:24px;">
+          <p style="color:#666;font-size:16px;line-height:1.6;margin:0;">
+            지금 내 몸, 괜찮은 걸까?<br>
+            <strong style="color:#4CAF50;">놓치기 쉬운 몸의 신호를 1분만 확인해보세요</strong>
+          </p>
+        </div>
+        <div id="selfcheck-content"></div>
       </div>
     </div>
 
@@ -3022,6 +3144,78 @@
         return [];
       }
     };
+
+    // 자가체크 콘텐츠 로딩
+    window.loadSelfCheckPosts = async function() {
+      try {
+        console.log('Firebase에서 자가체크 콘텐츠 로딩 중...');
+        
+        // 오프라인 상태 시 캐시된 데이터 사용
+        if (!window.isOnline) {
+          console.log('오프라인 상태 - 캐시된 자가체크 콘텐츠 사용');
+          const cachedData = localStorage.getItem('cached_selfcheck_posts');
+          if (cachedData) {
+            const posts = JSON.parse(cachedData);
+            console.log('캐시된 자가체크 콘텐츠:', posts.length, '개');
+            return posts;
+          }
+          return [{
+            id: 'offline_selfcheck_1',
+            title: '냄새로 알 수 있는 건강 경고 7가지',
+            content: '몸에서 나는 냄새는 단순한 위생 문제가 아니라 건강의 신호일 수 있습니다.\n\n1. 달콤한 입 냄새 → 혈당이 높다는 신호\n2. 암모니아 냄새 나는 땀 → 단백질 과다 섭취\n3. 신 냄새 나는 발 → 진균 감염 의심\n4. 생선 비린내 나는 체취 → 간 기능 이상\n5. 아세톤 냄새 나는 숨 → 케톤증 가능성\n6. 쇠맛 나는 입 → 철분 부족 또는 잇몸 출혈\n7. 썩은 계란 냄새 트림 → 소화불량 또는 위장 문제\n\n💬 혹시 경험해본 적 있으신가요? 댓글로 남겨주세요!',
+            author: '늘봄팀',
+            timestamp: new Date(),
+            likes: 0,
+            commentCount: 0,
+            type: 'selfcheck',
+            isOffline: true
+          }];
+        }
+        
+        // Firestore에서 자가체크 콘텐츠 로드
+        const q = query(
+          collection(db, 'self_check_posts'),
+          where('isPublished', '==', true),
+          orderBy('timestamp', 'desc')
+        );
+        const snapshot = await getDocs(q);
+        
+        const posts = snapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data()
+        }));
+        
+        // 성공적으로 로딩되면 캐시에 저장
+        if (posts.length > 0) {
+          localStorage.setItem('cached_selfcheck_posts', JSON.stringify(posts));
+          localStorage.setItem('cached_selfcheck_posts_time', Date.now().toString());
+        }
+        
+        console.log('자가체크 콘텐츠 로딩 완료:', posts.length, '개');
+        return posts;
+      } catch (error) {
+        console.error('자가체크 콘텐츠 로딩 오류:', error);
+        // 오류 발생 시 캐시된 데이터 사용 시도
+        const cachedData = localStorage.getItem('cached_selfcheck_posts');
+        if (cachedData) {
+          const posts = JSON.parse(cachedData);
+          console.log('오류 발생 - 캐시된 자가체크 콘텐츠 사용:', posts.length, '개');
+          return posts;
+        }
+        
+        // 캐시도 없으면 샘플 데이터 반환
+        return [{
+          id: 'sample_selfcheck_1',
+          title: '냄새로 알 수 있는 건강 경고 7가지',
+          content: '몸에서 나는 냄새는 단순한 위생 문제가 아니라 건강의 신호일 수 있습니다.\n\n1. 달콤한 입 냄새 → 혈당이 높다는 신호\n2. 암모니아 냄새 나는 땀 → 단백질 과다 섭취\n3. 신 냄새 나는 발 → 진균 감염 의심\n4. 생선 비린내 나는 체취 → 간 기능 이상\n5. 아세톤 냄새 나는 숨 → 케톤증 가능성\n6. 쇠맛 나는 입 → 철분 부족 또는 잇몸 출혈\n7. 썩은 계란 냄새 트림 → 소화불량 또는 위장 문제\n\n💬 혹시 경험해본 적 있으신가요? 댓글로 남겨주세요!',
+          author: '늘봄팀',
+          timestamp: new Date(),
+          likes: 0,
+          commentCount: 0,
+          type: 'selfcheck'
+        }];
+      }
+    };
     
     // 좋아요 기능 (Firestore 연동)
     window.toggleLike = async function(postType, postId) {
@@ -3162,7 +3356,7 @@
         return;
       }
       // 기존 섹션 숨기기
-      const sections = ['brand', 'question', 'free', 'challenge'];
+      const sections = ['brand', 'selfcheck', 'question', 'free', 'challenge'];
       sections.forEach(section => {
         const element = document.getElementById(`habit-salon-${section}`);
         if (element) element.style.display = 'none';
@@ -3174,6 +3368,7 @@
       if (targetSection) {
         targetSection.style.display = 'block';
         if (sectionName === 'brand') await window.loadBrandSection();
+        if (sectionName === 'selfcheck') await window.loadSelfCheckSection();
         if (sectionName === 'question') await window.loadQuestionSection();
         if (sectionName === 'challenge') {/* 준비중 */}
       }
@@ -3282,6 +3477,100 @@
         
       } catch (error) {
         console.error('브랜드 섹션 로딩 오류:', error);
+        container.innerHTML = '<div style="text-align:center;padding:40px;color:#f44336;">로딩 중 오류가 발생했습니다.</div>';
+      }
+    };
+
+    // 자가체크 섹션 로딩 (인스타 스타일 카드)
+    window.loadSelfCheckSection = async function() {
+      const container = document.getElementById('habit-salon-selfcheck-list');
+      if (!container) return;
+      
+      container.innerHTML = '<div style="text-align:center;padding:40px;color:#666;">로딩 중...</div>';
+      
+      try {
+        const posts = await window.loadSelfCheckPosts();
+        
+        if (posts.length === 0) {
+          container.innerHTML = '<div style="text-align:center;padding:40px;color:#666;">오늘의 자가체크 콘텐츠가 준비 중입니다.</div>';
+          return;
+        }
+        
+        currentCards = posts;
+        currentSection = 'selfcheck';
+        currentCardIndex = 0;
+        
+        container.innerHTML = `
+          <div class="card-slider-container">
+            <div class="card-slider" id="selfcheck-card-slider">
+              ${posts.map((post, index) => `
+                <div class="story-card selfcheck-card" data-index="${index}">
+                  ${post.imageUrl ? `<img src="${post.imageUrl}" alt="자가체크 이미지" class="story-card-image">` : 
+                    '<div class="story-card-image" style="display:flex;align-items:center;justify-content:center;font-size:48px;background:linear-gradient(135deg,#4CAF50,#356c55);color:white;">🔍</div>'}
+                  <div class="story-card-content">
+                    <h3 class="story-card-title">${post.title || '건강 자가체크'}</h3>
+                    <div class="story-card-text" style="white-space: pre-line;">${post.content}</div>
+                    <div class="selfcheck-engagement" style="margin-top:16px;padding:12px;background:#f0f8f0;border-radius:8px;text-align:center;">
+                      <p style="margin:0;color:#356c55;font-weight:600;font-size:14px;">💬 혹시 경험해본 적 있으신가요? 댓글로 남겨주세요!</p>
+                    </div>
+                    <div class="story-card-meta">
+                      <div class="story-card-author">
+                        <div class="story-card-avatar" style="background:linear-gradient(135deg,#4CAF50,#356c55);">🔍</div>
+                        <div class="story-card-author-info">
+                          <div class="story-card-author-name">${post.author || '늘봄팀'}</div>
+                          <div class="story-card-time">${window.formatTime(post.timestamp)}</div>
+                        </div>
+                      </div>
+                      <div class="story-card-actions">
+                        <button class="story-action-btn" onclick="window.toggleStoryLike('selfcheck', '${post.id}', ${index})">
+                          <span id="like-icon-selfcheck-${index}">❤️</span>
+                          <span id="like-count-selfcheck-${index}">${post.likes || 0}</span>
+                        </button>
+                        <button class="story-action-btn comment-btn" onclick="window.toggleStoryComments('selfcheck', '${post.id}', ${index})">
+                          <span>💬</span>
+                          <span id="comment-count-selfcheck-${index}">${post.commentCount || 0}</span>
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="story-comments-section active" id="comments-selfcheck-${index}">
+                    <div class="story-comments-header">
+                      댓글 <span id="comment-header-count-selfcheck-${index}">${post.commentCount || 0}</span>개
+                    </div>
+                    <div class="story-comments-list" id="comment-list-selfcheck-${index}">
+                      <!-- 댓글 목록이 여기에 로드됩니다 -->
+                    </div>
+                    <div class="story-comment-input">
+                      <div class="story-comment-form">
+                        <textarea id="comment-input-selfcheck-${index}" class="story-comment-textarea" 
+                                  placeholder="경험을 공유해주세요... (+30P)" maxlength="200"></textarea>
+                        <button onclick="window.submitStoryComment('selfcheck', '${post.id}', ${index})" 
+                                class="story-comment-submit">등록</button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              `).join('')}
+            </div>
+            ${posts.length > 1 ? `
+              <button class="card-nav prev" onclick="window.prevCard()" id="prev-btn">‹</button>
+              <button class="card-nav next" onclick="window.nextCard()" id="next-btn">›</button>
+            ` : ''}
+          </div>
+          ${posts.length > 1 ? `
+            <div class="card-indicators">
+              ${posts.map((_, index) => `
+                <div class="card-indicator ${index === 0 ? 'active' : ''}" 
+                     onclick="window.goToCard(${index})" data-index="${index}"></div>
+              `).join('')}
+            </div>
+          ` : ''}
+        `;
+        
+        window.updateCardNavigation();
+        
+      } catch (error) {
+        console.error('자가체크 섹션 로딩 오류:', error);
         container.innerHTML = '<div style="text-align:center;padding:40px;color:#f44336;">로딩 중 오류가 발생했습니다.</div>';
       }
     };
@@ -4174,6 +4463,19 @@
         window.showSalonToast('오프라인 상태입니다. 일부 기능이 제한될 수 있습니다.', 'warning');
       });
       
+      // 하루 1분 자가체크 버튼 초기화
+      const selfCheckBtn = document.getElementById('selfcheck-enter-btn');
+      if (selfCheckBtn) {
+        selfCheckBtn.addEventListener('click', async function() {
+          try {
+            await window.openSelfCheckPage();
+          } catch (error) {
+            console.error('자가체크 페이지 열기 오류:', error);
+            window.showSalonToast('오류가 발생했습니다. 다시 시도해주세요.', 'error');
+          }
+        });
+      }
+
       // 습관살롱 진입 버튼 초기화 (원본 방식 복원)
       const enterBtn = document.getElementById('habit-salon-enter-btn');
       if (enterBtn) {
@@ -4255,14 +4557,87 @@
       }
     };
 
+    // 샘플 자가체크 콘텐츠 추가 함수 (테스트용)
+    window.addSampleSelfCheckContent = async function() {
+      console.log('');
+      console.log('⚠️ 샘플 자가체크 콘텐츠는 실제 운영 시 Firebase Console에서 관리해주세요.');
+      console.log('아래는 예시 데이터 구조입니다:');
+      console.log('');
+      
+      const sampleContents = [
+        {
+          title: '냄새로 알 수 있는 건강 경고 7가지',
+          content: `몸에서 나는 냄새는 단순한 위생 문제가 아니라 건강의 신호일 수 있습니다.
+
+1. 달콤한 입 냄새 → 혈당이 높다는 신호
+2. 암모니아 냄새 나는 땀 → 단백질 과다 섭취
+3. 신 냄새 나는 발 → 진균 감염 의심
+4. 생선 비린내 나는 체취 → 간 기능 이상
+5. 아세톤 냄새 나는 숨 → 케톤증 가능성
+6. 쇠맛 나는 입 → 철분 부족 또는 잇몸 출혈
+7. 썩은 계란 냄새 트림 → 소화불량 또는 위장 문제
+
+💬 혹시 경험해본 적 있으신가요? 댓글로 남겨주세요!`
+        },
+        {
+          title: '손톱으로 알아보는 건강 신호 5가지',
+          content: `손톱의 색깔과 모양은 우리 건강 상태를 알려주는 중요한 지표입니다.
+
+1. 손톱이 하얗게 변함 → 간질환 또는 빈혈 의심
+2. 손톱에 세로줄 → 노화 또는 영양 불균형
+3. 손톱이 파랗게 변함 → 산소 부족, 혈액순환 장애
+4. 손톱 끝이 둥글게 굽음 → 폐질환 또는 심장질환
+5. 손톱에 하얀 반점 → 아연 부족 또는 외상
+
+💬 내 손톱은 어떤 상태인가요? 확인해보고 공유해주세요!`
+        },
+        {
+          title: '눈으로 알 수 있는 건강 적신호 6가지',
+          content: `눈은 몸의 창문이라고 불릴 만큼 건강 상태를 잘 반영합니다.
+
+1. 눈꺼풀 안쪽이 창백함 → 철분 결핍성 빈혈
+2. 눈의 흰자가 노랗게 변함 → 간 기능 이상
+3. 눈 주위 다크서클 → 수면 부족, 신장 기능 저하
+4. 눈꺼풀이 자주 떨림 → 마그네슘 부족, 스트레스
+5. 눈이 자주 건조함 → 비타민A 부족
+6. 눈동자에 하얀 고리 → 콜레스테롤 수치 높음
+
+💬 혹시 이런 증상을 경험해본 적 있나요?`
+        }
+      ];
+      
+      sampleContents.forEach((content, index) => {
+        console.log(`📋 샘플 ${index + 1}:`);
+        console.log(JSON.stringify({
+          id: `selfcheck_${Date.now()}_${index}`,
+          title: content.title,
+          content: content.content,
+          author: '늘봄팀',
+          timestamp: 'serverTimestamp()',
+          likes: 0,
+          commentCount: 0,
+          type: 'selfcheck',
+          isPublished: true
+        }, null, 2));
+        console.log('');
+      });
+      
+      console.log('🔥 Firebase Console에서 self_check_posts 컬렉션에 위 데이터를 추가하세요.');
+      console.log('https://console.firebase.google.com/project/neulbom-healt-quiz/firestore');
+      
+      return sampleContents;
+    };
+
     // 콘솔에서 사용할 수 있는 유틸리티 함수들 (데이터 관리 기능 제외)
     window.habitSalonUtils = {
       getUserPoints: window.getUserPoints,
       loadBrandPosts: window.loadBrandPosts,
       loadHealthQuestions: window.loadHealthQuestions,
+      loadSelfCheckPosts: window.loadSelfCheckPosts,
       loadUserPosts: window.loadUserPosts,
       syncOfflineActions: window.syncOfflineActions,
-      addSampleHealthStory: window.addSampleHealthStory
+      addSampleHealthStory: window.addSampleHealthStory,
+      addSampleSelfCheckContent: window.addSampleSelfCheckContent
     };
     
     console.log('🚨 Firestore 연결 문제 완전 해결!');
@@ -4307,6 +4682,7 @@
        // 모든 전체화면 요소들 닫기
        const fullscreenElements = [
          'brand-story-fullscreen',
+         'selfcheck-fullscreen',
          'question-fullscreen', 
          'free-write-fullscreen'
        ];
@@ -4473,6 +4849,111 @@
     });
     
     // 카드 슬라이더 네비게이션 함수들
+
+    // 전체 화면 하루 1분 자가체크 페이지
+    window.openSelfCheckPage = async function() {
+      try {
+        const overlay = document.getElementById('page-transition-overlay');
+        overlay.classList.add('active');
+
+        // 자가체크 데이터 로딩
+        const posts = await window.loadSelfCheckPosts();
+        
+        // 카드 슬라이더 형태로 렌더링
+        const container = document.querySelector('#selfcheck-content');
+        if (!container) return;
+
+        if (posts.length === 0) {
+          container.innerHTML = '<div style="text-align:center;padding:40px;color:#666;">오늘의 자가체크 콘텐츠가 준비 중입니다.</div>';
+        } else {
+          window.currentCards = posts;
+          window.currentSection = 'selfcheck';
+          window.currentCardIndex = 0;
+          container.innerHTML = `
+            <div class="card-slider-container">
+              <div class="card-slider" id="selfcheck-fullscreen-slider">
+                ${posts.map((post, index) => `
+                  <div class="story-card selfcheck-card" data-index="${index}">
+                    ${post.imageUrl ? `<img src="${post.imageUrl}" alt="자가체크 이미지" class="story-card-image">` : 
+                      '<div class="story-card-image" style="display:flex;align-items:center;justify-content:center;font-size:64px;background:linear-gradient(135deg,#4CAF50,#356c55);color:white;">🔍</div>'}
+                    <div class="story-card-content">
+                      <h3 class="story-card-title">${post.title || '건강 자가체크'}</h3>
+                      <div class="story-card-text" style="white-space: pre-line;">${post.content}</div>
+                      <div class="selfcheck-engagement" style="margin-top:20px;padding:16px;background:#f0f8f0;border-radius:12px;text-align:center;">
+                        <p style="margin:0;color:#356c55;font-weight:600;font-size:15px;">💬 혹시 경험해본 적 있으신가요? 댓글로 남겨주세요!</p>
+                      </div>
+                      <div class="story-card-meta">
+                        <div class="story-card-author">
+                          <div class="story-card-avatar" style="background:linear-gradient(135deg,#4CAF50,#356c55);">🔍</div>
+                          <div class="story-card-author-info">
+                            <div class="story-card-author-name">${post.author || '늘봄팀'}</div>
+                            <div class="story-card-time">${window.formatTime(post.timestamp)}</div>
+                          </div>
+                        </div>
+                        <div class="story-card-actions">
+                          <button class="story-action-btn" onclick="window.toggleStoryLike('selfcheck', '${post.id}', ${index})">
+                            <span id="like-icon-selfcheck-${index}">❤️</span>
+                            <span id="like-count-selfcheck-${index}">${post.likes || 0}</span>
+                          </button>
+                          <button class="story-action-btn comment-btn" onclick="window.toggleStoryComments('selfcheck', '${post.id}', ${index})">
+                            <span>💬</span>
+                            <span id="comment-count-selfcheck-${index}">${post.commentCount || 0}</span>
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                    <div class="story-comments-section active" id="comments-selfcheck-${index}">
+                      <div class="story-comments-header">
+                        댓글 <span id="comment-header-count-selfcheck-${index}">${post.commentCount || 0}</span>개
+                      </div>
+                      <div class="story-comments-list" id="comment-list-selfcheck-${index}"></div>
+                      <div class="story-comment-input">
+                        <div class="story-comment-form">
+                          <textarea id="comment-input-selfcheck-${index}" class="story-comment-textarea" 
+                                    placeholder="경험을 공유해주세요... (+30P)" maxlength="200"></textarea>
+                          <button onclick="window.submitStoryComment('selfcheck', '${post.id}', ${index})" 
+                                  class="story-comment-submit">등록</button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                `).join('')}
+              </div>
+              ${posts.length > 1 ? `
+                <button class="card-nav prev" onclick="window.prevCard()" id="prev-btn">‹</button>
+                <button class="card-nav next" onclick="window.nextCard()" id="next-btn">›</button>
+              ` : ''}
+            </div>
+            ${posts.length > 1 ? `
+              <div class="card-indicators">
+                ${posts.map((_, index) => `
+                  <div class="card-indicator ${index === 0 ? 'active' : ''}" 
+                       onclick="window.goToCard(${index})" data-index="${index}"></div>
+                `).join('')}
+              </div>
+            ` : ''}
+            <div style="text-align:center;margin-top:20px;padding:16px;background:#f8f9fa;border-radius:12px;">
+              <p style="margin:0;color:#356c55;font-weight:600;">💚 현재 포인트: <span id="habit-salon-my-point">${await window.getUserPoints()}</span>P</p>
+            </div>
+          `;
+          setTimeout(() => { window.updateCardNavigation(); }, 0);
+        }
+
+        // 전체화면으로 이동
+        setTimeout(() => {
+          overlay.classList.remove('active');
+          document.getElementById('selfcheck-fullscreen').classList.add('active');
+          document.body.style.overflow = 'hidden';
+          history.pushState({page: 'selfcheck'}, '', '#selfcheck');
+        }, 200);
+        
+      } catch (error) {
+        console.error('자가체크 페이지 열기 오류:', error);
+        window.showSalonToast('페이지를 불러올 수 없습니다.', 'error');
+        const overlay = document.getElementById('page-transition-overlay');
+        overlay.classList.remove('active');
+      }
+    };
 
     // 전체 화면 오늘의 질문 페이지 (NavigationManager 통합)
     window.openQuestionPage = async function() {
@@ -4658,6 +5139,12 @@
       history.back();
     };
     
+    window.closeSelfCheckPage = function() {
+      document.getElementById('selfcheck-fullscreen').classList.remove('active');
+      document.body.style.overflow = '';
+      history.back();
+    };
+    
     window.closeQuestionPage = function() {
       document.getElementById('question-fullscreen').classList.remove('active');
       document.body.style.overflow = '';
@@ -4702,6 +5189,8 @@
           console.log('네비게이션 카드 클릭됨:', section);
           if (section === 'brand') {
             window.openBrandStoryPage();
+          } else if (section === 'selfcheck') {
+            window.showHabitSalonSection('selfcheck');
           } else if (section === 'question') {
             window.openQuestionPage();
           } else if (section === 'free') {
@@ -4852,7 +5341,8 @@
         
         // 댓글 수 업데이트
         const postRef = doc(db, postType === 'brand' ? 'brand_posts' : 
-                           postType === 'question' ? 'health_questions' : 'user_posts', 
+                           postType === 'question' ? 'health_questions' : 
+                           postType === 'selfcheck' ? 'self_check_posts' : 'user_posts', 
                            postId);
         await updateDoc(postRef, {
           commentCount: increment(1)

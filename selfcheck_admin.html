@@ -1,0 +1,654 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <title>자가체크 콘텐츠 관리자</title>
+  <script src="https://www.gstatic.com/firebasejs/11.8.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/11.8.1/firebase-firestore.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/11.8.1/firebase-storage.js"></script>
+  <style>
+    body { 
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; 
+      max-width: 800px; 
+      margin: 40px auto; 
+      padding: 20px; 
+      background: linear-gradient(135deg, #f0f8f0, #e8f5e8);
+      min-height: 100vh;
+    }
+    .container {
+      background: white;
+      padding: 40px;
+      border-radius: 20px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+      border: 1px solid rgba(76, 175, 80, 0.1);
+    }
+    h1 { 
+      color: #4CAF50; 
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-size: 28px;
+    }
+    .subtitle {
+      color: #666;
+      margin-bottom: 32px;
+      font-size: 16px;
+      padding: 12px;
+      background: #f0f8f0;
+      border-radius: 8px;
+      border-left: 4px solid #4CAF50;
+    }
+    .form-group {
+      margin-bottom: 24px;
+    }
+    label { 
+      display: block; 
+      margin-bottom: 8px; 
+      font-weight: 600; 
+      color: #356c55;
+      font-size: 16px;
+    }
+    input, textarea {
+      width: 100%; 
+      padding: 16px; 
+      border: 2px solid #e0ede3; 
+      border-radius: 12px;
+      font-size: 15px;
+      transition: all 0.3s ease;
+      box-sizing: border-box;
+      font-family: inherit;
+    }
+    input:focus, textarea:focus {
+      outline: none;
+      border-color: #4CAF50;
+      box-shadow: 0 0 0 3px rgba(76,175,80,0.15);
+      transform: translateY(-2px);
+    }
+    textarea {
+      resize: vertical;
+      line-height: 1.6;
+    }
+    
+    /* 이미지 업로드 섹션 */
+    .image-upload-section {
+      margin: 24px 0;
+      padding: 24px;
+      background: #f8f9fa;
+      border-radius: 16px;
+      border: 3px dashed #4CAF50;
+      transition: all 0.3s ease;
+      text-align: center;
+    }
+    .image-upload-section:hover {
+      border-color: #356c55;
+      background: #f0f8f0;
+      transform: translateY(-2px);
+    }
+    .image-upload-header {
+      margin-bottom: 16px;
+    }
+    .image-upload-title {
+      font-size: 18px;
+      font-weight: 600;
+      color: #356c55;
+      margin-bottom: 4px;
+    }
+    .image-upload-guide {
+      font-size: 14px;
+      color: #666;
+    }
+    .image-upload-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 16px 24px;
+      background: linear-gradient(135deg, #4CAF50, #356c55);
+      color: white;
+      border: none;
+      border-radius: 12px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      font-size: 16px;
+      font-weight: 600;
+      margin: 16px 0;
+    }
+    .image-upload-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(76,175,80,0.4);
+    }
+    .image-preview-container {
+      position: relative;
+      display: inline-block;
+      margin-top: 16px;
+      border-radius: 16px;
+      overflow: hidden;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+    }
+    .image-preview {
+      max-width: 400px;
+      max-height: 300px;
+      width: 100%;
+      height: auto;
+      object-fit: cover;
+      display: block;
+    }
+    .image-remove-btn {
+      position: absolute;
+      top: 12px;
+      right: 12px;
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: rgba(255, 0, 0, 0.8);
+      color: white;
+      border: none;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      font-weight: bold;
+      transition: all 0.2s ease;
+    }
+    .image-remove-btn:hover {
+      background: rgba(255, 0, 0, 1);
+      transform: scale(1.1);
+    }
+    .upload-progress {
+      width: 100%;
+      height: 8px;
+      background: #e0e0e0;
+      border-radius: 4px;
+      overflow: hidden;
+      margin: 16px 0;
+    }
+    .progress-bar {
+      height: 100%;
+      background: linear-gradient(90deg, #4CAF50, #45a049);
+      width: 0%;
+      transition: width 0.3s ease;
+      position: relative;
+    }
+    .progress-bar::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      bottom: 0;
+      right: 0;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
+      animation: shine 1.5s infinite;
+    }
+    @keyframes shine {
+      0% { transform: translateX(-100%); }
+      100% { transform: translateX(100%); }
+    }
+    
+    .char-count {
+      text-align: right;
+      font-size: 12px;
+      color: #666;
+      margin-top: 4px;
+    }
+    .char-count.warning { color: #f59e0b; }
+    .char-count.danger { color: #ef4444; }
+    
+    .submit-btn {
+      width: 100%;
+      padding: 20px;
+      font-size: 18px;
+      font-weight: 600;
+      background: linear-gradient(135deg, #4CAF50, #356c55);
+      color: white;
+      border: none;
+      border-radius: 16px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      margin-top: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+    }
+    .submit-btn:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 10px 30px rgba(76,175,80,0.4);
+    }
+    .submit-btn:disabled {
+      background: #ccc;
+      cursor: not-allowed;
+      transform: none;
+      box-shadow: none;
+    }
+    
+    .message { 
+      margin-top: 24px; 
+      padding: 20px;
+      border-radius: 16px;
+      font-weight: 600;
+      text-align: center;
+      font-size: 16px;
+    }
+    .message.success {
+      background: linear-gradient(135deg, #e8f5e8, #f0f8f0);
+      color: #2e7d32;
+      border: 2px solid #4CAF50;
+    }
+    .message.error {
+      background: linear-gradient(135deg, #ffeaea, #ffebee);
+      color: #d32f2f;
+      border: 2px solid #f44336;
+    }
+    
+    .preview-section {
+      margin-top: 32px;
+      padding: 24px;
+      background: linear-gradient(135deg, #f0f8f0, #e8f5e8);
+      border-radius: 16px;
+      border: 2px solid #4CAF50;
+    }
+    .preview-title {
+      color: #356c55;
+      font-weight: 700;
+      font-size: 18px;
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .preview-card {
+      background: white;
+      border-radius: 16px;
+      padding: 24px;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+    }
+    
+    .tips-section {
+      background: #e3f2fd;
+      padding: 20px;
+      border-radius: 12px;
+      margin: 20px 0;
+      border-left: 4px solid #2196f3;
+    }
+    .tips-title {
+      color: #1976d2;
+      font-weight: 600;
+      margin-bottom: 8px;
+      font-size: 16px;
+    }
+    .tips-list {
+      color: #333;
+      line-height: 1.6;
+      margin: 0;
+    }
+    .tips-list li {
+      margin-bottom: 4px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>
+      <span style="font-size: 36px;">🔍</span>
+      자가체크 콘텐츠 관리자
+    </h1>
+    <div class="subtitle">
+      <strong>💡 고급 관리자 도구</strong><br>
+      이미지 파일을 직접 업로드하고 실시간 미리보기로 완벽한 자가체크 콘텐츠를 만드세요!
+    </div>
+
+    <form id="selfcheck-form">
+      <div class="form-group">
+        <label for="title">📋 제목 *</label>
+        <input id="title" placeholder="예: 냄새로 알 수 있는 건강 경고 7가지" maxlength="100" required />
+        <div class="char-count" id="title-count">0/100</div>
+      </div>
+
+      <div class="form-group">
+        <label for="content">📝 본문 내용 *</label>
+        <textarea id="content" rows="15" placeholder="건강 신호에 대한 상세한 설명을 입력하세요.&#10;&#10;예시:&#10;몸에서 나는 냄새는 단순한 위생 문제가 아니라 건강의 신호일 수 있습니다.&#10;&#10;1. 달콤한 입 냄새 → 혈당이 높다는 신호&#10;2. 암모니아 냄새 나는 땀 → 단백질 과다 섭취&#10;3. 신 냄새 나는 발 → 진균 감염 의심&#10;4. 과일 냄새 나는 입 → 당뇨병 케톤산증 위험&#10;5. 생선 냄새 나는 몸 → 간 기능 이상&#10;6. 달콤한 체취 → 혈당 조절 필요&#10;7. 시큼한 냄새 → 스트레스나 호르몬 변화&#10;&#10;이런 신호들을 놓치지 마시고, 지속된다면 전문의와 상담해보세요.&#10;&#10;💬 혹시 이런 경험 해보신 적 있나요? 댓글로 경험을 공유해주세요!" maxlength="3000" required></textarea>
+        <div class="char-count" id="content-count">0/3000</div>
+      </div>
+
+      <div class="tips-section">
+        <div class="tips-title">💡 효과적인 콘텐츠 작성 팁</div>
+        <ul class="tips-list">
+          <li><strong>구체적인 항목 나열:</strong> "7가지", "5가지" 등 숫자로 명확하게</li>
+          <li><strong>증상 → 의미 구조:</strong> "달콤한 입 냄새 → 혈당 이상" 형태</li>
+          <li><strong>참여 유도:</strong> 마지막에 경험 공유를 요청하는 질문 추가</li>
+          <li><strong>전문성 강조:</strong> "전문의 상담 권유" 등 신뢰도 높이기</li>
+        </ul>
+      </div>
+
+      <!-- 이미지 업로드 섹션 -->
+      <div class="image-upload-section">
+        <div class="image-upload-header">
+          <div class="image-upload-title">📷 이미지 첨부</div>
+          <div class="image-upload-guide">5MB 이하 JPG, PNG, GIF, WebP 파일</div>
+        </div>
+        
+        <input type="file" id="image-file" accept="image/*" style="display: none;">
+        <button type="button" class="image-upload-btn" onclick="document.getElementById('image-file').click()">
+          <span style="font-size: 20px;">📷</span>
+          <span>이미지 파일 선택</span>
+        </button>
+        
+        <div class="image-preview-container" id="image-preview-container" style="display: none;">
+          <img id="image-preview" class="image-preview" src="" alt="미리보기">
+          <button type="button" class="image-remove-btn" onclick="removeImage()" title="이미지 제거">×</button>
+        </div>
+        
+        <div id="upload-progress-section" style="display: none;">
+          <div class="upload-progress">
+            <div class="progress-bar" id="progress-bar"></div>
+          </div>
+          <div id="upload-status">업로드 중...</div>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="timestamp">📅 게시일자 (선택사항)</label>
+        <input id="timestamp" type="datetime-local" />
+      </div>
+
+      <!-- 실시간 미리보기 -->
+      <div class="preview-section" id="preview" style="display: none;">
+        <div class="preview-title">
+          <span>🔍</span>
+          <span>실시간 미리보기</span>
+        </div>
+        <div class="preview-card" id="preview-content"></div>
+      </div>
+
+      <button type="submit" class="submit-btn" id="submit-btn">
+        <span style="font-size: 20px;">🚀</span>
+        <span>자가체크 콘텐츠 등록</span>
+      </button>
+    </form>
+
+    <div class="message" id="status" style="display: none;"></div>
+  </div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-app.js";
+    import { getFirestore, collection, addDoc, serverTimestamp, Timestamp } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-firestore.js";
+    import { getStorage, ref, uploadBytesResumable, getDownloadURL } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-storage.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyDMgQA6mqaXR_qr9Ujy1-VnC-8qkcj3ZBw",
+      authDomain: "neulbom-healt-quiz.firebaseapp.com",
+      projectId: "neulbom-healt-quiz",
+      storageBucket: "neulbom-healt-quiz.firebasestorage.app",
+      messagingSenderId: "300280931247",
+      appId: "1:300280931247:web:5516f3bd8e8834304a055a"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+    const storage = getStorage(app);
+
+    let selectedImageFile = null;
+    let uploadedImageUrl = null;
+
+    // 글자 수 카운터
+    function updateCharCount(inputId, countId, maxLength) {
+      const input = document.getElementById(inputId);
+      const counter = document.getElementById(countId);
+      const length = input.value.length;
+      counter.textContent = `${length}/${maxLength}`;
+      
+      if (length > maxLength * 0.9) {
+        counter.className = 'char-count danger';
+      } else if (length > maxLength * 0.8) {
+        counter.className = 'char-count warning';
+      } else {
+        counter.className = 'char-count';
+      }
+    }
+
+    // 이미지 선택 처리
+    window.handleImageSelect = function(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      // 파일 크기 체크 (5MB)
+      const maxSize = 5 * 1024 * 1024;
+      if (file.size > maxSize) {
+        alert('파일 크기는 5MB 이하로 선택해주세요.');
+        event.target.value = '';
+        return;
+      }
+
+      // 파일 타입 체크
+      const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
+      if (!allowedTypes.includes(file.type)) {
+        alert('JPG, PNG, GIF, WebP 파일만 업로드 가능합니다.');
+        event.target.value = '';
+        return;
+      }
+
+      selectedImageFile = file;
+
+      // 미리보기 표시
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        const previewContainer = document.getElementById('image-preview-container');
+        const previewImage = document.getElementById('image-preview');
+        
+        previewImage.src = e.target.result;
+        previewContainer.style.display = 'block';
+        updatePreview();
+      };
+      reader.readAsDataURL(file);
+    };
+
+    // 이미지 제거
+    window.removeImage = function() {
+      const previewContainer = document.getElementById('image-preview-container');
+      const fileInput = document.getElementById('image-file');
+      
+      previewContainer.style.display = 'none';
+      fileInput.value = '';
+      selectedImageFile = null;
+      uploadedImageUrl = null;
+      updatePreview();
+    };
+
+    // 이미지 업로드
+    async function uploadImage(file) {
+      if (!file) return null;
+
+      try {
+        const progressSection = document.getElementById('upload-progress-section');
+        const progressBar = document.getElementById('progress-bar');
+        const statusText = document.getElementById('upload-status');
+        
+        progressSection.style.display = 'block';
+        progressBar.style.width = '0%';
+        statusText.textContent = '이미지 업로드 중...';
+
+        // 파일명 생성
+        const timestamp = Date.now();
+        const randomId = Math.random().toString(36).substr(2, 9);
+        const extension = file.name.split('.').pop();
+        const fileName = `selfcheck_content/${timestamp}_${randomId}.${extension}`;
+
+        const storageRef = ref(storage, fileName);
+        const uploadTask = uploadBytesResumable(storageRef, file);
+
+        return new Promise((resolve, reject) => {
+          uploadTask.on('state_changed',
+            (snapshot) => {
+              const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+              progressBar.style.width = progress + '%';
+              statusText.textContent = `업로드 중... ${Math.round(progress)}%`;
+            },
+            (error) => {
+              console.error('업로드 오류:', error);
+              progressSection.style.display = 'none';
+              reject(error);
+            },
+            async () => {
+              try {
+                const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
+                progressBar.style.width = '100%';
+                statusText.textContent = '업로드 완료!';
+                setTimeout(() => {
+                  progressSection.style.display = 'none';
+                }, 1500);
+                resolve(downloadURL);
+              } catch (error) {
+                reject(error);
+              }
+            }
+          );
+        });
+      } catch (error) {
+        console.error('업로드 시작 오류:', error);
+        throw error;
+      }
+    }
+
+    // 실시간 미리보기 업데이트
+    function updatePreview() {
+      const title = document.getElementById("title").value.trim();
+      const content = document.getElementById("content").value.trim();
+      const preview = document.getElementById("preview");
+      const previewContent = document.getElementById("preview-content");
+
+      if (title || content) {
+        preview.style.display = 'block';
+        
+        let imageHtml = '';
+        if (selectedImageFile) {
+          const previewImage = document.getElementById('image-preview');
+          if (previewImage && previewImage.src) {
+            imageHtml = `<img src="${previewImage.src}" style="width: 100%; max-height: 250px; object-fit: cover; border-radius: 12px; margin-bottom: 16px;">`;
+          }
+        }
+
+        previewContent.innerHTML = `
+          ${imageHtml}
+          <h3 style="color: #356c55; margin: 0 0 16px; font-size: 20px; font-weight: 700;">${title || '제목을 입력하세요'}</h3>
+          <div style="color: #333; line-height: 1.6; white-space: pre-line; font-size: 15px;">${content || '내용을 입력하세요'}</div>
+          <div style="margin-top: 20px; padding: 16px; background: #f0f8f0; border-radius: 12px; text-align: center;">
+            <p style="margin: 0; color: #356c55; font-weight: 600; font-size: 15px;">💬 혹시 경험해본 적 있으신가요? 댓글로 남겨주세요!</p>
+          </div>
+          <div style="margin-top: 16px; display: flex; justify-content: space-between; align-items: center; padding-top: 16px; border-top: 1px solid #eee;">
+            <div style="display: flex; align-items: center; gap: 12px;">
+              <div style="width: 40px; height: 40px; border-radius: 50%; background: linear-gradient(135deg, #4CAF50, #356c55); display: flex; align-items: center; justify-content: center; color: white; font-weight: bold;">🔍</div>
+              <div>
+                <div style="font-weight: 600; color: #333; font-size: 14px;">늘봄팀</div>
+                <div style="color: #666; font-size: 12px;">방금 전</div>
+              </div>
+            </div>
+            <div style="display: flex; gap: 16px;">
+              <button style="background: none; border: none; color: #666; cursor: pointer; display: flex; align-items: center; gap: 4px;">
+                <span>❤️</span><span>0</span>
+              </button>
+              <button style="background: none; border: none; color: #666; cursor: pointer; display: flex; align-items: center; gap: 4px;">
+                <span>💬</span><span>0</span>
+              </button>
+            </div>
+          </div>
+        `;
+      } else {
+        preview.style.display = 'none';
+      }
+    }
+
+    // 이벤트 리스너
+    document.getElementById('title').addEventListener('input', function() {
+      updateCharCount('title', 'title-count', 100);
+      updatePreview();
+    });
+
+    document.getElementById('content').addEventListener('input', function() {
+      updateCharCount('content', 'content-count', 3000);
+      updatePreview();
+    });
+
+    document.getElementById('image-file').addEventListener('change', handleImageSelect);
+
+    // 폼 제출
+    document.getElementById('selfcheck-form').addEventListener('submit', async function(e) {
+      e.preventDefault();
+      
+      const title = document.getElementById("title").value.trim();
+      const content = document.getElementById("content").value.trim();
+      const timestampInput = document.getElementById("timestamp").value;
+      const status = document.getElementById("status");
+      const submitBtn = document.getElementById("submit-btn");
+
+      if (!title || !content) {
+        status.textContent = "❗ 제목과 본문을 모두 입력해주세요.";
+        status.className = "message error";
+        status.style.display = "block";
+        return;
+      }
+
+      if (content.length < 100) {
+        status.textContent = "❗ 본문은 100자 이상 입력해주세요.";
+        status.className = "message error";
+        status.style.display = "block";
+        return;
+      }
+
+      try {
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<span>⏳</span><span>등록 중...</span>';
+
+        let imageUrl = null;
+        if (selectedImageFile) {
+          imageUrl = await uploadImage(selectedImageFile);
+        }
+
+        let timestampValue;
+        if (timestampInput) {
+          const date = new Date(timestampInput);
+          timestampValue = Timestamp.fromDate(date);
+        } else {
+          timestampValue = serverTimestamp();
+        }
+
+        await addDoc(collection(db, "self_check_posts"), {
+          title,
+          content,
+          imageUrl,
+          author: "늘봄팀",
+          commentCount: 0,
+          likes: 0,
+          type: "selfcheck",
+          isPublished: true,
+          timestamp: timestampValue
+        });
+
+        status.textContent = "🎉 자가체크 콘텐츠가 성공적으로 등록되었습니다!";
+        status.className = "message success";
+        status.style.display = "block";
+        
+        // 폼 초기화
+        document.getElementById("selfcheck-form").reset();
+        removeImage();
+        updateCharCount('title', 'title-count', 100);
+        updateCharCount('content', 'content-count', 3000);
+        updatePreview();
+
+      } catch (error) {
+        console.error("등록 오류:", error);
+        status.textContent = "❌ 등록 중 오류가 발생했습니다: " + error.message;
+        status.className = "message error";
+        status.style.display = "block";
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = '<span style="font-size: 20px;">🚀</span><span>자가체크 콘텐츠 등록</span>';
+      }
+    });
+
+    // 초기 설정
+    updateCharCount('title', 'title-count', 100);
+    updateCharCount('content', 'content-count', 3000);
+  </script>
+</body>
+</html> 

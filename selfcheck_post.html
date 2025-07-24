@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <title>하루 1분 자가체크 콘텐츠 등록</title>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js"></script>
+  <style>
+    body { font-family: sans-serif; max-width: 600px; margin: 40px auto; padding: 20px; }
+    label { display: block; margin: 16px 0 6px; font-weight: bold; }
+    input, textarea {
+      width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 8px;
+      font-size: 16px;
+    }
+    input[type="datetime-local"] {
+      padding: 8px;
+    }
+    button {
+      margin-top: 20px; padding: 12px 20px; font-size: 16px;
+      background-color: #4CAF50; color: white; border: none; border-radius: 8px; cursor: pointer;
+    }
+    .message { margin-top: 20px; font-weight: bold; }
+  </style>
+</head>
+<body>
+  <h2>🔍 하루 1분 자가체크 등록</h2>
+
+  <label for="title">제목</label>
+  <input id="title" placeholder="예: 냄새로 알 수 있는 건강 경고 7가지" />
+
+  <label for="content">본문</label>
+  <textarea id="content" rows="8" placeholder="건강 신호에 대한 설명을 입력하세요. 줄바꿈도 가능합니다."></textarea>
+
+  <label for="imageUrl">이미지 URL</label>
+  <input id="imageUrl" placeholder="https://..." />
+
+  <label for="timestamp">게시일자 (선택)</label>
+  <input id="timestamp" type="datetime-local" />
+
+  <button onclick="submitPost()">등록</button>
+
+  <div class="message" id="status"></div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+    import { getFirestore, collection, addDoc, serverTimestamp, Timestamp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyDMgQA6mqaXR_qr9Ujy1-VnC-8qkcj3ZBw",
+      authDomain: "neulbom-healt-quiz.firebaseapp.com",
+      projectId: "neulbom-healt-quiz",
+      storageBucket: "neulbom-healt-quiz.firebasestorage.app",
+      messagingSenderId: "300280931247",
+      appId: "1:300280931247:web:5516f3bd8e8834304a055a"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    window.submitPost = async function () {
+      const title = document.getElementById("title").value.trim();
+      const content = document.getElementById("content").value.trim();
+      const imageUrl = document.getElementById("imageUrl").value.trim() || null;
+      const timestampInput = document.getElementById("timestamp").value;
+      const status = document.getElementById("status");
+
+      if (!title || !content) {
+        status.textContent = "❗ 제목과 본문을 모두 입력해주세요.";
+        status.style.color = "red";
+        return;
+      }
+
+      let timestampValue;
+      if (timestampInput) {
+        const date = new Date(timestampInput);
+        timestampValue = Timestamp.fromDate(date);
+      } else {
+        timestampValue = serverTimestamp();
+      }
+
+      try {
+        await addDoc(collection(db, "self_check_posts"), {
+          title,
+          content,
+          imageUrl,
+          author: "늘봄팀",
+          commentCount: 0,
+          likes: 0,
+          type: "selfcheck",
+          isPublished: true,
+          timestamp: timestampValue
+        });
+
+        status.textContent = "✅ 등록이 완료되었습니다!";
+        status.style.color = "green";
+        document.getElementById("title").value = "";
+        document.getElementById("content").value = "";
+        document.getElementById("imageUrl").value = "";
+        document.getElementById("timestamp").value = "";
+      } catch (err) {
+        status.textContent = "⚠️ 오류 발생: " + err.message;
+        status.style.color = "red";
+      }
+    };
+  </script>
+</body>
+</html> 
