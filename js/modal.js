@@ -2,7 +2,7 @@
 window.openWriteModal = function() {
   const writeFullscreen = document.getElementById('free-write-fullscreen');
   const textarea = document.getElementById('habit-salon-free-content');
-  const submitBtn = document.querySelector('#habit-salon-free-form .submit-btn');
+  const submitBtn = document.querySelector('#habit-salon-free-form .write-submit-btn');
   const overlay = document.getElementById('page-transition-overlay');
   
   if (!writeFullscreen || !textarea || !submitBtn || !overlay) {
@@ -55,7 +55,7 @@ let charCountTimeout;
 function updateCharCounter() {
   const textarea = document.getElementById('habit-salon-free-content');
   const counter = document.querySelector('.char-counter');
-  const submitBtn = document.querySelector('#habit-salon-free-form .submit-btn');
+  const submitBtn = document.querySelector('#habit-salon-free-form .write-submit-btn');
   const charCountGuide = document.querySelector('.char-count-guide');
   
   if (!textarea || !counter || !submitBtn || !charCountGuide) return;
@@ -66,15 +66,15 @@ function updateCharCounter() {
     counter.textContent = `${charCount}/500`;
     
     // 글자수에 따른 UI 업데이트
-    if (charCount < 100) {
+    if (charCount < 50) {
       counter.style.color = '#f44336';
       submitBtn.disabled = true;
-      const remaining = 100 - charCount;
+      const remaining = 50 - charCount;
       charCountGuide.textContent = `더 자세한 이야기를 들려주세요! (${remaining}자 더 필요)`;
       charCountGuide.style.color = '#f44336';
       
       // 프로그레스 표시 (선택적)
-      const progress = (charCount / 100) * 100;
+      const progress = (charCount / 50) * 100;
       charCountGuide.style.background = `linear-gradient(to right, #f4433633 ${progress}%, transparent ${progress}%)`;
     } else {
       counter.style.color = '#4CAF50';
@@ -92,7 +92,7 @@ document.addEventListener('DOMContentLoaded', function() {
   const freeForm = document.getElementById('habit-salon-free-form');
   if (freeForm) {
     const textarea = freeForm.querySelector('#habit-salon-free-content');
-    const submitBtn = freeForm.querySelector('.submit-btn');
+    const submitBtn = freeForm.querySelector('.write-submit-btn');
     
     // 입력 이벤트 (모바일 대응)
     ['input', 'keyup', 'paste', 'change'].forEach(eventType => {
@@ -113,8 +113,8 @@ document.addEventListener('DOMContentLoaded', function() {
       e.preventDefault();
       const content = textarea.value.trim();
       
-      if (content.length < 100) {
-        window.showSalonToast('100자 이상 작성해야 공유할 수 있어요!', 'warning');
+      if (content.length < 50) {
+        window.showSalonToast('50자 이상 작성해야 공유할 수 있어요!', 'warning');
         return;
       }
       

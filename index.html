@@ -1811,6 +1811,123 @@
 
     /* 모바일 최적화 */
     @media (max-width: 768px) {
+      /* 글쓰기 모달 모바일 최적화 */
+      #free-write-fullscreen {
+        padding: 0;
+        align-items: stretch;
+        position: fixed !important;
+        top: 0 !important;
+        left: 0 !important;
+        width: 100% !important;
+        height: 100vh !important;
+        overflow-y: auto !important;
+        -webkit-overflow-scrolling: touch !important;
+      }
+
+      .modal-content {
+        width: 100% !important;
+        max-width: none !important;
+        border-radius: 0 !important;
+        margin: 0 !important;
+        max-height: 100vh !important;
+        height: 100vh !important;
+        padding: 16px !important;
+        display: flex !important;
+        flex-direction: column !important;
+        overflow-y: auto !important;
+        -webkit-overflow-scrolling: touch !important;
+        box-sizing: border-box !important;
+      }
+
+      .modal-header {
+        flex-shrink: 0;
+        margin-bottom: 16px;
+        padding-bottom: 12px;
+        position: sticky;
+        top: 0;
+        background: #fff;
+        z-index: 10;
+      }
+
+      .modal-header h2 {
+        font-size: 18px;
+      }
+
+      .write-guide {
+        margin-bottom: 16px;
+        padding: 12px;
+        flex-shrink: 0;
+      }
+
+      .write-textarea-container {
+        flex: 1;
+        margin-bottom: 16px;
+        display: flex;
+        flex-direction: column;
+        min-height: 200px;
+      }
+
+      #habit-salon-free-content {
+        flex: 1;
+        min-height: 150px !important;
+        max-height: none !important;
+        padding: 12px;
+        font-size: 16px;
+        resize: none;
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+      }
+
+      .write-modal-footer {
+        flex-shrink: 0;
+        margin-top: 16px;
+        padding-top: 12px;
+        position: sticky;
+        bottom: 0;
+        background: #fff;
+        z-index: 10;
+        border-top: 1px solid #f0f0f0;
+      }
+
+      .write-modal-actions {
+        display: flex;
+        gap: 8px;
+        width: 100%;
+      }
+
+      .write-cancel-btn,
+      .write-submit-btn {
+        flex: 1;
+        padding: 14px 20px !important;
+        font-size: 16px !important;
+        border-radius: 8px;
+        min-height: 48px;
+        touch-action: manipulation;
+      }
+
+      .write-submit-btn {
+        background: #4CAF50 !important;
+        color: white !important;
+        border: none !important;
+        font-weight: 600;
+      }
+
+      .write-submit-btn:disabled {
+        background: #ccc !important;
+        cursor: not-allowed;
+      }
+
+      .write-cancel-btn {
+        background: #f5f5f5 !important;
+        color: #666 !important;
+        border: none !important;
+      }
+
+      /* 모바일에서 safe area 고려 */
+      .modal-content {
+        padding-bottom: calc(16px + env(safe-area-inset-bottom)) !important;
+      }
+
       .image-upload-section {
         margin: 16px 0;
         padding: 16px;
@@ -2505,7 +2622,7 @@
         </div>
         <div id="habit-salon-free-list"></div>
         <!-- 플로팅 글쓰기 버튼 (항상 우하단 고정) -->
-        <button id="floating-write-btn" class="floating-write-btn" title="글쓰기" onclick="window.openWriteModal()">+</button>
+        <button id="floating-write-btn" class="floating-write-btn" title="글쓰기">+</button>
       </section>
       <!-- 4️⃣ 습관 챌린지(예정) -->
       <section id="habit-salon-challenge" style="display:none;margin-bottom:40px;">
@@ -2597,7 +2714,7 @@
         <div class="modal-body">
           <form id="habit-salon-free-form">
             <div class="write-guide">
-              <p>💡 100자 이상 작성 시 100P가 적립됩니다!</p>
+              <p>💡 50자 이상 작성 시 100P가 적립됩니다!</p>
               <ul>
                 <li>실제 경험한 건강 관리 방법</li>
                 <li>효과를 본 운동이나 식단</li>
@@ -2606,7 +2723,7 @@
             </div>
             <div class="write-textarea-container">
               <textarea id="habit-salon-free-content" 
-                        placeholder="건강과 관련된 경험과 노하우를 100자 이상 작성해주세요."
+                        placeholder="건강과 관련된 경험과 노하우를 50자 이상 작성해주세요."
                         maxlength="500"></textarea>
               <div class="char-counter">0/500</div>
             </div>
@@ -2634,11 +2751,12 @@
                 <span class="upload-status-text" id="upload-status-text">업로드 중...</span>
               </div>
             </div>
-            <div class="char-count-guide">더 자세한 이야기를 들려주세요! (100자 필요)</div>
-            <div class="modal-footer">
-              <div class="modal-actions">
-                <button type="button" class="cancel-btn" onclick="window.closeWriteModal()">취소</button>
-                <button type="submit" class="submit-btn" disabled>
+            <div class="char-count-guide">더 자세한 이야기를 들려주세요! (50자 필요)</div>
+            <div class="write-modal-footer">
+              <div class="point-info">💡 50자 이상 작성 시 100P 적립!</div>
+              <div class="write-modal-actions">
+                <button type="button" class="write-cancel-btn" onclick="window.closeWriteModal()">취소</button>
+                <button type="submit" class="write-submit-btn" disabled>
                   <span>건강 이야기 공유하기</span>
                   <span class="point-badge">+100P</span>
                 </button>
@@ -3697,7 +3815,7 @@
                   첫 번째로 공유해보세요.
                 </p>
                 <div style="background:#f8f9fa;padding:20px;border-radius:12px;margin:20px 0;">
-                  <p style="margin:0;color:#4CAF50;font-weight:600;">✍️ 100자 이상 작성 시 100P 적립!</p>
+                  <p style="margin:0;color:#4CAF50;font-weight:600;">✍️ 50자 이상 작성 시 100P 적립!</p>
                 </div>
                 <p style="color:#999;font-size:14px;">
                   우측 하단의 + 버튼을 눌러 글을 작성해보세요
@@ -4495,6 +4613,45 @@
             console.error('습관살롱 진입 오류:', error);
             window.showSalonToast('오류가 발생했습니다. 다시 시도해주세요.', 'error');
           }
+        });
+      }
+
+      // 플로팅 글쓰기 버튼 이벤트 리스너 (모바일 최적화)
+      const floatingWriteBtn = document.getElementById('floating-write-btn');
+      if (floatingWriteBtn) {
+        let touchHandled = false;
+        
+        // 터치 이벤트 처리 (모바일)
+        floatingWriteBtn.addEventListener('touchstart', function(e) {
+          touchHandled = true;
+          this.style.transform = 'scale(0.95)';
+        });
+        
+        floatingWriteBtn.addEventListener('touchend', function(e) {
+          e.preventDefault();
+          e.stopPropagation();
+          console.log('플로팅 글쓰기 버튼 터치됨');
+          window.openWriteModal();
+          
+          setTimeout(() => {
+            this.style.transform = 'scale(1)';
+            touchHandled = false;
+          }, 100);
+        });
+        
+        floatingWriteBtn.addEventListener('touchcancel', function() {
+          this.style.transform = 'scale(1)';
+          touchHandled = false;
+        });
+        
+        // 클릭 이벤트 처리 (데스크톱)
+        floatingWriteBtn.addEventListener('click', function(e) {
+          if (touchHandled) return; // 터치 이벤트가 이미 처리되었으면 무시
+          
+          e.preventDefault();
+          e.stopPropagation();
+          console.log('플로팅 글쓰기 버튼 클릭됨');
+          window.openWriteModal();
         });
       }
     });
