@@ -924,34 +924,36 @@
     /* 카드 네비게이션 */
     .card-nav {
       position: absolute;
-      top: 50%;
+      top: 30%;
       transform: translateY(-50%);
-      background: rgba(255,255,255,0.9);
+      background: rgba(255,255,255,0.95);
       border: none;
-      width: 40px;
-      height: 40px;
+      width: 44px;
+      height: 44px;
       border-radius: 50%;
       cursor: pointer;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 18px;
+      font-size: 20px;
       color: #356c55;
       transition: all 0.2s ease;
-      z-index: 10;
+      z-index: 100;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.2);
     }
 
     .card-nav:hover {
       background: rgba(255,255,255,1);
-      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+      box-shadow: 0 6px 16px rgba(0,0,0,0.25);
+      transform: translateY(-50%) scale(1.1);
     }
 
     .card-nav.prev {
-      left: 16px;
+      left: 20px;
     }
 
     .card-nav.next {
-      right: 16px;
+      right: 20px;
     }
 
     .card-nav:disabled {
@@ -1266,17 +1268,24 @@
       }
 
       .card-nav {
-        width: 36px;
-        height: 36px;
-        font-size: 16px;
+        width: 40px;
+        height: 40px;
+        font-size: 18px;
+        top: 25%;
+        background: rgba(255,255,255,0.98);
+        box-shadow: 0 3px 12px rgba(0,0,0,0.3);
       }
 
       .card-nav.prev {
-        left: 12px;
+        left: 16px;
       }
 
       .card-nav.next {
-        right: 12px;
+        right: 16px;
+      }
+
+      .card-nav:hover {
+        transform: translateY(-50%) scale(1.05);
       }
     }
 
@@ -2369,14 +2378,29 @@
         margin-top: 8px;
       }
       
-      /* 네비게이션 버튼 모바일 스타일 */
+      /* 네비게이션 버튼 모바일 스타일 (작은 화면) */
       .card-nav {
-        width: 40px;
-        height: 40px;
-        font-size: 24px;
+        width: 42px;
+        height: 42px;
+        font-size: 20px;
+        top: 20%;
+        background: rgba(255,255,255,0.98);
+        box-shadow: 0 4px 16px rgba(0,0,0,0.35);
+        border: 2px solid rgba(53,108,85,0.1);
       }
       
       .card-nav.prev {
+        left: 12px;
+      }
+
+      .card-nav.next {
+        right: 12px;
+      }
+
+      .card-nav:hover {
+        transform: translateY(-50%) scale(1.03);
+        background: rgba(255,255,255,1);
+        box-shadow: 0 6px 20px rgba(0,0,0,0.4);
       }
     }
 
@@ -3490,10 +3514,10 @@
       }
     };
 
-    // 카드 슬라이더 상태 관리
-    let currentCardIndex = 0;
-    let currentCards = [];
-    let currentSection = '';
+    // 카드 슬라이더 상태 관리 (전역 변수로 설정)
+    window.currentCardIndex = 0;
+    window.currentCards = [];
+    window.currentSection = '';
 
     // 브랜드 섹션 로딩 (인스타 스타일 카드)
     window.loadBrandSection = async function() {
@@ -3510,9 +3534,9 @@
           return;
         }
         
-        currentCards = posts;
-        currentSection = 'brand';
-        currentCardIndex = 0;
+        window.currentCards = posts;
+        window.currentSection = 'brand';
+        window.currentCardIndex = 0;
         
         container.innerHTML = `
           <div class="card-slider-container">
@@ -3603,9 +3627,9 @@
           return;
         }
         
-        currentCards = posts;
-        currentSection = 'selfcheck';
-        currentCardIndex = 0;
+        window.currentCards = posts;
+        window.currentSection = 'selfcheck';
+        window.currentCardIndex = 0;
         
         container.innerHTML = `
           <div class="card-slider-container">
@@ -3699,9 +3723,9 @@
           return;
         }
         
-        currentCards = questions;
-        currentSection = 'question';
-        currentCardIndex = 0;
+        window.currentCards = questions;
+        window.currentSection = 'question';
+        window.currentCardIndex = 0;
         
         container.innerHTML = `
           <div class="card-slider-container">
@@ -4140,49 +4164,64 @@
     
     // 카드 슬라이더 네비게이션 함수들
     window.updateCardNavigation = function() {
+      console.log('네비게이션 업데이트 시작:', {
+        currentIndex: window.currentCardIndex,
+        totalCards: window.currentCards?.length || 0,
+        section: window.currentSection
+      });
+      
       const prevBtn = document.getElementById('prev-btn');
       const nextBtn = document.getElementById('next-btn');
       const indicators = document.querySelectorAll('.card-indicator');
       
       if (prevBtn) {
-        prevBtn.disabled = currentCardIndex === 0;
-        prevBtn.style.opacity = currentCardIndex === 0 ? '0.3' : '1';
+        prevBtn.disabled = window.currentCardIndex === 0;
+        prevBtn.style.opacity = window.currentCardIndex === 0 ? '0.3' : '1';
+        console.log('이전 버튼 상태:', { disabled: prevBtn.disabled, opacity: prevBtn.style.opacity });
       }
       
       if (nextBtn) {
-        nextBtn.disabled = currentCardIndex === currentCards.length - 1;
-        nextBtn.style.opacity = currentCardIndex === currentCards.length - 1 ? '0.3' : '1';
+        nextBtn.disabled = window.currentCardIndex === (window.currentCards?.length || 1) - 1;
+        nextBtn.style.opacity = window.currentCardIndex === (window.currentCards?.length || 1) - 1 ? '0.3' : '1';
+        console.log('다음 버튼 상태:', { disabled: nextBtn.disabled, opacity: nextBtn.style.opacity });
       }
       
       // 인디케이터 업데이트
       indicators.forEach((indicator, index) => {
-        indicator.classList.toggle('active', index === currentCardIndex);
+        indicator.classList.toggle('active', index === window.currentCardIndex);
       });
       
       // 슬라이더 위치 업데이트
       const sliders = document.querySelectorAll('.card-slider');
       sliders.forEach(slider => {
-        slider.style.transform = `translateX(-${currentCardIndex * 100}%)`;
+        slider.style.transform = `translateX(-${window.currentCardIndex * 100}%)`;
+        console.log('슬라이더 위치 업데이트:', slider.style.transform);
       });
     };
     
     window.prevCard = function() {
-      if (currentCardIndex > 0) {
-        currentCardIndex--;
+      console.log('이전 카드 요청:', window.currentCardIndex);
+      if (window.currentCardIndex > 0) {
+        window.currentCardIndex--;
+        console.log('이전 카드로 이동:', window.currentCardIndex);
         window.updateCardNavigation();
       }
     };
     
     window.nextCard = function() {
-      if (currentCardIndex < currentCards.length - 1) {
-        currentCardIndex++;
+      console.log('다음 카드 요청:', window.currentCardIndex, '/', (window.currentCards?.length || 0));
+      if (window.currentCardIndex < (window.currentCards?.length || 1) - 1) {
+        window.currentCardIndex++;
+        console.log('다음 카드로 이동:', window.currentCardIndex);
         window.updateCardNavigation();
       }
     };
     
     window.goToCard = function(index) {
-      if (index >= 0 && index < currentCards.length) {
-        currentCardIndex = index;
+      console.log('특정 카드로 이동 요청:', index);
+      if (index >= 0 && index < (window.currentCards?.length || 0)) {
+        window.currentCardIndex = index;
+        console.log('카드 이동 완료:', window.currentCardIndex);
         window.updateCardNavigation();
       }
     };
@@ -4900,9 +4939,9 @@
         }
         
         // 카드 슬라이더 초기화
-        currentCards = posts;
-        currentSection = 'brand';
-        currentCardIndex = 0;
+        window.currentCards = posts;
+        window.currentSection = 'brand';
+        window.currentCardIndex = 0;
         
         // 브랜드 스토리 콘텐츠 생성
         const container = document.getElementById('brand-story-content');
@@ -5082,7 +5121,16 @@
               <p style="margin:0;color:#356c55;font-weight:600;">💚 현재 포인트: <span id="habit-salon-my-point">${await window.getUserPoints()}</span>P</p>
             </div>
           `;
-          setTimeout(() => { window.updateCardNavigation(); }, 0);
+          // DOM 렌더링 완료 후 네비게이션 초기화
+          requestAnimationFrame(() => {
+            console.log('자가체크 네비게이션 초기화 중...', { 
+              currentCards: window.currentCards.length, 
+              currentIndex: window.currentCardIndex 
+            });
+            if (window.updateCardNavigation) {
+              window.updateCardNavigation();
+            }
+          });
         }
 
         // 전체화면으로 이동
