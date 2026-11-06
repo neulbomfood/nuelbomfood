@@ -2355,7 +2355,7 @@
   </style>
   <link rel="stylesheet" href="css/home.css?v=20261102-points-guide1" />
   <link rel="stylesheet" href="css/coupon-requests.css?v=20261102-pending1" />
-  <link rel="stylesheet" href="css/health-stories.css?v=20261030-library1" />
+  <link rel="stylesheet" href="css/health-stories.css?v=20261106-feed1" />
   <link rel="stylesheet" href="css/community.css?v=20261105-answers1" />
 </head>
 <body class="neulbom-home home-active">
@@ -2834,6 +2834,7 @@
     import { getStorage, ref, uploadBytesResumable, getDownloadURL, deleteObject } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-storage.js";
 
     import { installCommunityActions } from "./js/community-actions.js?v=20261030-manage1";
+    import { installHealthStoryComments } from "./js/health-story-comment-store.js?v=20261106-comments1";
 
     import { firebaseConfig } from "./js/firebase-config.js?v=20261106-points1";
     import { installPointPersistence } from "./js/point-persistence.js?v=20261106-points1";
@@ -2846,6 +2847,7 @@
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
     installCommunityActions(window, { db, doc, runTransaction, serverTimestamp });
+    installHealthStoryComments(window, { db, collection, doc, getDocs, query, where, runTransaction, serverTimestamp });
     const storage = getStorage(app);
     
     // 🔥 Firestore 오프라인 지원 활성화
@@ -5568,7 +5570,8 @@
   </script>
   <script src="script.js?v=20261106-points1" onerror="console.error('script.js 로드 실패')" onload="console.log('script.js 로드 성공')"></script>
   <script src="js/health-stories-data.js?v=20261030-library1"></script>
-  <script src="js/health-stories.js?v=20261030-library1"></script>
+  <script src="js/health-story-comments.js?v=20261106-feed1"></script>
+  <script src="js/health-stories.js?v=20261106-feed1"></script>
   <script src="js/home.js?v=20261030-stories1"></script>
   <script src="js/community.js?v=20261105-answers1"></script>
 </body>
