@@ -9,111 +9,91 @@ const bgList = [
 // 개발 중 포인트 리셋 (주석 해제하여 사용)
 // localStorage.removeItem('points');
 
-// 통합 포인트 관리 시스템
+// Local changes are recorded once, then retried against Firestore without
+// adding the reward again. Read shared storage before every change: cached
+// pages must never restore a balance that another page has already spent.
 window.pointsManager = {
-  // 현재 포인트 캐시
   currentPoints: 0,
-  
-  // 포인트 초기화
+  readBalance() {
+    return Math.max(0, Number(localStorage.getItem('points')) || 0);
+  },
+  userId() {
+    let id = localStorage.getItem('userId');
+    if (!id) {
+      id = 'user_' + Date.now() + '_' + Math.random().toString(36).slice(2, 11);
+      localStorage.setItem('userId', id);
+    }
+    return id;
+  },
+  operationId() {
+    return window.crypto?.randomUUID?.() || Date.now() + '_' + Math.random().toString(36).slice(2);
+  },
+  queueKey() { return `neulbom_point_queue_${this.userId()}`; },
+  readQueue() {
+    const saved = localStorage.getItem(this.queueKey());
+    if (saved) return JSON.parse(saved);
+    // Preserve existing on-device earnings on the first upgrade. This
+    // baseline is accepted only once by the server, including after a coupon.
+    const queue = [{ id: 'baseline', baseline: this.readBalance(), amount: 0, source: 'migration' }];
+    localStorage.setItem(this.queueKey(), JSON.stringify(queue));
+    return queue;
+  },
+  async acknowledge(id) {
+    const apply = () => localStorage.setItem(this.queueKey(), JSON.stringify(this.readQueue().filter(item => item.id !== id)));
+    if (navigator.locks) return navigator.locks.request(`neulbom-points-local-${this.userId()}`, apply);
+    return apply();
+  },
   async init() {
-    try {
-      // 우선순위: Firestore > localStorage
-      const firestorePoints = await this.getFirestorePoints();
-      const localPoints = parseInt(localStorage.getItem('points') || '0');
-      
-      // 더 큰 값을 사용 (데이터 손실 방지)
-      this.currentPoints = Math.max(firestorePoints, localPoints);
-      
-      // 동기화
-      await this.syncPoints();
-      this.updateAllDisplays();
-      
-      console.log('포인트 시스템 초기화 완료:', this.currentPoints);
-    } catch (error) {
-      console.error('포인트 초기화 오류:', error);
-      // 오류 시 localStorage 값 사용
-      this.currentPoints = parseInt(localStorage.getItem('points') || '0');
-      this.updateAllDisplays();
-    }
+    this.currentPoints = this.readBalance();
+    this.readQueue();
+    this.updateAllDisplays();
+    void this.syncPoints();
   },
-  
-  // Firestore에서 포인트 조회 (index.html의 통합 시스템 사용)
-  async getFirestorePoints() {
-    try {
-      // index.html의 통합 포인트 시스템이 있으면 사용
-      if (window.getUserPoints) {
-        return await window.getUserPoints();
-      }
-      
-      // 백업: localStorage만 사용
-      const userId = localStorage.getItem('userId');
-      if (!userId) return 0;
-      
-      return parseInt(localStorage.getItem('points') || '0');
-    } catch (error) {
-      console.error('Firestore 포인트 조회 오류:', error);
-      return parseInt(localStorage.getItem('points') || '0');
-    }
-  },
-  
-  // 포인트 동기화 (index.html의 통합 시스템 사용)
   async syncPoints() {
-    try {
-      // localStorage 업데이트
-      localStorage.setItem('points', this.currentPoints.toString());
-      
-      // index.html의 통합 포인트 시스템이 있으면 사용
-      if (window.addUserPoints && window.getUserPoints) {
-        // 현재 포인트와 목표 포인트 차이 계산
-        const currentFirestorePoints = await window.getUserPoints();
-        const diff = this.currentPoints - currentFirestorePoints;
-        
-        if (diff !== 0) {
-          await window.addUserPoints(diff, 'sync', `sync_${Date.now()}`);
-        }
+    return window.pointsPersistence ? window.pointsPersistence.flush() : false;
+  },
+  async flushPending() { return this.syncPoints(); },
+  async change(amount, source = 'quiz', actionId = null, absolute = false) {
+    const apply = () => {
+      const oldPoints = this.readBalance();
+      const marker = actionId ? `neulbom_point_action_${this.userId()}_${actionId}` : null;
+      if (marker && localStorage.getItem(marker)) {
+        this.refreshFromStorage();
+        return this.currentPoints;
       }
-    } catch (error) {
-      console.error('포인트 동기화 오류:', error);
-      // 최소한 localStorage는 업데이트
-      localStorage.setItem('points', this.currentPoints.toString());
-    }
+      const nextPoints = Math.max(0, absolute ? Number(amount) : oldPoints + Number(amount));
+      if (!Number.isFinite(nextPoints)) throw new Error('Invalid point amount');
+      const queue = this.readQueue();
+      queue.push({ id: actionId ? `action_${actionId}` : this.operationId(),
+        amount: nextPoints - oldPoints, source, actionId,
+        beforePoints: oldPoints, afterPoints: nextPoints });
+      localStorage.setItem(this.queueKey(), JSON.stringify(queue));
+      localStorage.setItem('points', String(nextPoints));
+      if (marker) localStorage.setItem(marker, 'true');
+      this.currentPoints = nextPoints;
+      this.updateAllDisplays();
+      this.triggerPointsChange(oldPoints, nextPoints, nextPoints - oldPoints);
+      void this.syncPoints();
+      return nextPoints;
+    };
+    if (navigator.locks) return navigator.locks.request(`neulbom-points-local-${this.userId()}`, apply);
+    return apply();
   },
-  
-  // 포인트 추가/차감
-  async addPoints(amount) {
-    const oldPoints = this.currentPoints;
-    this.currentPoints = Math.max(0, this.currentPoints + amount);
-    
-    // 동기화
-    await this.syncPoints();
-    
-    // 모든 화면 업데이트
-    this.updateAllDisplays();
-    
-    // 변경 이벤트 발생
-    this.triggerPointsChange(oldPoints, this.currentPoints, amount);
-    
-    return this.currentPoints;
+  async addPoints(amount, source = 'quiz', actionId = null) {
+    return this.change(amount, source, actionId);
   },
-  
-  // 포인트 설정 (직접 설정)
-  async setPoints(newPoints) {
-    const oldPoints = this.currentPoints;
-    this.currentPoints = Math.max(0, newPoints);
-    
-    await this.syncPoints();
-    this.updateAllDisplays();
-    
-    this.triggerPointsChange(oldPoints, this.currentPoints, newPoints - oldPoints);
-    
-    return this.currentPoints;
-  },
-  
-  // 현재 포인트 반환
+  async setPoints(value) { return this.change(value, 'adjustment', null, true); },
   getPoints() {
+    this.currentPoints = this.readBalance();
     return this.currentPoints;
   },
-  
+  refreshFromStorage() {
+    const oldPoints = this.currentPoints;
+    this.currentPoints = this.readBalance();
+    this.updateAllDisplays();
+    if (oldPoints !== this.currentPoints) this.triggerPointsChange(oldPoints, this.currentPoints, this.currentPoints - oldPoints);
+  },
+
   // 모든 포인트 표시 요소 업데이트
   updateAllDisplays() {
     const pointsElements = [
@@ -154,7 +134,9 @@ window.pointsManager = {
     
     // 퀴즈/메인 페이지 전환 버튼
     if (exchangeButton) {
-      exchangeButton.style.display = isEligible ? 'block' : 'none';
+      const isHomeButton = exchangeButton.hasAttribute('data-home-exchange');
+      exchangeButton.style.display = isHomeButton || isEligible ? 'block' : 'none';
+      if (isHomeButton) exchangeButton.disabled = !isEligible || !!window.couponRequestBusy;
     }
     
     // 포인트 모달 전환 버튼
@@ -179,6 +161,19 @@ window.pointsManager = {
     console.log(`포인트 변경: ${oldPoints} → ${newPoints} (${change > 0 ? '+' : ''}${change})`);
   }
 };
+
+// A restored page must read the current shared balance, not its old memory.
+function refreshStoredPoints() {
+  window.pointsManager.refreshFromStorage();
+  void window.pointsManager.syncPoints();
+}
+window.addEventListener('pageshow', refreshStoredPoints);
+window.addEventListener('focus', refreshStoredPoints);
+window.addEventListener('online', refreshStoredPoints);
+window.addEventListener('storage', event => {
+  if (event.key === 'points' || event.key === window.pointsManager.queueKey()) refreshStoredPoints();
+});
+document.addEventListener('visibilitychange', () => { if (!document.hidden) refreshStoredPoints(); });
 
 let currentIndex = 0;
 let points = parseInt(localStorage.getItem('points')) || 0;
@@ -258,7 +253,7 @@ function onPlayerStateChange(event) {
     // 영상 끝까지 시청 시 포인트 지급 (중복 방지)
     const watchedVideos = JSON.parse(localStorage.getItem('watchedVideos') || '[]');
     if (!watchedVideos.includes(currentVideoId)) {
-      addPoints(50);
+      addPoints(50, 'video');
       showToast('영상 시청 완료! +50P가 적립되었어요 🎉');
       watchedVideos.push(currentVideoId);
       localStorage.setItem('watchedVideos', JSON.stringify(watchedVideos));
@@ -351,7 +346,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   showDailyQuizReminder();
 
   // 카카오톡 공유 버튼 초기화
-  if (window.Kakao) {
+  if (window.Kakao?.Link?.createDefaultButton && document.getElementById('kakao-share-btn')) {
     Kakao.Link.createDefaultButton({
       container: '#kakao-share-btn',
       objectType: 'feed',
@@ -374,7 +369,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         },
       ],
       success: function(response) {
-        addPoints(200);
+        addPoints(200, 'share');
         showToast('공유 감사합니다! +200P가 적립되었어요 💚');
       },
       fail: function(error) {
@@ -513,7 +508,7 @@ async function handleAnswer(selected, question) {
     
     popupEmoji.textContent = "🎉";
     popupResult.textContent = "정답이에요!";
-    popupExplanation.textContent = question.explanation;
+    popupExplanation.textContent = question.explanation || '';
     popupPoints.innerHTML = `
       <div class="point-change">+15P</div>
       <div class="total-points">현재 총 ${currentPoints}P</div>
@@ -530,7 +525,7 @@ async function handleAnswer(selected, question) {
     
     popupEmoji.textContent = "💪";
     popupResult.textContent = "아쉽지만 틀렸어요";
-    popupExplanation.textContent = `정답: ${question.correct}\n${question.explanation}`;
+    popupExplanation.textContent = `정답: ${question.correct}\n${question.explanation || ''}`;
     popupPoints.innerHTML = `
       <div class="point-change">-5P</div>
       <div class="total-points">현재 총 ${currentPoints}P</div>
@@ -605,15 +600,6 @@ function finishQuiz() {
   document.getElementById('accuracy').textContent = accuracy;
   document.getElementById('time-taken').textContent = timeTaken;
   
-  // 계속하기 버튼 추가
-  quizComplete.innerHTML += `
-    <div style="margin-top: 20px">
-      <button onclick="continueQuiz()" class="primary-button">
-        계속해서 풀기
-      </button>
-    </div>
-  `;
-  
   quizBox.style.display = 'none';
   quizComplete.style.display = 'block';
   
@@ -624,17 +610,17 @@ function finishQuiz() {
     exchangeBox.innerHTML = `
       <div style="margin-bottom: 16px">
         🎉 축하합니다! ${currentPoints}P를 모으셨네요!<br/>
-        늘봄몰에서 적립금으로 전환하실 수 있습니다.
+        보유 포인트 전액으로 늘봄몰 할인쿠폰을 신청할 수 있어요.
       </div>
       <button onclick="requestExchange()" class="primary-button">
-        적립금으로 전환하기
+        할인쿠폰 신청하기
       </button>
     `;
   } else {
     exchangeBox.style.display = 'block';
     exchangeBox.innerHTML = `
       <div style="color: #666; margin: 16px 0">
-        5,000P 이상이면 늘봄몰에서 적립금으로 바꿀 수 있어요!<br/>
+        5,000P 이상이면 늘봄몰 할인쿠폰을 신청할 수 있어요!<br/>
         (현재 ${currentPoints}P / 목표 5,000P)
       </div>
     `;
@@ -653,11 +639,13 @@ function finishQuiz() {
 }
 
 function requestExchange() {
-  if (confirm('포인트는 초기화됩니다. 정말 전환 신청하시겠습니까?')) {
-    window.open('https://docs.google.com/forms/d/e/1FAIpQLSf79U4uayn49L_SMV3KgjnAp8vlP7gx-XJ-v6AnBxveqlIPxg/viewform?usp=dialog', '_blank');
-    localStorage.setItem('points', '0');
-    location.reload();
+  // The home service records the request before deducting points. Quiz screens
+  // use the same entry point instead of clearing points without a receipt.
+  if (document.querySelector('[data-home-exchange]')) {
+    if (window.showSalonToast) window.showSalonToast('신청 화면을 준비 중이에요. 잠시 후 다시 눌러주세요.', 'warning');
+    return;
   }
+  window.location.href = 'index.html#coupon-request';
 }
 
 function showExplanation(isCorrect, explanation) {
@@ -710,7 +698,7 @@ function shareApp() {
     })
     .then(() => {
       // 공유 성공 시 포인트 지급
-      addPoints(50);
+      addPoints(50, 'video');
       showToast('공유 감사합니다! +50P가 적립되었어요 💚');
     })
     .catch((error) => {
@@ -726,7 +714,7 @@ function shareToInstagram() {
   const url = encodeURIComponent(window.location.href);
   const text = encodeURIComponent('나를 위한 작은 습관의 변화, 늘봄과 함께 건강한 습관을 만들어보세요!');
   window.open(`https://www.instagram.com/share?url=${url}&caption=${text}`, 'instagram-share-dialog', 'width=800,height=600');
-  addPoints(200);
+  addPoints(200, 'share');
   showToast('공유 감사합니다! +200P가 적립되었어요 💚');
 }
 
@@ -754,7 +742,7 @@ function shareAppInstall() {
       text: "퀴즈 풀고 포인트 받아요 🎁",
       url: shareUrl
     }).then(() => {
-      addPoints(200);
+      addPoints(200, 'share');
       showToast('공유 감사합니다! +200P가 적립되었어요 💚');
     }).catch(() => {});
   } else {
@@ -770,7 +758,7 @@ function handleReferralReward() {
   // 이미 이 ref로 리워드를 받은 적이 있는지 확인
   const rewardedRefs = JSON.parse(localStorage.getItem('rewardedRefs') || '[]');
   if (!rewardedRefs.includes(ref)) {
-    addPoints(200);
+    addPoints(200, 'share');
     showToast('초대 링크로 방문! +200P가 적립되었어요 💚');
     rewardedRefs.push(ref);
     localStorage.setItem('rewardedRefs', JSON.stringify(rewardedRefs));
@@ -781,7 +769,7 @@ function giveDailyVisitPoints() {
   const today = new Date().toISOString().slice(0, 10); // 'YYYY-MM-DD'
   const lastVisit = localStorage.getItem('lastVisitDate');
   if (lastVisit !== today) {
-    addPoints(100);
+    addPoints(100, 'visit', `visit_${today}`);
     showToast('출석 완료  +100P', 'attendance');
     localStorage.setItem('lastVisitDate', today);
   }
@@ -819,8 +807,8 @@ function showDailyQuizReminder() {
 }
 
 // 기존 addPoints 함수를 통합 시스템으로 리다이렉트
-async function addPoints(amount) {
-  await window.pointsManager.addPoints(amount);
+async function addPoints(amount, source = 'quiz', actionId = null) {
+  return window.pointsManager.addPoints(amount, source, actionId);
 }
 
 function showShortsSection() {

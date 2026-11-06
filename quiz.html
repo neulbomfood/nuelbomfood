@@ -19,7 +19,7 @@
         </div>
         <div id="points-action" style="display: none;">
           <button onclick="requestExchange()" id="exchange-button" class="secondary-button" style="display: none;">
-            ✨ 포인트 전환 신청하기
+            ✨ 할인쿠폰 신청하기
           </button>
           <div id="points-insufficient" class="points-notice" style="display: none;">
             포인트가 부족합니다 😢
@@ -72,9 +72,10 @@
         <div id="exchange-box" style="display: none;">
           🎉 축하합니다! 5000P 이상 달성했습니다!<br />
           <button onclick="requestExchange()" class="primary-button">
-            적립금으로 전환하기
+            할인쿠폰 신청하기
           </button>
         </div>
+        <button id="continue-quiz" onclick="continueQuiz()" class="primary-button">계속해서 풀기</button>
         <button onclick="goHome()" class="primary-button">
           처음으로 돌아가기
         </button>
@@ -83,6 +84,7 @@
     </div>
   </div>
 
-  <script src="script.js"></script>
+  <script src="script.js?v=20261106-points1"></script>
+  <script type="module" async src="js/quiz-points.js?v=20261106-points1"></script>
 </body>
 </html>

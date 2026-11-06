@@ -1,0 +1,79 @@
+/* Scoped to the health-story catalogue; other screens retain their presentation. */
+body.health-stories-active { background: #fafbf8; }
+.neulbom-home.health-stories-active .home-container { max-width: 480px; padding: 20px 20px 140px; }
+.health-stories-active .home-container > .logo,
+.health-stories-active #pointsDisplay,
+.health-stories-active #mute-button { display: none; }
+.health-stories { width: 100%; color: #142d23; font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+.health-stories [hidden] { display: none !important; }
+.health-stories button, .health-stories a { -webkit-tap-highlight-color: transparent; }
+.health-stories-topbar { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 22px; }
+.health-stories-back { display: inline-flex; align-items: center; gap: 7px; min-height: 44px; padding: 0; border: 0; background: transparent; color: #244f3d; font-size: 14px !important; font-weight: 600 !important; cursor: pointer; }
+.health-stories-back > span { font: 36px/1 Arial, sans-serif; margin-top: -3px; }
+.health-stories-wordmark { color: #24553e; font-size: 23px; font-weight: 700; letter-spacing: -.8px; }
+.health-stories-header h1 { margin: 0 0 8px; color: #123c2c; font: 750 34px/1.2 'Pretendard', sans-serif; letter-spacing: -1.7px; }
+.health-stories-header p { margin: 0; color: #737d76; font-size: 13px; line-height: 1.7; letter-spacing: -.45px; word-break: keep-all; }
+.health-stories-filters { display: grid; grid-template-columns: .75fr 1.25fr 1fr 1.15fr; gap: 6px; margin: 25px 0 20px; }
+.health-stories-filters button { min-width: 0; min-height: 39px; padding: 8px 3px; border: 1px solid transparent; border-radius: 12px; background: #e8eee4; color: #253a2e; font-size: 12px !important; font-weight: 600 !important; line-height: 1.4; letter-spacing: -.5px; white-space: nowrap; cursor: pointer; }
+.health-stories-filters button[aria-pressed="true"] { background: #356c55; color: #fff; }
+.health-stories-filters button:hover { border-color: #668873; }
+.health-stories-search { margin: -5px 0 20px; }
+.health-stories-search input { box-sizing: border-box; width: 100%; min-height: 46px; padding: 11px 14px; border: 1px solid #d9e3d6; border-radius: 12px; background: #fff; color: #173d2d; font-family: inherit; font-size: 14px; line-height: 1.5; }
+.health-stories-search input::placeholder { color: #89958b; }
+.health-stories-status { margin: -3px 0 14px; color: #6a7b6d; font-size: 12px; }
+.health-stories-load-more { display: block; width: 100%; min-height: 48px; margin: 26px 0 0; padding: 12px; border: 1px solid #d9e3d6; border-radius: 12px; background: #fff; color: #2b6048; font-size: 14px !important; font-weight: 600 !important; cursor: pointer; }
+.health-stories-load-more:hover { background: #e8eee4; }
+.health-stories-empty { padding: 30px 10px; color: #6a7b6d; font-size: 14px; line-height: 1.8; text-align: center; }
+.health-stories-list-heading { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; margin-bottom: 12px; }
+.health-stories-list-heading h2 { margin: 0; font: 650 16px/1.5 'Pretendard', sans-serif; letter-spacing: -.55px; }
+.health-stories-list-heading a { color: #818980; font-size: 11px; text-decoration: none; white-space: nowrap; }
+.health-stories-list-heading a:hover { text-decoration: underline; }
+.health-stories-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 21px 10px; }
+.health-stories-card { min-width: 0; }
+.health-stories-card-link { display: block; color: inherit; text-decoration: none; border-radius: 11px; }
+.health-stories-card-link:hover .health-stories-card-title { color: #356c55; text-decoration: underline; text-underline-offset: 3px; }
+.health-stories-cover { position: relative; aspect-ratio: 4 / 5; overflow: hidden; border-radius: 9px; background: #0b0f10; }
+.health-stories-cover[data-tone="paper"] { background: #eae5db; }
+.health-stories-cover img { display: block; width: 100%; height: 100%; object-fit: contain; }
+.health-stories-media-icon { position: absolute; right: 8px; top: 8px; display: grid; place-items: center; width: 26px; height: 26px; border-radius: 50%; background: #0009; color: #fff; }
+.health-stories-media-icon svg { width: 20px; height: 20px; }
+.health-stories-category { display: inline-block; max-width: 100%; margin: 8px 0 5px; padding: 2px 9px; border-radius: 20px; background: #e5ede2; color: #28523e; font-size: 11px; font-weight: 600; line-height: 1.6; }
+.health-stories-card-title { margin: 0; font: 650 15px/1.45 'Pretendard', sans-serif; color: #17251d; letter-spacing: -.65px; word-break: keep-all; overflow-wrap: anywhere; }
+.health-stories-more { margin-top: 30px; padding-top: 16px; border-top: 1px solid #dfe5dc; }
+.health-stories-more summary { min-height: 44px; color: #526b58; font-size: 13px; cursor: pointer; }
+.health-stories-more .home-story-links { margin-top: 8px; }
+.health-stories-more .home-menu { min-height: 82px; }
+.health-stories-more #selfcheck-enter-btn { background: #fff; color: #233e32; box-shadow: none; }
+.health-stories-more #selfcheck-enter-btn::before { display: none; }
+.health-stories-detail-header { margin-bottom: 18px; }
+.health-stories-detail-header h1 { margin: 4px 0 10px; font: 700 25px/1.45 'Pretendard', sans-serif; letter-spacing: -.8px; word-break: keep-all; }
+.health-stories-credit { margin: 0; color: #738074; font-size: 12px; }
+.health-stories-video { display: block; width: 100%; height: auto; max-height: 70vh; object-fit: contain; border-radius: 12px; background: #0b0f10; }
+.health-stories-media-note { margin: 10px 0 6px; color: #68776c; font-size: 12px; line-height: 1.7; }
+.health-stories-gallery { width: 100%; }
+.health-stories-slide { display: block; width: 100%; height: auto; border-radius: 12px; background: #0b0f10; touch-action: pan-y pinch-zoom; }
+.health-stories-slide[data-tone="paper"] { background: #eae5db; }
+.health-stories-gallery-controls { display: flex; align-items: center; justify-content: center; gap: 24px; margin-top: 10px; }
+.health-stories-gallery-arrow { display: grid; place-items: center; width: 44px; height: 44px; padding: 0; border: 1px solid #dfe5dc; border-radius: 50%; background: #fff; color: #244f3d; font: 30px/1 Arial, sans-serif !important; cursor: pointer; }
+.health-stories-gallery-arrow:hover { background: #e8eee4; }
+.health-stories-gallery-arrow[aria-disabled="true"] { opacity: .3; cursor: default; }
+.health-stories-gallery-count { min-width: 42px; color: #647267; font-size: 13px; text-align: center; font-variant-numeric: tabular-nums; }
+
+.health-stories-source-link { display: inline-block; padding: 8px 0; color: #356c55; font-size: 13px; text-underline-offset: 3px; }
+.health-stories-caption { margin: 22px 0 0; padding-top: 22px; border-top: 1px solid #dfe5dc; }
+.health-stories-caption h2 { margin: 0 0 18px; font: 650 17px/1.5 'Pretendard', sans-serif; }
+.health-stories-caption p { margin: 0 0 19px; color: #35463c; font-size: 15px; line-height: 1.9; white-space: pre-line; overflow-wrap: anywhere; }
+.health-stories-detail-footer { margin-top: 24px; padding-top: 16px; border-top: 1px solid #dfe5dc; }
+.health-stories :focus-visible { outline: 3px solid #769667; outline-offset: 4px; }
+.health-stories h1[tabindex="-1"]:focus { outline: none; }
+.health-stories-sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; clip: rect(0, 0, 0, 0); overflow: hidden; white-space: nowrap; border: 0; }
+@media (max-width: 359px) {
+  .neulbom-home.health-stories-active .home-container { padding: 16px 14px 130px; }
+  .health-stories-header h1 { font-size: 31px; }
+  .health-stories-filters { gap: 4px; }
+  .health-stories-filters button { font-size: 10.5px !important; }
+  .health-stories-list-heading { gap: 4px; }
+  .health-stories-list-heading h2 { font-size: 14px; }
+  .health-stories-list-heading a { font-size: 10px; }
+  .health-stories-card-title { font-size: 14px; }
+}

@@ -8,127 +8,6 @@
   <link rel="stylesheet" href="css/nickname.css" />
   <link rel="manifest" href="manifest.json" />
   <script src="https://developers.kakao.com/sdk/js/kakao.min.js"></script>
-      <!-- Firebase SDK 추가 -->
-    <script src="https://www.gstatic.com/firebasejs/9.x.x/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.x.x/firebase-firestore-compat.js"></script>
-    <script>
-      // Firebase 초기화
-      var firebaseConfig = {
-        // Firebase 설정 정보를 여기에 입력하세요
-      };
-      firebase.initializeApp(firebaseConfig);
-      var db = firebase.firestore();
-
-    // 카카오 초기화
-    Kakao.init('2c0e3c8b8e6b4c8f9d5a7e1f3b9c6d2e');
-    
-    // 스크립트 로드 확인용 코드
-    console.log('인라인 스크립트 실행됨');
-    
-    // 앱 설치 배너 닫기 함수
-    function closeInstallBanner() {
-      var banner = document.getElementById('install-banner');
-      if (banner) banner.style.display = 'none';
-    }
-
-    // 닉네임 중복 체크 함수
-    async function isNicknameTaken(nickname) {
-      const querySnapshot = await db.collection("users")
-        .where("nickname", "==", nickname)
-        .get();
-      return !querySnapshot.empty;
-    }
-
-    // 닉네임 등록 함수
-    async function registerNickname() {
-      const nicknameInput = document.getElementById("nicknameInput");
-      const nickname = nicknameInput.value.trim();
-      
-      if (!nickname) {
-        alert("닉네임을 입력해주세요.");
-        return;
-      }
-
-      try {
-        // 중복 체크
-        if (await isNicknameTaken(nickname)) {
-          alert("이미 사용 중인 닉네임입니다.");
-          return;
-        }
-
-        // userId 생성 또는 가져오기
-        let userId = localStorage.getItem("userId");
-        if (!userId) {
-          userId = "user_" + Date.now() + "_" + Math.random().toString(36).substr(2, 8);
-          localStorage.setItem("userId", userId);
-        }
-
-        // Firestore에 저장
-        await db.collection("users").doc(userId).set({
-          userId: userId,
-          nickname: nickname,
-          points: parseInt(localStorage.getItem('points') || '0'),
-          createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-          updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-        });
-
-        localStorage.setItem("nickname", nickname);
-        alert("닉네임이 등록되었습니다!");
-        
-        // 닉네임 입력 폼 숨기기 및 포인트 표시
-        document.getElementById("nickname-form").style.display = "none";
-        document.getElementById("point-display").style.display = "block";
-        getMyPoints();
-      } catch (error) {
-        console.error("Error:", error);
-        alert("닉네임 등록 중 오류가 발생했습니다.");
-      }
-    }
-
-    // 포인트 조회 함수 (통합 시스템 사용)
-    async function getMyPoints() {
-      const userId = localStorage.getItem("userId");
-      if (!userId) {
-        alert("로그인/닉네임 등록이 필요합니다.");
-        return;
-      }
-
-      try {
-        // 통합 포인트 시스템이 있으면 사용
-        if (window.pointsManager) {
-          await window.pointsManager.init();
-          return;
-        }
-        
-        // 기존 방식 유지 (백업)
-        const doc = await db.collection("users").doc(userId).get();
-        if (doc.exists) {
-          const points = doc.data().points || 0;
-          document.getElementById("points").textContent = `${points}P`;
-        }
-      } catch (error) {
-        console.error("Error:", error);
-        alert("포인트 조회 중 오류가 발생했습니다.");
-      }
-    }
-
-    // 페이지 로드 시 실행
-    window.onload = async function() {
-      // 통합 포인트 시스템 초기화
-      if (window.pointsManager) {
-        await window.pointsManager.init();
-      }
-      
-      const userId = localStorage.getItem("userId");
-      const nickname = localStorage.getItem("nickname");
-      
-      if (userId && nickname) {
-        document.getElementById("nickname-form").style.display = "none";
-        document.getElementById("point-display").style.display = "block";
-        getMyPoints();
-      }
-    };
-  </script>
   <style>
     .link-copy-btn {
       display: flex;
@@ -2474,8 +2353,12 @@
       font-size: 48px !important;
     }
   </style>
+  <link rel="stylesheet" href="css/home.css?v=20261102-points-guide1" />
+  <link rel="stylesheet" href="css/coupon-requests.css?v=20261102-pending1" />
+  <link rel="stylesheet" href="css/health-stories.css?v=20261030-library1" />
+  <link rel="stylesheet" href="css/community.css?v=20261105-answers1" />
 </head>
-<body>
+<body class="neulbom-home home-active">
   
 
   <!-- 음소거 버튼 추가 -->
@@ -2497,70 +2380,100 @@
 
 
 
-  <div class="container">
+  <div class="container home-container">
     <img src="assets/img/logo.png" alt="늘봄 로고" class="logo">
     <div id="main-section">
-      <div class="start-screen">
-        <h1 class="main-title">나를 위한 작은 습관의 변화, 늘봄</h1>
-        <p class="sub-title">오늘도 나를 돌보는 가장 쉬운 방법, 시작해볼까요?</p>
-        <div style="text-align:center;">
-          <div class="share-section">
-            <h3 class="share-title">친구와 함께 건강한 습관 만들기</h3>
-            
-            <!-- 닉네임 입력 폼 -->
-            <div id="nickname-form" class="nickname-form" style="margin-bottom: 20px;">
-              <input type="text" id="nicknameInput" class="nickname-input" placeholder="닉네임을 입력해주세요">
-              <button onclick="registerNickname()" class="nickname-button">등록하기</button>
-            </div>
-
-            <div class="social-share-buttons-wrapper">
-              <div class="social-share-buttons">
-                <button onclick="shareAppInstall()" class="social-btn install-btn">
-                  <span class="install-icon-wrap"><img src="assets/img/icon-512.png" alt="앱설치" class="install-icon" /></span>
-                  <span class="install-btn-text">앱 설치 링크 공유</span>
-                </button>
-              </div>
-            </div>
-            <p class="share-reward">공유하면 200P가 적립됩니다! 💚</p>
+      <div class="home-screen">
+        <header class="home-header">
+          <div class="home-account-row">
+            <h1 id="home-brand" class="home-brand" tabindex="-1"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 21v-8M12 16C5 16 3 11 3 7c6 0 9 3 9 9ZM12 13c0-6 3-9 9-9 0 6-3 9-9 9Z"/></svg>늘봄</h1>
+            <button id="home-nickname-open" class="home-nickname-open" type="button">닉네임 등록</button>
+            <span id="home-greeting" class="home-greeting" hidden></span>
           </div>
-        </div>
-        <div class="points-info">
-          <p class="current-points">
-            💚 현재 나의 습관 포인트: <strong class="point-value" id="points">0</strong>P
-          </p>
-          <div class="points-guide">
-            <p class="point-main-text">
-              📌 <strong class="point-highlight">5,000포인트</strong>를 달성하면
-              <strong>늘봄몰 적립금으로 전환</strong>할 수 있어요!
-            </p>
-            <p class="point-sub-text">
-              환전 신청 버튼은 <strong class="point-emphasis">5,000P 이상</strong>일 때 자동으로 활성화됩니다
-            </p>
-          </div>
-          <div id="points-action">
-            <button id="selfcheck-enter-btn" class="primary-button" style="margin-bottom:12px;background:linear-gradient(135deg,#4CAF50,#356c55);color:white;display:flex;align-items:center;justify-content:center;gap:8px;">
-              <span style="font-size:18px;">🔍</span>
-              <span>하루 1분 자가체크</span>
-            </button>
-            <button id="habit-salon-enter-btn" class="primary-button" style="margin-bottom:12px;background:#356c55;">🌿 늘봄 습관살롱</button>
-            <button onclick="location.href='quiz.html'" class="primary-button">
-              오늘의 건강 루틴 시작하기 →
-            </button>
-            <button onclick="requestExchange()" id="exchange-button" class="secondary-button" style="display: none;">
-              ✨ 포인트 전환 신청하기
-            </button>
-            <button onclick="window.open('https://smartstore.naver.com/jinjjamall', '_blank')" class="secondary-button" style="margin-top:10px;">
-              🛒 늘봄식품 바로가기
-            </button>
-            <button onclick="goToShorts()" class="secondary-button" style="margin-top:10px;">
-              🎥 1분 건강 숏츠 보러가기
-            </button>
-            
-            <div id="points-insufficient" class="points-notice" style="display: none;">
-              포인트가 부족합니다 😢
+          <p class="home-tagline">나를 위한 작은 습관의 변화</p>
+        </header>
+        <section class="home-benefits" aria-label="포인트와 공유 혜택">
+          <div class="home-points-row">
+            <div class="home-points-stack">
+              <span class="home-points-label">나의 습관 포인트</span>
+              <span class="home-balance"><strong id="points">0</strong> P</span>
             </div>
+            <button id="exchange-button" data-home-exchange type="button" disabled
+                    aria-describedby="home-conversion-rule" onclick="requestExchange()">
+              늘봄몰 할인쿠폰<br>신청하기
+            </button>
           </div>
-        </div>
+          <p id="home-conversion-rule" class="home-conversion-rule">5,000P부터 보유 포인트 전액으로 신청할 수 있어요.<br>신청 내용을 확인한 뒤 할인쿠폰을 지급해드려요.</p>
+          <section class="coupon-requests" data-coupon-requests aria-label="진행 중인 쿠폰 신청" hidden></section>
+          <button type="button" class="home-share" onclick="shareAppInstall()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="m8.6 10.5 6.8-4M8.6 13.5l6.8 4"/></svg><span>앱 설치 링크 공유하고 <strong>200P</strong> 받기</span>
+          </button>
+          <details id="home-points-guide" class="home-points-guide">
+            <summary>
+              <span class="home-points-guide-heading">
+                <strong>이렇게 포인트를 모아요</strong>
+                <span class="home-points-guide-toggle">
+                  <span class="home-points-guide-expand">자세히</span>
+                  <span class="home-points-guide-collapse">접기</span>
+                  <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 7.5 5 5 5-5"/></svg>
+                </span>
+              </span>
+              <span class="home-points-guide-preview">
+                <span>출석 <b>100P</b></span>
+                <span>퀴즈 정답 <b>15P</b></span>
+                <span>글쓰기 최대 <b>100P</b></span>
+              </span>
+            </summary>
+            <div class="home-points-guide-content">
+              <dl class="home-points-guide-list" aria-label="활동별 포인트 적립 기준">
+                <div>
+                  <dt>매일 출석<small>하루 1회, 방문하면 자동 적립</small></dt>
+                  <dd>100P</dd>
+                </div>
+                <div>
+                  <dt>퀴즈 정답<small>정답 한 문제마다 적립<br>오답은 5P 차감</small></dt>
+                  <dd>15P</dd>
+                </div>
+                <div>
+                  <dt>글쓰기<small>본문 10~49자: 30P<br>본문 50자 이상: 100P<br>10자 미만은 적립 없이 등록</small></dt>
+                  <dd>최대 100P</dd>
+                </div>
+                <div>
+                  <dt>댓글 작성<small>댓글을 등록하면 적립</small></dt>
+                  <dd>30P</dd>
+                </div>
+                <div>
+                  <dt>앱 설치 링크 공유<small>공유 완료 시 적립<br>링크 복사만 한 경우는 제외</small></dt>
+                  <dd>200P</dd>
+                </div>
+              </dl>
+              <p class="home-points-guide-note">글·댓글을 수정할 때는 추가 적립되지 않아요.</p>
+            </div>
+          </details>
+        </section>
+        <h2 id="home-menu-heading" class="home-menu-heading">오늘은 무엇을 해볼까요?</h2>
+        <nav class="home-menu-grid" aria-labelledby="home-menu-heading">
+          <button id="health-story-enter-btn" class="home-menu" type="button">
+            <span class="home-menu-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v16M12 5C9 3 5 3 2 4v15c3-1 7-1 10 2 3-3 7-3 10-2V4c-3-1-7-1-10 1Z"/></svg></span>
+            <strong>건강 이야기</strong>
+            <span class="home-menu-description">건강 정보와<br>늘봄의 이야기</span>
+          </button>
+          <a class="home-menu" href="https://smartstore.naver.com/jinjjamall" target="_blank" rel="noopener noreferrer">
+            <span class="home-menu-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 7h14l1 14H4L5 7ZM9 8V6a3 3 0 0 1 6 0v2"/></svg></span>
+            <strong>늘봄 쇼핑몰</strong>
+            <span class="home-menu-description">나를 위한<br>제품 둘러보기</span>
+          </a>
+          <button id="habit-salon-enter-btn" class="home-menu" type="button">
+            <span class="home-menu-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8" r="3"/><path d="M3 21v-3a6 6 0 0 1 12 0v3M16 5a3 3 0 0 1 0 6M18 15a5 5 0 0 1 3 4v2"/></svg></span>
+            <strong>커뮤니티</strong>
+            <span class="home-menu-description">일상과 건강 습관<br>함께 나누기</span>
+          </button>
+          <a class="home-menu" href="quiz.html">
+            <span class="home-menu-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M9.5 9a2.5 2.5 0 1 1 4 2c-1 .7-1.5 1.2-1.5 2.5M12 17h.01"/></svg></span>
+            <strong>건강 퀴즈</strong>
+            <span class="home-menu-description">문제를 풀며<br>건강 상식 배우기</span>
+          </a>
+        </nav>
         <div class="card-grid">
           <div class="info-card">
             <span class="emoji">✨</span>
@@ -2581,6 +2494,52 @@
         <p class="footer-quote">작은 습관이, 결국 가장 멀리 갑니다</p>
       </div>
     </div>
+    <section id="health-story-section" class="home-screen health-stories" style="display:none;" aria-labelledby="health-story-title">
+      <div id="health-story-list-view">
+        <nav class="health-stories-topbar" aria-label="건강 이야기 탐색">
+          <button id="health-story-back" class="health-stories-back" type="button"><span aria-hidden="true">‹</span> 첫 화면</button>
+          <span class="health-stories-wordmark">늘봄</span>
+        </nav>
+        <header class="health-stories-header">
+          <h1 id="health-story-title" tabindex="-1">건강 이야기</h1>
+          <p>건강을 알고, 습관을 바꾸고, 나를 돌보는 이야기</p>
+        </header>
+        <div class="health-stories-filters" role="group" aria-label="콘텐츠 주제">
+          <button type="button" data-health-category="all" aria-pressed="true">전체</button>
+          <button type="button" data-health-category="knowledge" aria-pressed="false">건강 바로알기</button>
+          <button type="button" data-health-category="habits" aria-pressed="false">작은 습관</button>
+          <button type="button" data-health-category="thoughts" aria-pressed="false">늘봄의 생각</button>
+        </div>
+        <form id="health-stories-search-form" class="health-stories-search" role="search">
+          <label class="health-stories-sr-only" for="health-stories-search">건강 이야기 제목과 내용 검색</label>
+          <input id="health-stories-search" type="search" placeholder="궁금한 건강 이야기를 찾아보세요" autocomplete="off">
+        </form>
+        <div class="health-stories-list-heading">
+          <h2 id="health-stories-list-title">늘봄이 전하는 이야기</h2>
+          <a href="https://www.instagram.com/neulbom_food/" target="_blank" rel="noopener noreferrer" aria-label="늘봄 인스타그램 새 창에서 보기">@neulbom_food</a>
+        </div>
+        <p id="health-stories-status" class="health-stories-status" role="status" aria-live="polite"></p>
+        <div id="health-stories-grid" class="health-stories-grid" aria-labelledby="health-stories-list-title"></div>
+        <p id="health-stories-empty" class="health-stories-empty" hidden>찾으시는 이야기가 아직 없어요.<br>다른 단어로 검색해 보세요.</p>
+        <button id="health-stories-load-more" class="health-stories-load-more" type="button" hidden>이야기 더 보기</button>
+        <noscript><p>콘텐츠를 보려면 자바스크립트를 켜주세요. <a href="https://www.instagram.com/neulbom_food/">늘봄 인스타그램에서도 볼 수 있어요.</a></p></noscript>
+        <details class="health-stories-more">
+          <summary>더 둘러보기</summary>
+          <nav class="home-story-links" aria-label="다른 건강 콘텐츠">
+            <button id="selfcheck-enter-btn" class="home-menu" type="button">
+              <strong>하루 1분 자가체크</strong><span class="home-menu-description">건강 정보로 내 생활 습관 돌아보기</span>
+            </button>
+            <button id="health-brand-link" class="home-menu" type="button">
+              <strong>늘봄 브랜드 이야기</strong><span class="home-menu-description">늘봄이 전하는 건강한 일상 이야기</span>
+            </button>
+            <button id="health-shorts-link" class="home-menu" type="button">
+              <strong>1분 건강 숏츠</strong><span class="home-menu-description">짧은 영상으로 만나는 건강 정보</span>
+            </button>
+          </nav>
+        </details>
+      </div>
+      <div id="health-story-detail-view" hidden></div>
+    </section>
     <div class="video-section" id="shorts-section" style="display:none;">
       <h3 class="video-title">🎥 1분 건강 숏츠</h3>
       <ul id="videoList" class="video-list"></ul>
@@ -2588,36 +2547,66 @@
     </div>
 
     <!-- 늘봄 습관살롱 메인 섹션 (초기에는 숨김) -->
-    <div id="habit-salon-main" style="display:none;max-width:700px;margin:40px auto 40px auto;padding:0 8px;">
-      <!-- 뒤로가기 버튼 -->
-      <div style="display:flex;justify-content:flex-end;padding:16px 0;margin-bottom:20px;">
-        <button id="habit-salon-main-back-btn" style="padding:8px 16px;background:#e0ede3;color:#356c55;border:none;border-radius:8px;font-size:14px;font-weight:600;">← 뒤로가기</button>
+    <div id="habit-salon-main" style="display:none;">
+      <div class="community-shell">
+        <nav class="community-topbar" aria-label="커뮤니티 탐색">
+          <button type="button" id="habit-salon-main-back-btn" class="community-icon-button" aria-label="홈으로 돌아가기">‹</button>
+          <span>커뮤니티</span>
+          <button type="button" id="community-search-toggle" class="community-icon-button" aria-label="게시글 검색" aria-expanded="false" aria-controls="community-search-form"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 5 5"/></svg></button>
+        </nav>
+        <header class="community-hero">
+          <h1 tabindex="-1" id="community-title"><svg viewBox="0 0 40 40" aria-hidden="true"><path d="M20 35V20"/><path d="M20 23C8 24 5 15 5 7c11 0 17 5 15 16Z"/><path d="M20 27c0-12 6-17 16-17 0 10-6 17-16 17Z"/></svg>늘봄 커뮤니티</h1>
+          <p>건강한 일상, 함께 만들어가요</p>
+        </header>
+        <div class="community-filters" role="group" aria-label="게시판 선택">
+          <button type="button" data-community-board="all" aria-pressed="true">전체글</button>
+          <button type="button" data-community-board="talk" aria-pressed="false">건강 수다</button>
+          <button type="button" data-community-board="question" aria-pressed="false">궁금해요</button>
+          <button type="button" data-community-board="practice" aria-pressed="false">함께 실천</button>
+        </div>
+        <aside id="community-question-invite" class="community-question-invite" aria-labelledby="community-question-invite-title" hidden>
+          <span class="community-question-icon" aria-hidden="true">🌱</span>
+          <div><h2 id="community-question-invite-title">늘봄에게 궁금한 점이 있나요?</h2><p>질문을 남겨주시면 운영자가 확인하고 답변해요.</p></div>
+        </aside>
+        <form id="community-search-form" class="community-search" role="search" hidden>
+          <label class="community-sr-only" for="community-search-input">제목, 내용, 작성자 검색</label>
+          <input type="search" id="community-search-input" placeholder="궁금한 건강 이야기 찾아보기" autocomplete="off">
+        </form>
+        <details class="community-welcome">
+          <summary><span aria-hidden="true">⌁</span> 처음 오셨나요? 편하게 이야기 나눠요 <span class="community-chevron" aria-hidden="true">›</span></summary>
+          <div>
+            <p>건강을 챙기며 겪는 일, 궁금한 점, 나를 위한 작은 실천을 나눠주세요. 잘된 날도, 쉬어간 날도 환영해요.</p>
+            <p>게시글 본문이 10~49자이면 30P, 50자 이상이면 100P가 적립돼요. 10자 미만도 적립 없이 등록할 수 있어요. 댓글은 기존처럼 30P가 적립되며, 사진은 선택이에요.</p>
+            <p>개인의 경험과 건강 정보의 출처를 구분해서 나눠주세요.</p>
+            <div class="community-existing-links">
+              <button type="button" id="community-brand-link">늘봄 브랜드 이야기 ↗</button>
+              <button type="button" id="community-questions-link">기존 오늘의 질문 모아보기 ↗</button>
+            </div>
+          </div>
+        </details>
+        <div class="community-points">
+          <div><span>내 포인트</span> <strong><span id="habit-salon-my-point">0</span>P</strong><small>5,000P부터 보유 포인트 전액으로 신청할 수 있어요.<br>신청 내용을 확인한 뒤 할인쿠폰을 지급해드려요.</small></div>
+          <button type="button" id="community-exchange" disabled>할인쿠폰 신청</button>
+        </div>
+        <section class="coupon-requests" data-coupon-requests aria-label="진행 중인 쿠폰 신청" hidden></section>
+        <div class="community-feed-heading">
+          <h2 id="community-feed-title">전체 이야기</h2>
+          <label class="community-sr-only" for="community-sort">게시글 정렬</label>
+          <select id="community-sort"><option value="latest">최신순</option><option value="popular">인기순</option></select>
+        </div>
+        <p class="community-status" id="community-status" role="status" hidden></p>
+        <div id="community-feed" aria-busy="false"></div>
+        <aside class="community-practice-invite" id="community-practice-invite" aria-labelledby="community-practice-title">
+          <div class="community-card-meta"><span class="community-chip community-chip-practice">함께 실천</span><span>참여 안내</span></div>
+          <h2 id="community-practice-title">이번 주, 나를 위한 작은 실천</h2>
+          <p>내 생활에 맞는 목표 하나를 정해보세요.</p>
+          <div class="community-topic-chips"><span>걷기</span><span>식사 챙기기</span><span>쉬는 시간</span></div>
+          <p class="community-secondary">잘된 날도, 쉬어간 날도 함께 나눠요.</p>
+          <button type="button" class="community-primary" id="community-practice-write">내 목표 남기기 <span aria-hidden="true">→</span></button>
+        </aside>
+        <div class="community-write-bar"><button type="button" id="floating-write-btn" class="community-primary"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m4 15 11-11 5 5L9 20H4Z"/><path d="m13 6 5 5"/></svg><span id="community-write-label">글쓰기</span></button></div>
       </div>
-      
-      <!-- 섹션 네비게이션 카드 -->
-      <div id="habit-salon-nav-cards" style="display:flex;gap:16px;justify-content:space-between;margin-bottom:32px;flex-wrap:wrap;">
-        <div class="habit-salon-nav-card" data-section="brand" style="flex:1 1 140px;min-width:140px;max-width:180px;background:#fff;border-radius:16px;box-shadow:0 2px 8px #e0ede3;padding:18px 10px;display:flex;flex-direction:column;align-items:center;cursor:pointer;transition:box-shadow 0.2s;">
-          <img src="assets/img/brand-icon.png" alt="브랜드 이야기" style="width:48px;height:48px;margin-bottom:10px;object-fit:contain;"/>
-          <div style="font-weight:700;font-size:1.05rem;color:#356c55;">브랜드 이야기</div>
-        </div>
-        <!-- 자가체크는 메인 홈에 배치되어 있으므로 숨김 처리 -->
-        <!-- <div class="habit-salon-nav-card" data-section="selfcheck" style="display:none;">
-          <div style="width:48px;height:48px;margin-bottom:10px;display:flex;align-items:center;justify-content:center;font-size:28px;background:linear-gradient(135deg,#4CAF50,#356c55);border-radius:50%;color:white;">🔍</div>
-          <div style="font-weight:700;font-size:1.05rem;color:#356c55;text-align:center;">하루 1분<br>자가체크</div>
-        </div> -->
-        <div class="habit-salon-nav-card" data-section="question" style="flex:1 1 140px;min-width:140px;max-width:180px;background:#fff;border-radius:16px;box-shadow:0 2px 8px #e0ede3;padding:18px 10px;display:flex;flex-direction:column;align-items:center;cursor:pointer;transition:box-shadow 0.2s;">
-          <img src="assets/img/question-icon%20.png" alt="오늘의 질문" style="width:48px;height:48px;margin-bottom:10px;object-fit:contain;"/>
-          <div style="font-weight:700;font-size:1.05rem;color:#356c55;">오늘의 질문</div>
-        </div>
-        <div class="habit-salon-nav-card" data-section="free" style="flex:1 1 140px;min-width:140px;max-width:180px;background:#fff;border-radius:16px;box-shadow:0 2px 8px #e0ede3;padding:18px 10px;display:flex;flex-direction:column;align-items:center;cursor:pointer;transition:box-shadow 0.2s;">
-          <img src="assets/img/community-icon.png" alt="건강 한마당" style="width:48px;height:48px;margin-bottom:10px;object-fit:contain;"/>
-          <div style="font-weight:700;font-size:1.05rem;color:#356c55;">건강 한마당</div>
-        </div>
-        <div class="habit-salon-nav-card" data-section="challenge" style="flex:1 1 140px;min-width:140px;max-width:180px;background:#fff;border-radius:16px;box-shadow:0 2px 8px #e0ede3;padding:18px 10px;display:flex;flex-direction:column;align-items:center;cursor:pointer;transition:box-shadow 0.2s;opacity:0.6;">
-          <img src="assets/img/challenge-icon.png" alt="습관 챌린지" style="width:48px;height:48px;margin-bottom:10px;object-fit:contain;"/>
-          <div style="font-weight:700;font-size:1.05rem;color:#356c55;">습관 챌린지</div>
-        </div>
-      </div>
+
       <!-- 1️⃣ 브랜드 이야기 -->
       <section id="habit-salon-brand" style="display:none;margin-bottom:40px;">
         <h2 style="font-size:1.3rem;color:#356c55;font-weight:700;">📖 브랜드 이야기</h2>
@@ -2647,7 +2636,7 @@
         </div>
         <div id="habit-salon-free-list"></div>
         <!-- 플로팅 글쓰기 버튼 (항상 우하단 고정) -->
-        <button id="floating-write-btn" class="floating-write-btn" title="글쓰기">+</button>
+
       </section>
       <!-- 4️⃣ 습관 챌린지(예정) -->
       <section id="habit-salon-challenge" style="display:none;margin-bottom:40px;">
@@ -2655,10 +2644,7 @@
         <div style="background:#f8f9fa;padding:20px;border-radius:12px;">주간 실천 과제, 루틴 기록 기능이 곧 오픈됩니다!</div>
       </section>
 
-      <!-- 포인트 정보 및 로그 -->
-      <div style="text-align:center;margin-top:20px;padding:16px;background:#f8f9fa;border-radius:12px;">
-        <p style="margin:0;color:#356c55;font-weight:600;">💚 현재 포인트: <span id="habit-salon-my-point">0</span>P</p>
-      </div>
+
 
       <!-- 피드백 메시지 (기존 방식 대신 토스트 사용) -->
       <div id="habit-salon-feedback" style="display:none;"></div>
@@ -2730,25 +2716,35 @@
     </div>
 
     <!-- 글쓰기 모달 -->
-    <div id="free-write-fullscreen" class="modal-overlay">
+    <div id="free-write-fullscreen" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="community-write-title">
       <div class="modal-content">
         <div class="modal-header">
-          <h2>✍️ 건강 이야기 쓰기</h2>
+          <h2 id="community-write-title">✍️ 건강 이야기 쓰기</h2>
           <button class="modal-close-btn" onclick="window.closeWriteModal()">×</button>
         </div>
         <div class="modal-body">
           <form id="habit-salon-free-form">
+            <div class="community-compose-fields">
+              <label for="community-post-board">게시판</label>
+              <select id="community-post-board" name="communityBoard">
+                <option value="talk">건강 수다</option>
+                <option value="question">궁금해요</option>
+                <option value="practice">함께 실천</option>
+              </select>
+              <label for="community-post-title">제목 (선택)</label>
+              <input id="community-post-title" name="title" maxlength="80" placeholder="어떤 이야기를 나누고 싶으세요?">
+            </div>
             <div class="write-guide">
-              <p>💡 50자 이상 작성 시 100P가 적립됩니다!</p>
+              <p>짧은 이야기도 좋아요. 편하게 남겨주세요.</p>
               <ul>
-                <li>실제 경험한 건강 관리 방법</li>
-                <li>효과를 본 운동이나 식단</li>
-                <li>나만의 건강 습관과 꿀팁</li>
+                <li>건강을 챙기며 겪는 일과 궁금한 점</li>
+                <li>직접 해본 방법과 어려웠던 경험</li>
+                <li>나를 위한 작은 목표와 실천 이야기</li>
               </ul>
             </div>
             <div class="write-textarea-container">
               <textarea id="habit-salon-free-content" 
-                        placeholder="건강과 관련된 경험과 노하우를 50자 이상 작성해주세요."
+                        placeholder="오늘의 건강 이야기나 궁금한 점을 편하게 남겨주세요."
                         maxlength="500"></textarea>
               <div class="char-counter">0/500</div>
             </div>
@@ -2776,14 +2772,11 @@
                 <span class="upload-status-text" id="upload-status-text">업로드 중...</span>
               </div>
             </div>
-            <div class="char-count-guide">더 자세한 이야기를 들려주세요! (50자 필요)</div>
             <div class="write-modal-footer">
-              <div class="point-info">💡 50자 이상 작성 시 100P 적립!</div>
               <div class="write-modal-actions">
                 <button type="button" class="write-cancel-btn" onclick="window.closeWriteModal()">취소</button>
                 <button type="submit" class="write-submit-btn" disabled>
-                  <span>건강 이야기 공유하기</span>
-                  <span class="point-badge">+100P</span>
+                  <span>등록하기</span>
                 </button>
               </div>
             </div>
@@ -2823,23 +2816,36 @@
     </div>
 
   </div>
+  <dialog id="home-nickname-dialog" class="home-dialog" aria-labelledby="home-nickname-title" aria-describedby="home-nickname-copy">
+    <button id="home-nickname-close" class="home-dialog-close" type="button" aria-label="닉네임 등록 창 닫기">×</button>
+    <div class="home-dialog-symbol"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 21v-8M12 16C5 16 3 11 3 7c6 0 9 3 9 9ZM12 13c0-6 3-9 9-9 0 6-3 9-9 9Z"/></svg></div>
+    <h2 id="home-nickname-title">어떤 이름으로 불러드릴까요?</h2>
+    <p id="home-nickname-copy" class="home-dialog-copy">늘봄에서 사용할 닉네임을 정해주세요.<br>처음 한 번만 등록하면 돼요.</p>
+    <form id="nickname-form" novalidate>
+      <label for="nicknameInput">닉네임</label>
+      <input id="nicknameInput" name="nickname" type="text" autocomplete="nickname" placeholder="사용할 닉네임을 입력해주세요" required aria-describedby="home-nickname-error">
+      <p id="home-nickname-error" class="home-form-error" role="alert" hidden></p>
+      <button id="home-nickname-submit" class="home-nickname-submit" type="submit">등록하고 시작하기</button>
+    </form>
+  </dialog>
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-app.js";
-    import { getFirestore, collection, addDoc, getDocs, getDoc, setDoc, updateDoc, doc, query, where, orderBy, serverTimestamp, deleteDoc, writeBatch, increment, enableNetwork, disableNetwork, connectFirestoreEmulator } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-firestore.js";
+    import { getFirestore, collection, addDoc, getDocs, getDoc, setDoc, updateDoc, doc, query, where, orderBy, serverTimestamp, deleteDoc, writeBatch, runTransaction, increment, enableNetwork, disableNetwork, connectFirestoreEmulator } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-firestore.js";
     import { getStorage, ref, uploadBytesResumable, getDownloadURL, deleteObject } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-storage.js";
 
-    const firebaseConfig = {
-      apiKey: "AIzaSyDMgQA6mqaXR_qr9Uyj1-VnC-8qkcj3ZBw",
-      authDomain: "neulbom-healt-quiz.firebaseapp.com",
-      projectId: "neulbom-healt-quiz",
-      storageBucket: "neulbom-healt-quiz.appspot.com",
-      messagingSenderId: "300280931247",
-      appId: "1:300280931247:web:5516f3bd8e8834304a055a"
-    };
+    import { installCommunityActions } from "./js/community-actions.js?v=20261030-manage1";
+
+    import { firebaseConfig } from "./js/firebase-config.js?v=20261106-points1";
+    import { installPointPersistence } from "./js/point-persistence.js?v=20261106-points1";
+    import { installCouponRequests } from "./js/coupon-requests.js?v=20261106-points1";
+
+    // The quiz uses the same Firebase project.
+
     
     console.log('Firebase 앱 초기화 중...');
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
+    installCommunityActions(window, { db, doc, runTransaction, serverTimestamp });
     const storage = getStorage(app);
     
     // 🔥 Firestore 오프라인 지원 활성화
@@ -2934,6 +2940,7 @@
         const userDoc = await getDoc(doc(db, 'users', userId));
         if (userDoc.exists() && userDoc.data().nickname) {
           localStorage.setItem('nickname', userDoc.data().nickname);
+          window.dispatchEvent(new Event('nicknameUpdated'));
           const nicknameForm = document.getElementById('nickname-form');
           if (nicknameForm) {
             nicknameForm.style.display = 'none';
@@ -2950,6 +2957,7 @@
       
       if (!nickname) {
         window.showSalonToast('닉네임을 입력해주세요.', 'warning');
+        window.setNicknameError?.('닉네임을 입력해주세요.');
         return;
       }
 
@@ -2960,6 +2968,7 @@
         
         if (!snapshot.empty) {
           window.showSalonToast('이미 사용 중인 닉네임입니다.', 'warning');
+          window.setNicknameError?.('이미 사용 중인 닉네임입니다.');
           return;
         }
 
@@ -2969,13 +2978,13 @@
         await setDoc(doc(db, 'users', userId), {
           userId: userId,
           nickname: nickname,
-          points: parseInt(localStorage.getItem('points') || '0'),
           createdAt: serverTimestamp(),
           updatedAt: serverTimestamp()
         }, { merge: true });
 
         // localStorage에 저장
         localStorage.setItem('nickname', nickname);
+        window.dispatchEvent(new Event('nicknameUpdated'));
         
         // 입력 폼 숨기기
         const nicknameForm = document.getElementById('nickname-form');
@@ -2988,6 +2997,7 @@
       } catch (error) {
         console.error('닉네임 등록 오류:', error);
         window.showSalonToast('닉네임 등록 중 오류가 발생했습니다.', 'error');
+        window.setNicknameError?.('닉네임 등록 중 오류가 발생했습니다.');
       }
     };
 
@@ -2996,176 +3006,13 @@
       window.checkNickname();
     });
 
-    // 포인트 관리 (통합 시스템 우선 사용)
+    // Presentation reads local balance; persistence writes directly to Firebase.
+    installPointPersistence(window, { db, doc, runTransaction, serverTimestamp });
     window.getUserPoints = async function() {
-      try {
-        // 통합 포인트 시스템이 있으면 사용
-        if (window.pointsManager) {
-          return window.pointsManager.getPoints();
-        }
-        
-        // 기존 로직 유지 (백업)
-        // 오프라인 상태 체크
-        if (!window.isOnline) {
-          console.log('오프라인 상태 - 로컬 포인트 사용');
-          return parseInt(localStorage.getItem('points') || '0');
-        }
-        
-        // 기존 script.js의 points 변수와 동기화
-        const localPoints = parseInt(localStorage.getItem('points') || '0');
-        
-        const userId = window.getUserId();
-        const userDoc = await getDoc(doc(db, 'users', userId));
-        
-        if (userDoc.exists()) {
-          const firestorePoints = userDoc.data().points || 0;
-          // Firestore와 로컬 포인트 중 더 큰 값 사용 (데이터 손실 방지)
-          const syncedPoints = Math.max(localPoints, firestorePoints);
-          
-          if (syncedPoints !== firestorePoints) {
-            // Firestore 업데이트
-            await updateDoc(doc(db, 'users', userId), {
-              points: syncedPoints,
-              lastActive: serverTimestamp()
-            });
-          }
-          
-          localStorage.setItem('points', syncedPoints.toString());
-          
-          // 기존 script.js의 points 변수도 업데이트
-          if (window.points !== undefined) {
-            window.points = syncedPoints;
-          }
-          
-          return syncedPoints;
-        } else {
-          // 사용자 문서가 없으면 생성
-          await setDoc(doc(db, 'users', userId), {
-            points: localPoints,
-            createdAt: serverTimestamp(),
-            lastActive: serverTimestamp()
-          });
-          return localPoints;
-        }
-      } catch (error) {
-        console.error('포인트 조회 오류:', error);
-        console.log('오류로 인해 로컬 포인트 사용');
-        if (error.code === 'failed-precondition' || error.code === 'unavailable') {
-          window.showSalonToast('네트워크 연결을 확인해주세요.', 'warning');
-        }
-        return parseInt(localStorage.getItem('points') || '0');
-      }
+      return window.pointsManager.getPoints();
     };
-    
     window.addUserPoints = async function(pointsToAdd, source = 'habit_salon', actionId = null) {
-      try {
-        // 통합 포인트 시스템이 있으면 사용
-        if (window.pointsManager) {
-          return await window.pointsManager.addPoints(pointsToAdd);
-        }
-        
-        // 기존 로직 유지 (백업)
-        const userId = window.getUserId();
-        
-        // 오프라인 상태에서도 로컬 포인트는 업데이트
-        const currentPoints = parseInt(localStorage.getItem('points') || '0');
-        const newPoints = Math.max(0, currentPoints + pointsToAdd);
-        localStorage.setItem('points', newPoints.toString());
-        
-        // 기존 script.js의 points 변수도 업데이트
-        if (window.points !== undefined) {
-          window.points = newPoints;
-        }
-        
-        // 오프라인 상태면 로컬만 업데이트하고 리턴
-        if (!window.isOnline) {
-          console.log('오프라인 상태 - 로컬 포인트만 업데이트:', newPoints);
-          // 오프라인 액션을 큐에 저장 (나중에 동기화용)
-          const offlineActions = JSON.parse(localStorage.getItem('offlineActions') || '[]');
-          offlineActions.push({
-            type: 'addPoints',
-            pointsToAdd,
-            source,
-            actionId,
-            timestamp: Date.now()
-          });
-          localStorage.setItem('offlineActions', JSON.stringify(offlineActions));
-          return newPoints;
-        }
-        
-        const userRef = doc(db, 'users', userId);
-        
-        // 중복 포인트 지급 방지 (actionId가 있는 경우)
-        if (actionId) {
-          const duplicateCheck = query(
-            collection(db, 'pointsHistory'),
-            where('userId', '==', userId),
-            where('actionId', '==', actionId)
-          );
-          const duplicateSnapshot = await getDocs(duplicateCheck);
-          
-          if (!duplicateSnapshot.empty) {
-            console.log('이미 포인트가 지급된 액션입니다:', actionId);
-            window.showSalonToast('이미 포인트를 받은 활동입니다.', 'warning');
-            return await window.getUserPoints();
-          }
-        }
-        
-        // Firestore에서 포인트 업데이트
-        await updateDoc(userRef, {
-          points: newPoints,
-          lastActive: serverTimestamp()
-        });
-        
-        // 포인트 이력을 pointsHistory 컬렉션에 기록
-        const historyData = {
-          userId: userId,
-          points: pointsToAdd,
-          action: pointsToAdd > 0 ? 'earn' : 'spend',
-          source: source,
-          timestamp: serverTimestamp(),
-          beforePoints: currentPoints,
-          afterPoints: newPoints
-        };
-        
-        if (actionId) {
-          historyData.actionId = actionId;
-        }
-        
-        await addDoc(collection(db, 'pointsHistory'), historyData);
-        
-        // 메인 페이지 포인트 표시 업데이트
-        const mainPointElement = document.getElementById('points');
-        if (mainPointElement) {
-          mainPointElement.textContent = newPoints;
-        }
-        
-        // 기존 script.js의 updatePoints 함수 호출
-        if (typeof updatePoints === 'function') {
-          updatePoints();
-        }
-        
-        return newPoints;
-      } catch (error) {
-        console.error('포인트 추가 오류:', error);
-        console.log('오류로 인해 로컬 포인트만 업데이트');
-        
-        // 오류 상황에서도 로컬 포인트는 유지
-        const currentPoints = parseInt(localStorage.getItem('points') || '0');
-        const newPoints = Math.max(0, currentPoints + pointsToAdd);
-        localStorage.setItem('points', newPoints.toString());
-        
-        if (error.code === 'failed-precondition' || error.code === 'unavailable') {
-          window.showSalonToast('네트워크 연결 문제로 로컬에만 저장되었습니다.', 'warning');
-        }
-        
-        // 기존 script.js의 addPoints 함수 사용
-        if (typeof addPoints === 'function') {
-          addPoints(pointsToAdd);
-        }
-        
-        return newPoints;
-      }
+      return window.pointsManager.addPoints(pointsToAdd, source, actionId);
     };
 
     // 브랜드 게시글 로딩 (인덱스 문제 해결 - 단순 쿼리 + 클라이언트 필터링)
@@ -3230,6 +3077,8 @@
     
     // 건강 질문 로딩 (인덱스 문제 해결 - 단순 쿼리 + 클라이언트 필터링)
     window.loadHealthQuestions = async function() {
+      window.communityReadErrors ||= {};
+      window.communityReadErrors.questions = false;
       try {
         console.log('Firebase에서 건강 질문 로딩 중...');
         
@@ -3279,6 +3128,7 @@
         console.log('건강 질문 로딩 완료:', questions.length, '개');
         return questions;
       } catch (error) {
+        window.communityReadErrors.questions = true;
         console.error('건강 질문 로딩 오류:', error);
         // 오류 시 캐시된 데이터 사용 시도
         const cachedData = localStorage.getItem('cached_health_questions');
@@ -3471,6 +3321,7 @@
         }
         
         
+        await window.Community.open();
         console.log('습관살롱 초기화 완료');
       } catch (error) {
         console.error('습관살롱 초기화 오류:', error);
@@ -3791,134 +3642,26 @@
       }
     };
 
-    // 자유 섹션 로딩 (카드형 리스트 피드)
+    // All boards use the existing user_posts and health_questions services.
     window.loadFreeSection = async function() {
-      const container = document.getElementById('habit-salon-free-list');
-      if (!container) return;
-      container.innerHTML = '<div style="text-align:center;padding:40px;color:#666;">로딩 중...</div>';
-      try {
-        let posts = await window.loadUserPosts();
-        // 정렬
-        const sortLatestBtn = document.getElementById('sort-latest-btn');
-        const sortPopularBtn = document.getElementById('sort-popular-btn');
-        if (sortLatestBtn && sortPopularBtn) {
-          sortLatestBtn.onclick = () => {
-            sortLatestBtn.classList.add('active');
-            sortPopularBtn.classList.remove('active');
-            posts.sort((a, b) => (b.timestamp?.seconds || 0) - (a.timestamp?.seconds || 0));
-            renderFeed();
-          };
-          sortPopularBtn.onclick = () => {
-            sortPopularBtn.classList.add('active');
-            sortLatestBtn.classList.remove('active');
-            posts.sort((a, b) => (b.likes || 0) - (a.likes || 0));
-            renderFeed();
-          };
-        }
-        // 기본 최신순
-        posts.sort((a, b) => (b.timestamp?.seconds || 0) - (a.timestamp?.seconds || 0));
-        function renderFeed() {
-          if (posts.length === 0) {
-            container.innerHTML = `
-              <div style="text-align:center;padding:60px 20px;color:#666;">
-                <div style="font-size:48px;margin-bottom:20px;">💬</div>
-                <h3 style="color:#356c55;margin-bottom:16px;font-size:20px;">건강 이야기를 나눠보세요!</h3>
-                <p style="margin-bottom:24px;line-height:1.6;">
-                  여러분의 건강 경험과 노하우를<br>
-                  첫 번째로 공유해보세요.
-                </p>
-                <div style="background:#f8f9fa;padding:20px;border-radius:12px;margin:20px 0;">
-                  <p style="margin:0;color:#4CAF50;font-weight:600;">✍️ 50자 이상 작성 시 100P 적립!</p>
-                </div>
-                <p style="color:#999;font-size:14px;">
-                  우측 하단의 + 버튼을 눌러 글을 작성해보세요
-                </p>
-                <button onclick="window.addSampleHealthStory()" style="margin-top:20px;padding:12px 24px;background:#4CAF50;color:white;border:none;border-radius:8px;cursor:pointer;">
-                  💡 샘플 건강 이야기 추가하기 (테스트용)
-                </button>
-              </div>
-            `;
-            return;
-          }
-          container.innerHTML = posts.map((post, index) => `
-            <div class="feed-card" style="margin-bottom:24px;">
-              <div class="feed-card-header" style="display:flex;justify-content:space-between;align-items:center;">
-                <span class="feed-card-author" style="font-weight:600;color:#356c55;">${post.nickname || '익명'}</span>
-                <span class="feed-card-time" style="font-size:13px;color:#999;">${window.formatTime(post.timestamp)}</span>
-              </div>
-              <div class="feed-card-content" style="margin:16px 0;">
-                ${post.imageUrl ? `<div class="feed-card-image-container" style="margin-bottom:16px;border-radius:12px;overflow:hidden;"><img src="${post.imageUrl}" alt="건강 이야기 이미지" class="feed-card-image" style="width:100%;height:auto;max-height:300px;object-fit:cover;display:block;cursor:pointer;" onclick="window.openImageModal('${post.imageUrl}')"></div>` : ''}
-                <div class="feed-card-text" id="feed-card-text-${index}" style="font-size:16px;color:#333;line-height:1.7;max-height:72px;overflow:hidden;position:relative;">${post.content.length > 100 ? post.content.slice(0, 100) + '...' : post.content}</div>
-                ${post.content.length > 100 ? `<button class="feed-card-more-btn" onclick="window.toggleFeedMore(${index})" style="background:none;border:none;color:#4CAF50;font-size:14px;cursor:pointer;">더보기</button>` : ''}
-              </div>
-              <div class="feed-card-actions" style="display:flex;gap:16px;align-items:center;">
-                <button class="feed-card-like-btn" onclick="window.toggleStoryLike('free', '${post.id}', ${index})" style="background:none;border:none;cursor:pointer;font-size:15px;display:flex;align-items:center;gap:4px;">
-                  <span id="like-icon-free-${index}">${post.isLiked ? '❤️' : '🤍'}</span>
-                  <span id="like-count-free-${index}">${post.likes || 0}</span>
-                </button>
-                <button class="feed-card-comment-btn" onclick="window.toggleFeedComments(${index})" style="background:none;border:none;cursor:pointer;font-size:15px;display:flex;align-items:center;gap:4px;">
-                  💬 <span id="comment-count-free-${index}">${post.commentCount || 0}</span>
-                </button>
-              </div>
-              <div class="feed-card-comments" id="feed-card-comments-${index}" style="display:none;margin-top:12px;background:#fafbfc;border-radius:12px;padding:12px 8px;">
-                <div class="story-comments-list" id="comment-list-free-${index}"></div>
-                <div class="story-comment-input" style="margin-top:8px;">
-                  <div class="story-comment-form" style="display:flex;gap:8px;align-items:flex-end;">
-                    <textarea id="comment-input-free-${index}" class="story-comment-textarea" placeholder="댓글을 입력하세요... (+30P)" maxlength="200" style="flex:1;padding:10px 14px;border-radius:16px;border:1px solid #e0e0e0;font-size:14px;"></textarea>
-                    <button onclick="window.submitStoryComment('free', '${post.id}', ${index})" class="story-comment-submit" style="padding:10px 16px;background:#356c55;color:white;border:none;border-radius:16px;font-size:14px;font-weight:600;cursor:pointer;">등록</button>
-                  </div>
-                </div>
-              </div>
-            </div>
-          `).join('');
-        }
-        // 더보기/펼치기 토글 함수
-        window.toggleFeedMore = function(index) {
-          const textDiv = document.getElementById(`feed-card-text-${index}`);
-          if (!textDiv) return;
-          if (textDiv.style.maxHeight === 'none') {
-            textDiv.style.maxHeight = '72px';
-            textDiv.style.overflow = 'hidden';
-          } else {
-            textDiv.style.maxHeight = 'none';
-            textDiv.style.overflow = 'visible';
-          }
-        };
-        // 댓글창 토글 함수
-        window.toggleFeedComments = async function(index) {
-          const commentsDiv = document.getElementById(`feed-card-comments-${index}`);
-          if (!commentsDiv) return;
-          if (commentsDiv.style.display === 'block') {
-            commentsDiv.style.display = 'none';
-          } else {
-            commentsDiv.style.display = 'block';
-            // 댓글 목록 로드
-            const post = posts[index];
-            await window.loadStoryComments('free', post.id, index);
-          }
-        };
-        renderFeed();
-      } catch (error) {
-        console.error('피드 로딩 오류:', error);
-        container.innerHTML = '<div style="text-align:center;padding:40px;color:#f44336;">로딩 중 오류가 발생했습니다.</div>';
-      }
+      return window.Community.refresh();
     };
 
     // 자유글 작성 처리 (이미지 지원)
     window.handleFreePostSubmit = async function(e) {
       e.preventDefault();
+      if (window.communityPostSubmitting) return;
       
       const textarea = document.getElementById('habit-salon-free-content');
       const content = textarea.value.trim();
       
-      if (content.length < 50) {
-        window.showSalonToast('50자 이상 입력해주세요.', 'warning');
+      if (!content || content.length > 500) {
+        window.showSalonToast(content ? '500자 이내로 입력해주세요.' : '이야기를 입력해주세요.', 'warning');
         return;
       }
       
       try {
         const submitBtn = e.target.querySelector('button[type="submit"]');
-        const originalText = submitBtn.innerHTML;
         submitBtn.disabled = true;
         
         // 이미지가 있는지 확인
@@ -3927,19 +3670,25 @@
         if (hasImage) {
           submitBtn.innerHTML = '<span>이미지 업로드 중...</span>';
         } else {
-          submitBtn.innerHTML = '<span>작성 중...</span>';
+          submitBtn.innerHTML = '<span>등록 중...</span>';
         }
         
-        // 게시글 작성 (이미지 포함)
-        await window.addUserPost(content, selectedImageFile);
+        window.communityPostSubmitting = true;
+        const metadata = {
+          board: document.getElementById('community-post-board').value,
+          title: document.getElementById('community-post-title').value.trim()
+        };
+        // Same document collection and reward service; metadata is additive.
+        await window.addUserPost(content, selectedImageFile, metadata);
+        window.Community.posted(metadata.board);
         
         // 폼 초기화
         textarea.value = '';
         window.removeImagePreview(); // 이미지 미리보기 제거
         
-        const message = hasImage ? 
-          '건강 이야기가 이미지와 함께 공유되었습니다! +100P 적립 🎉' : 
-          '건강 이야기가 공유되었습니다! +100P 적립 🎉';
+        const message = hasImage ?
+          '사진과 함께 건강 이야기가 등록되었어요.' :
+          '건강 이야기가 등록되었어요.';
         window.showSalonToast(message);
         
         // 포인트 표시 업데이트
@@ -3964,7 +3713,9 @@
       } finally {
         const submitBtn = e.target.querySelector('button[type="submit"]');
         submitBtn.disabled = false;
-        submitBtn.innerHTML = '<span>건강 이야기 공유하기</span><span class="point-badge">+100P</span>';
+        submitBtn.innerHTML = '<span>등록하기</span>';
+        window.communityPostSubmitting = false;
+        window.validateWriteForm();
       }
     };
 
@@ -4487,58 +4238,11 @@
     console.log('=====================================');
     console.log('');
     
-    // 🔄 오프라인 액션 동기화 함수
+    // Retry already-earned points without adding them to the local balance again.
     window.syncOfflineActions = async function() {
-      try {
-        const offlineActions = JSON.parse(localStorage.getItem('offlineActions') || '[]');
-        
-        if (offlineActions.length === 0) {
-          console.log('동기화할 오프라인 액션이 없습니다.');
-          return;
-        }
-        
-        if (!window.isOnline) {
-          console.log('오프라인 상태 - 동기화를 나중에 시도합니다.');
-          window.showSalonToast('네트워크 연결 후 자동 동기화됩니다.', 'info');
-          return;
-        }
-        
-        console.log(`🔄 ${offlineActions.length}개의 오프라인 액션 동기화 시작...`);
-        let successCount = 0;
-        let failCount = 0;
-        
-        for (const action of offlineActions) {
-          try {
-            if (action.type === 'addPoints') {
-              // 오프라인에서 추가된 포인트를 서버에 동기화
-              await window.addUserPoints(action.pointsToAdd, action.source, action.actionId);
-              successCount++;
-            }
-            // 다른 액션 타입들도 여기에 추가 가능
-          } catch (error) {
-            console.error('액션 동기화 오류:', action, error);
-            failCount++;
-          }
-        }
-        
-        // 성공한 액션들은 큐에서 제거
-        if (successCount > 0) {
-          localStorage.removeItem('offlineActions');
-          console.log(`✅ ${successCount}개 액션 동기화 완료`);
-          window.showSalonToast(`${successCount}개 오프라인 액션이 동기화되었습니다! 🔄`, 'success');
-        }
-        
-        if (failCount > 0) {
-          console.log(`❌ ${failCount}개 액션 동기화 실패`);
-          window.showSalonToast(`${failCount}개 액션 동기화에 실패했습니다.`, 'warning');
-        }
-        
-      } catch (error) {
-        console.error('오프라인 액션 동기화 오류:', error);
-        window.showSalonToast('동기화 중 오류가 발생했습니다.', 'error');
-      }
+      return window.pointsManager.syncPoints();
     };
-    
+
     // 네트워크 복구 시 자동 동기화 (기존 online 이벤트에 추가)
     const originalOnlineHandler = window.addEventListener('online', () => {
       console.log('🌐 네트워크 연결됨 - Firestore 재연결 시도');
@@ -4633,6 +4337,7 @@
             
             // 뒤로가기 히스토리 추가 (최소한의 수정)
             history.pushState({page: 'habit-salon'}, '', '#habit-salon');
+            window.scrollTo(0, 0);
             
             // 이벤트 리스너 초기화를 여기서도 실행
             window.initializeEventListeners();
@@ -4898,7 +4603,14 @@
        
        document.body.style.overflow = '';
        
-       if (state && state.page === 'habit-salon') {
+       const healthStories = document.getElementById('health-story-section');
+       healthStories.style.display = 'none';
+       if (state && state.page === 'health-story') {
+         document.getElementById('main-section').style.display = 'none';
+         document.getElementById('habit-salon-main').style.display = 'none';
+         healthStories.style.display = 'block';
+         currentPage = 'health-story';
+       } else if (state && state.page === 'habit-salon') {
          // 습관살롱 표시
          document.getElementById('main-section').style.display = 'none';
          document.getElementById('habit-salon-main').style.display = 'block';
@@ -5241,70 +4953,12 @@
 
     // ESC 키 이벤트는 통합 네비게이션 시스템에서 처리됨 (중복 제거)
 
-    // 전체 화면 자유글(건강 한마당) 페이지 (원본 방식)
+    // Legacy free-board links now open the same community feed.
     window.openFreePage = async function() {
-      console.log('🏠 건강한마당 전체화면 진입 시작');
-      
-      // 자유게시판 전체화면 표시
-      const freeSection = document.getElementById('habit-salon-free');
-      if (!freeSection) {
-        console.error('habit-salon-free 요소를 찾을 수 없습니다');
-        return;
+      if (history.state?.page !== 'habit-salon') {
+        history.pushState({page: 'habit-salon'}, '', '#habit-salon');
       }
-
-      // 다른 섹션들 숨기기
-      document.getElementById('main-section').style.display = 'none';
-      document.getElementById('habit-salon-main').style.display = 'none';
-
-      // body로 이동하고 전체화면 스타일 적용
-      if (freeSection.parentElement !== document.body) {
-        document.body.appendChild(freeSection);
-        console.log('건강한마당 섹션을 body로 이동');
-      }
-
-      // 기존 뒤로가기 버튼과 타이틀 제거 (중복 방지)
-      const existingBackBtn = document.getElementById('free-back-btn');
-      if (existingBackBtn) existingBackBtn.remove();
-      const existingTitle = document.getElementById('free-title');
-      if (existingTitle) existingTitle.remove();
-
-      // 전체화면 모드에서 뒤로가기 버튼과 타이틀 추가
-      const backBtn = document.createElement('button');
-      backBtn.id = 'free-back-btn';
-      backBtn.className = 'fullscreen-back-btn';
-      backBtn.onclick = window.goBackMain;
-      backBtn.innerHTML = '← 뒤로가기';
-      backBtn.style.display = 'flex';
-      freeSection.insertBefore(backBtn, freeSection.firstChild);
-
-      const title = document.createElement('h1');
-      title.id = 'free-title';
-      title.className = 'fullscreen-page-title';
-      title.innerHTML = '💬 건강 한마당';
-      title.style.display = 'block';
-      freeSection.insertBefore(title, freeSection.children[1]);
-
-      // 전체화면 클래스 추가 및 표시
-      freeSection.classList.add('fullscreen');
-      freeSection.style.display = 'block';
-      freeSection.style.position = 'fixed';
-      freeSection.style.top = '0';
-      freeSection.style.left = '0';
-      freeSection.style.width = '100vw';
-      freeSection.style.height = '100vh';
-      freeSection.style.zIndex = '9999';
-      freeSection.style.background = 'linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%)';
-      freeSection.style.overflow = 'auto';
-      
-      document.body.style.overflow = 'hidden';
-      history.pushState({page: 'free'}, '', '#free');
-      
-      console.log('🏠 건강한마당 전체화면 UI 설정 완료');
-      
-      // 피드 로드
-      await window.loadFreeSection();
-      
-      console.log('🏠 건강한마당 데이터 로딩 완료');
+      await window.Community.open('talk');
     };
 
     // ESC 키 이벤트는 통합 네비게이션 시스템에서 처리됨 (중복 제거)
@@ -5312,7 +4966,12 @@
     // 글쓰기 모달 (원본 방식)
     window.openWriteModal = function() {
       try {
-        document.getElementById('free-write-fullscreen').classList.add('active');
+        const modal = document.getElementById('free-write-fullscreen');
+        if (modal.classList.contains('active')) return;
+        window.Community.prepareWrite();
+        modal.classList.add('active');
+        modal.querySelector('.modal-content').scrollTop = 0;
+        document.getElementById('community-post-title').focus({preventScroll: true});
         document.body.style.overflow = 'hidden';
         history.pushState({page: 'write'}, '', '#write');
       } catch (error) {
@@ -5409,9 +5068,7 @@
       // 뒤로가기 버튼
       const backBtn = document.getElementById('habit-salon-main-back-btn');
       if (backBtn) {
-        backBtn.addEventListener('click', function() {
-          window.goBackMain();
-        });
+        backBtn.onclick = () => window.goBackMain();
       }
       
       console.log('이벤트 리스너 초기화 완료');
@@ -5421,6 +5078,8 @@
 
     // 자유 게시판 게시글 로딩
     window.loadUserPosts = async function() {
+      window.communityReadErrors ||= {};
+      window.communityReadErrors.posts = false;
       try {
         console.log('Firebase에서 자유 게시글 로딩 중...');
         
@@ -5458,6 +5117,7 @@
         console.log('자유 게시글 로딩 완료:', posts.length, '개');
         return posts;
       } catch (error) {
+        window.communityReadErrors.posts = true;
         console.error('자유 게시글 로딩 오류:', error);
         // 오류 시 캐시된 데이터 사용 시도
         const cachedData = localStorage.getItem('cached_user_posts');
@@ -5471,8 +5131,11 @@
     };
 
     // 자유글 작성 함수 (이미지 지원)
-    window.addUserPost = async function(content, imageFile = null) {
+    window.addUserPost = async function(content, imageFile = null, metadata = {}) {
       try {
+        content = String(content ?? '').trim();
+        if (!content || content.length > 500) throw new Error('본문은 1~500자로 입력해주세요.');
+        const reward = content.length >= 50 ? 100 : content.length >= 10 ? 30 : 0;
         const userId = window.getUserId();
         const nickname = localStorage.getItem('nickname');
         
@@ -5489,6 +5152,8 @@
           userId: userId,
           nickname: nickname,
           content: content,
+          communityBoard: window.Community.boardOf(metadata.board),
+          ...(metadata.title?.trim() ? { title: metadata.title.trim().slice(0, 80) } : {}),
           timestamp: serverTimestamp(),
           likes: 0,
           commentCount: 0
@@ -5504,7 +5169,7 @@
         
         // 포인트 지급
         const actionId = `post_${docRef.id}`;
-        await window.addUserPoints(100, 'post', actionId);
+        if (reward > 0) await window.addUserPoints(reward, 'post', actionId);
         
         console.log('게시글 작성 완료:', docRef.id, imageUrl ? '(이미지 포함)' : '(텍스트만)');
         return docRef.id;
@@ -5615,65 +5280,46 @@
       }
     };
 
-    // 포인트 전환 신청 함수
-    window.requestExchange = async function() {
-      try {
-        const userId = window.getUserId();
-        const nickname = localStorage.getItem('nickname');
-        const points = await window.getUserPoints();
-        
-        // 5000포인트 미만이면 전환 불가
-        if (points < 5000) {
-          window.showSalonToast('5,000포인트 이상부터 전환 신청이 가능합니다.', 'warning');
-          return;
-        }
-        
-        // 확인 대화상자
-        if (!confirm('포인트는 초기화됩니다. 정말 전환 신청하시겠습니까?')) {
-          return;
-        }
-        
-        // 전환 신청 기록 저장
-        await addDoc(collection(db, "exchangeRequests"), {
-          userId: userId,
-          nickname: nickname || '익명',
-          points: points,
-          requestedAt: serverTimestamp(),
-          status: "pending"
-        });
-        
-        // 사용자 포인트 차감 (문서가 없으면 생성)
-        await setDoc(doc(db, 'users', userId), {
-          points: 0,
-          lastExchangeAt: serverTimestamp(),
-          nickname: nickname || '익명'
-        }, { merge: true });
-        
-        // localStorage 포인트도 초기화
-        localStorage.setItem('points', '0');
-        
-        // UI 업데이트
-        const pointDisplay = document.getElementById('habit-salon-my-point');
-        if (pointDisplay) {
-          pointDisplay.textContent = '0';
-        }
-        
-        // 전환 버튼 숨기기
-        const exchangeButton = document.getElementById('exchange-button');
-        if (exchangeButton) {
-          exchangeButton.style.display = 'none';
-        }
-        
-        // 구글폼 열기
-        window.open('https://docs.google.com/forms/d/e/1FAIpQLSf79U4uayn49L_SMV3KgjnAp8vlP7gx-XJ-v6AnBxveqlIPxg/viewform?usp=dialog', '_blank');
-        
-        window.showSalonToast('전환 신청이 완료되었습니다! 구글폼에서 상세 정보를 입력해주세요 🎉', 'success');
-        
-      } catch (error) {
-        console.error('포인트 전환 신청 오류:', error);
-        window.showSalonToast('전환 신청 중 오류가 발생했습니다.', 'error');
+    // Question status reads the same comments, in batches, without creating answers or rewards.
+    window.loadCommunityQuestionComments = async function(postIds) {
+      if (!window.isOnline) throw new Error('Question comments are offline');
+      const ids = [...new Set(postIds)].filter(id => typeof id === 'string' && id);
+      const comments = [];
+      for (let start = 0; start < ids.length; start += 10) {
+        const batch = ids.slice(start, start + 10);
+        const snapshot = await getDocs(query(collection(db, 'free_comments'), where('postId', 'in', batch)));
+        comments.push(...snapshot.docs.map(item => ({ id: item.id, ...item.data() })));
       }
+      for (const id of ids) {
+        try {
+          const cacheKey = `cached_comments_free_${id}`;
+          localStorage.setItem(cacheKey, JSON.stringify(comments.filter(comment => comment.postId === id)));
+          localStorage.setItem(`${cacheKey}_time`, Date.now().toString());
+        } catch { /* A full browser cache must not hide fetched comments. */ }
+      }
+      return comments;
     };
+
+    // Activity reads reuse the existing post/comment identities and never change rewards.
+    window.loadCommunityActivity = async function(userId, posts) {
+      if (!window.isOnline) throw new Error('Activity is offline');
+      const ownSnapshot = await getDocs(query(collection(db, 'free_comments'), where('userId', '==', userId)));
+      const myComments = ownSnapshot.docs.map(item => ({ id: item.id, ...item.data() }));
+      const existingIds = new Set(posts.map(post => post.id));
+      const ids = [...new Set([
+        ...posts.filter(post => post.userId === userId).map(post => post.id),
+        ...myComments.map(comment => comment.postId)
+      ])].filter(id => typeof id === 'string' && existingIds.has(id));
+      const comments = [];
+      for (let start = 0; start < ids.length; start += 10) {
+        const snapshot = await getDocs(query(collection(db, 'free_comments'), where('postId', 'in', ids.slice(start, start + 10))));
+        comments.push(...snapshot.docs.map(item => ({ id: item.id, ...item.data() })));
+      }
+      return { myComments, comments };
+    };
+
+    // 신청 기록과 재열기 링크는 홈과 커뮤니티에서 공유합니다.
+    installCouponRequests(window, { db, collection, doc, query, where, getDocs, runTransaction, serverTimestamp });
 
     // 포인트에 따른 전환 버튼 표시/숨김 처리
     window.updateExchangeButton = async function() {
@@ -5682,11 +5328,8 @@
         const exchangeButton = document.getElementById('exchange-button');
         
         if (exchangeButton) {
-          if (points >= 5000) {
-            exchangeButton.style.display = 'block';
-          } else {
-            exchangeButton.style.display = 'none';
-          }
+          exchangeButton.style.display = 'block';
+          exchangeButton.disabled = points < 5000 || !!window.couponRequestBusy;
         }
       } catch (error) {
         console.error('전환 버튼 업데이트 오류:', error);
@@ -5883,47 +5526,17 @@
       const content = textarea?.value?.trim() || '';
       const submitBtn = document.querySelector('#habit-salon-free-form button[type="submit"]');
       const charCounter = document.querySelector('.char-counter');
-      const charGuide = document.querySelector('.char-count-guide');
-      
-      // 글자 수 업데이트
+
       if (charCounter) {
         charCounter.textContent = `${content.length}/500`;
-        
-        if (content.length > 450) {
-          charCounter.style.color = '#f59e0b';
-        } else if (content.length > 480) {
-          charCounter.style.color = '#ef4444';
-        } else {
-          charCounter.style.color = '#666';
-        }
+        charCounter.style.color = content.length > 480 ? '#ef4444' : content.length > 450 ? '#f59e0b' : '#666';
       }
-      
-      // 제출 버튼 활성화/비활성화
+
       if (submitBtn) {
-        if (content.length >= 50) {
-          submitBtn.disabled = false;
-          submitBtn.style.opacity = '1';
-          submitBtn.style.cursor = 'pointer';
-        } else {
-          submitBtn.disabled = true;
-          submitBtn.style.opacity = '0.6';
-          submitBtn.style.cursor = 'not-allowed';
-        }
-      }
-      
-      // 안내 메시지 업데이트
-      if (charGuide) {
-        if (content.length === 0) {
-          charGuide.textContent = '건강 경험을 자세히 공유해주세요! (50자 필요)';
-          charGuide.style.color = '#666';
-        } else if (content.length < 50) {
-          const remaining = 50 - content.length;
-          charGuide.textContent = `더 자세한 이야기를 들려주세요! (${remaining}자 더 필요)`;
-          charGuide.style.color = '#f59e0b';
-        } else {
-          charGuide.textContent = '완성! 이제 건강 이야기를 공유할 수 있습니다 ✨';
-          charGuide.style.color = '#4CAF50';
-        }
+        const canSubmit = content.length > 0 && content.length <= 500 && !window.communityPostSubmitting;
+        submitBtn.disabled = !canSubmit;
+        submitBtn.style.opacity = canSubmit ? '1' : '0.6';
+        submitBtn.style.cursor = canSubmit ? 'pointer' : 'not-allowed';
       }
     };
 
@@ -5953,7 +5566,10 @@
     console.log('✅ 늘봄 습관살롱 초기화 완료 - 뒤로가기 지원');
     console.log('✅ 이미지 업로드 기능 초기화 완료');
   </script>
-  </script>
-  <script src="script.js" onerror="console.error('script.js 로드 실패')" onload="console.log('script.js 로드 성공')"></script>
+  <script src="script.js?v=20261106-points1" onerror="console.error('script.js 로드 실패')" onload="console.log('script.js 로드 성공')"></script>
+  <script src="js/health-stories-data.js?v=20261030-library1"></script>
+  <script src="js/health-stories.js?v=20261030-library1"></script>
+  <script src="js/home.js?v=20261030-stories1"></script>
+  <script src="js/community.js?v=20261105-answers1"></script>
 </body>
 </html>

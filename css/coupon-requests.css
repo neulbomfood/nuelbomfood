@@ -1,0 +1,39 @@
+.coupon-requests[hidden] { display: none !important; }
+.coupon-requests {
+  margin: 10px 0 16px;
+  padding: 14px;
+  border: 1px solid #d7e3d6;
+  border-radius: 12px;
+  background: #f0f5ed;
+  color: #35624b;
+  text-align: left;
+}
+.coupon-request-row + .coupon-request-row {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid #d7e3d6;
+}
+.coupon-request-title { display: block; font-size: 13px; line-height: 1.6; word-break: keep-all; }
+.coupon-request-date { display: block; margin-top: 2px; font-size: 11px; color: #637367; }
+.coupon-requests .coupon-request-reopen {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  margin: 8px 0 0;
+  padding: 8px 12px;
+  box-sizing: border-box;
+  border: 1px solid #b8cfba;
+  border-radius: 8px;
+  background: #fff;
+  color: #315b44;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.5;
+  text-decoration: none;
+}
+.coupon-request-reopen:focus-visible { outline: 3px solid #d2a95d; outline-offset: 3px; }
+.coupon-requests .coupon-request-help { margin: 10px 0 0; font-size: 12px; line-height: 1.7; word-break: keep-all; color: inherit; }
+.coupon-requests .coupon-request-cache { margin: 7px 0 0; font-size: 11px; line-height: 1.5; color: inherit; }
+.home-benefits .coupon-requests { border-color: #729580; background: #365f49; color: #f2f7ed; }
+.home-benefits .coupon-request-date { color: #dce7d7; }
+.home-benefits .coupon-request-row + .coupon-request-row { border-color: #729580; }

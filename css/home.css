@@ -1,0 +1,94 @@
+/* Home-only styles: the quiz and existing salon screens keep their own styles. */
+body.neulbom-home { background: #f7f8f4; }
+.neulbom-home .home-container { justify-content: flex-start; height: auto; overflow: visible; padding: 28px 20px 150px; }
+.neulbom-home.home-active .home-container > .logo,
+.neulbom-home.home-active #pointsDisplay { display: none; }
+.home-screen { color: #233e32; }
+.home-screen button, .home-screen a, .home-dialog button { font: inherit; }
+.home-header { margin-bottom: 24px; }
+.home-account-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.home-brand { display: flex; align-items: center; gap: 7px; margin: 0; font: 700 25px/1.4 'Pretendard', sans-serif; color: #233e32; }
+.home-brand svg { width: 27px; height: 27px; color: #356c55; }
+.home-tagline { margin: 8px 0 0; color: #64736a; font-size: 14px; }
+.home-nickname-open { background: transparent; border: 1px solid #ccd9cc; border-radius: 20px; padding: 9px 12px; color: #356c55; cursor: pointer; font-size: 13px !important; }
+.home-greeting { min-width: 0; max-width: 55%; color: #64736a; font-size: 13px; overflow-wrap: anywhere; text-align: right; }
+.home-benefits { padding: 20px; border-radius: 20px; background: #356c55; color: #fff; }
+.home-points-row { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+.home-points-label { display: block; color: #e0ebdf; font-size: 13px; }
+.home-balance { display: block; font-size: 16px; line-height: 1.4; margin-top: 5px; }
+.home-balance #points { color: #fff; font: 700 32px/1.3 'Pretendard', sans-serif; letter-spacing: -.7px; overflow-wrap: anywhere; }
+.home-points-stack { min-width: 0; }
+.home-screen #exchange-button { display: block; flex-shrink: 0; width: auto; margin: 0; padding: 11px 14px; border: 1px solid #eef6e9; border-radius: 12px; background: #eff6e9; color: #264e37; font-size: 13px; font-weight: 600; line-height: 1.5; cursor: pointer; }
+.home-screen #exchange-button:disabled { border-color: #719181; background: #466e5b; color: #f0f5f1; cursor: default; }
+.home-conversion-rule { margin: 14px 0 16px; color: #e5eee5; font-size: 12px; line-height: 1.6; word-break: keep-all; }
+.home-share { display: flex; justify-content: center; align-items: center; gap: 7px; width: 100%; min-height: 46px; padding: 11px 8px; border: 0; border-radius: 12px; background: #eff6e9; color: #264e37; font-size: 13px !important; font-weight: 600 !important; cursor: pointer; word-break: keep-all; }
+.home-share svg { width: 17px; height: 17px; flex-shrink: 0; }
+.home-menu-heading { margin: 26px 0 14px; font: 600 18px/1.5 'Pretendard', sans-serif; color: #233e32; letter-spacing: -.4px; }
+.home-menu-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.home-menu { display: flex; flex-direction: column; align-items: flex-start; min-width: 0; min-height: 151px; padding: 17px; border: 1px solid #dde5dc; border-radius: 17px; background: #fff; color: #233e32; text-align: left; text-decoration: none; cursor: pointer; transition: border-color .15s, background .15s; }
+.home-menu:hover { border-color: #9ebaa6; background: #edf5ec; }
+.home-menu-icon { display: flex; align-items: center; justify-content: center; width: 33px; height: 33px; margin-bottom: 11px; border-radius: 10px; background: #eaf1e8; color: #356c55; }
+.home-menu-icon svg { width: 21px; height: 21px; }
+.home-menu strong { font-size: 17px; font-weight: 600; line-height: 1.5; }
+.home-menu-description { margin-top: 5px; color: #64736a; font-size: 13px; line-height: 1.65; word-break: keep-all; }
+.home-screen .card-grid { margin-top: 32px; }
+.home-screen .footer-quote { margin: 22px 0 0; font-size: 13px; color: #64736a; }
+.home-screen :focus-visible, .home-dialog :focus-visible { outline: 3px solid #799d61; outline-offset: 4px; }
+.home-dialog { position: fixed; inset: 0; width: calc(100% - 36px); max-width: 350px; max-height: calc(100dvh - 36px); margin: auto; padding: 32px 24px 24px; border: 1px solid #dde5dc; border-radius: 22px; background: #fff; color: #233e32; box-shadow: 0 18px 60px #142e2433; overflow-y: auto; }
+.home-dialog::backdrop { background: #162d2273; }
+.home-dialog-close { position: absolute; top: 8px; right: 8px; width: 40px; height: 40px; background: transparent; border: 0; border-radius: 50%; color: #64736a; font-size: 26px !important; cursor: pointer; }
+.home-dialog-symbol { margin-bottom: 14px; color: #356c55; }
+.home-dialog-symbol svg { width: 31px; height: 31px; }
+.home-dialog h2 { margin: 0 0 10px; font-size: 20px; line-height: 1.5; letter-spacing: -.6px; word-break: keep-all; }
+.home-dialog-copy { margin: 0 0 22px; color: #64736a; font-size: 14px; line-height: 1.8; }
+.home-dialog #nickname-form { display: flex; flex-direction: column; gap: 8px; max-width: none; margin: 0; }
+.home-dialog label { font-size: 13px; font-weight: 600; }
+.home-dialog #nicknameInput { width: 100%; min-width: 0; height: 48px; border: 1px solid #ccd9cc; border-radius: 10px; padding: 12px; background: #fff; color: #233e32; font: 16px/1.4 'Pretendard', sans-serif; }
+.home-dialog .home-nickname-submit { width: 100%; margin-top: 10px; min-height: 48px; border: 0; border-radius: 11px; padding: 12px; background: #356c55; color: #fff; font-weight: 600; cursor: pointer; }
+.home-dialog .home-nickname-submit:disabled { opacity: .65; cursor: wait; }
+.home-dialog .home-form-error { color: #a03726; font-size: 13px; margin: 0; }
+body.home-dialog-open { overflow: hidden; }
+.home-story-header { margin-bottom: 24px; }
+.home-back { display: inline-block; margin-bottom: 20px; padding: 10px 14px; border: 1px solid #dde5dc; border-radius: 12px; background: #fff; color: #356c55; cursor: pointer; }
+.home-story-header h1 { font: 700 24px/1.5 'Pretendard', sans-serif; color: #233e32; }
+.home-story-header p { font-size: 14px; color: #64736a; }
+.home-story-links { display: grid; gap: 12px; }
+.home-story-links .home-menu { min-height: 100px; }
+.home-screen [hidden], .home-dialog [hidden] { display: none !important; }
+@media (max-width: 380px) {
+  .neulbom-home .home-container { padding: 22px 16px 150px; }
+  .home-benefits { padding: 17px 15px; }
+  .home-menu { padding: 14px; }
+  .home-menu strong { font-size: 16px; }
+  .home-share { font-size: 12px !important; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .home-menu { transition: none; }
+}
+
+/* The reward guide is presentation only; native details provides the toggle. */
+.home-points-guide { margin-top: 14px; border-top: 1px solid #709381; }
+.home-points-guide > summary { display: block; padding: 12px 0 0; min-height: 44px; list-style: none; cursor: pointer; border-radius: 4px; }
+.home-points-guide > summary::-webkit-details-marker { display: none; }
+.home-points-guide > summary::marker { content: ''; }
+.home-points-guide-heading { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+.home-points-guide-heading > strong { color: #fff; font-size: 14px; font-weight: 600; line-height: 1.6; word-break: keep-all; }
+.home-points-guide-toggle { display: inline-flex; flex-shrink: 0; align-items: center; gap: 3px; color: #e3eee5; font-size: 11px; line-height: 1.6; }
+.home-points-guide-toggle svg { width: 17px; height: 17px; }
+.home-points-guide-collapse { display: none; }
+.home-points-guide[open] .home-points-guide-expand { display: none; }
+.home-points-guide[open] .home-points-guide-collapse { display: inline; }
+.home-points-guide[open] .home-points-guide-toggle svg { transform: rotate(180deg); }
+.home-points-guide-preview { display: flex; flex-wrap: wrap; gap: 3px 12px; margin-top: 5px; color: #e3eee5; font-size: 12px; line-height: 1.7; }
+.home-points-guide-preview > span { white-space: nowrap; }
+.home-points-guide-preview b { font-weight: 600; color: #fff; }
+.home-points-guide[open] .home-points-guide-preview { display: none; }
+.home-points-guide-content { padding-top: 6px; }
+.home-points-guide-list { margin: 0; }
+.home-points-guide-list > div { display: flex; justify-content: space-between; gap: 12px; padding: 12px 0; }
+.home-points-guide-list > div + div { border-top: 1px solid #628771; }
+.home-points-guide-list dt { min-width: 0; color: #fff; font-size: 13px; font-weight: 600; line-height: 1.6; }
+.home-points-guide-list dt small { display: block; margin-top: 3px; color: #e3eee5; font-size: 12px; font-weight: 400; line-height: 1.7; word-break: keep-all; }
+.home-points-guide-list dd { flex-shrink: 0; margin: 0; color: #fff; font-size: 14px; font-weight: 600; line-height: 1.6; text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.home-points-guide .home-points-guide-note { margin: 0; padding-top: 8px; border-top: 1px solid #628771; color: #e3eee5; font-size: 11px; line-height: 1.7; word-break: keep-all; }
+.home-points-guide > summary:focus-visible { outline: 3px solid #eff6b7; outline-offset: 5px; }
