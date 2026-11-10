@@ -183,6 +183,7 @@ let allQuestions = []; // 전체 문제 풀을 저장할 배열
 let timer;
 let timeLeft = 15;
 let isAnswering = false;
+let answerReady = false;
 let startTime;
 let correctAnswers = 0;
 
@@ -380,12 +381,6 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   // 현재 페이지가 quiz.html인 경우에만 퀴즈 관련 코드 실행
   if (window.location.pathname.includes('quiz.html')) {
-    // 배경 이미지 랜덤 적용
-    const selectedBg = bgList[Math.floor(Math.random() * bgList.length)];
-    document.body.style.backgroundImage = `url('${selectedBg}')`;
-    document.body.style.backgroundPosition = 'center';
-    document.body.style.backgroundSize = 'cover';
-    
     startTime = Date.now();
     showLoading(true);
     
@@ -434,6 +429,7 @@ function updateProgress() {
 
 function showQuestion() {
   if (isAnswering) return;
+  answerReady = false;
   
   clearInterval(timer);
   document.getElementById("timer-fill").style.width = "100%";
@@ -454,17 +450,32 @@ function showQuestion() {
   document.getElementById("question").textContent = q.question;
   const answersList = document.getElementById("answers");
   answersList.innerHTML = "";
+  answersList.classList.remove('answered');
   document.getElementById("explanation").innerHTML = "";
   document.getElementById("explanation").classList.remove("show");
+  document.getElementById('explanation-popup').hidden = true;
+  document.getElementById('quiz-actions').hidden = true;
+  document.getElementById('next-question').disabled = true;
+  document.getElementById('answer-hint').hidden = false;
+  document.querySelector('.quiz-balance').classList.remove('earned');
 
   const options = [q.correct, ...q.wrong].sort(() => Math.random() - 0.5);
   options.forEach(option => {
     const li = document.createElement("li");
-    li.textContent = option;
-    li.onclick = () => {
-      if (isAnswering) return;
-      handleAnswer(option, q);
-    };
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.className = 'answer-button';
+    button.dataset.answer = option;
+    const label = document.createElement('span');
+    label.className = 'answer-text';
+    label.textContent = option;
+    const marker = document.createElement('span');
+    marker.className = 'answer-marker';
+    marker.setAttribute('aria-hidden', 'true');
+    button.appendChild(label);
+    button.appendChild(marker);
+    button.onclick = () => handleAnswer(option, q);
+    li.appendChild(button);
     answersList.appendChild(li);
   });
 
@@ -475,78 +486,90 @@ function showQuestion() {
 }
 
 async function handleAnswer(selected, question) {
-  if (isAnswering) return;
+  // Lock before awaiting persistence, including rapid taps and old callbacks.
+  if (isAnswering || question !== questions[currentIndex] ||
+      ![question.correct, ...question.wrong].includes(selected)) return;
   isAnswering = true;
+  answerReady = false;
   clearInterval(timer);
-
-  // try {
-  //   soundClick.play().catch(() => {});
-  // } catch (e) {}
 
   const popup = document.getElementById("explanation-popup");
   const popupEmoji = document.getElementById("popup-emoji");
   const popupResult = document.getElementById("popup-result");
   const popupExplanation = document.getElementById("popup-explanation");
   const popupPoints = document.getElementById("popup-points");
-  
-  const answers = document.querySelectorAll("#answers li");
-  
-  answers.forEach(li => {
-    if (li.textContent === question.correct) {
-      li.classList.add("correct");
-    } else if (li.textContent === selected) {
-      li.classList.add("wrong");
+  const popupAnswer = document.getElementById('popup-answer');
+  const isCorrect = selected === question.correct;
+  const beforePoints = window.pointsManager ? window.pointsManager.getPoints() : points;
+  const answers = document.querySelectorAll('#answers button');
+  document.getElementById('answers').classList.add('answered');
+  document.getElementById('answer-hint').hidden = true;
+
+  answers.forEach(button => {
+    const option = button.dataset.answer;
+    const marker = button.querySelector('.answer-marker');
+    if (option === question.correct) {
+      button.classList.add('correct');
+      marker.textContent = '✓';
+      button.setAttribute('aria-label', `${option}, 정답`);
+    } else if (option === selected) {
+      button.classList.add('wrong');
+      marker.textContent = '×';
+      button.setAttribute('aria-label', `${option}, 선택한 오답`);
     }
-    li.style.pointerEvents = "none";
+    button.disabled = true;
   });
 
-  if (selected === question.correct) {
+  if (isCorrect) {
     correctAnswers++;
     await addPoints(15);  // 통합 시스템 사용
-    
-    const currentPoints = window.pointsManager ? window.pointsManager.getPoints() : points;
-    
-    popupEmoji.textContent = "🎉";
-    popupResult.textContent = "정답이에요!";
-    popupExplanation.textContent = question.explanation || '';
-    popupPoints.innerHTML = `
-      <div class="point-change">+15P</div>
-      <div class="total-points">현재 총 ${currentPoints}P</div>
-    `;
-    popupPoints.style.color = "#28a745";
-    
+    popupEmoji.textContent = '✓';
+    popupResult.textContent = '맞혔어요!';
+    popupPoints.textContent = '';
+    popupAnswer.hidden = true;
+    const reward = document.createElement('span');
+    reward.className = 'answer-reward';
+    reward.textContent = '+15 P';
+    reward.setAttribute('aria-label', '15포인트 적립');
+    document.querySelector('#answers button.correct').parentElement.appendChild(reward);
+    document.querySelector('.quiz-balance').classList.add('earned');
     try {
       soundCorrect.play().catch(() => {});
     } catch (e) {}
   } else {
     await addPoints(-5);  // 통합 시스템 사용
-    
-    const currentPoints = window.pointsManager ? window.pointsManager.getPoints() : points;
-    
-    popupEmoji.textContent = "💪";
-    popupResult.textContent = "아쉽지만 틀렸어요";
-    popupExplanation.textContent = `정답: ${question.correct}\n${question.explanation || ''}`;
-    popupPoints.innerHTML = `
-      <div class="point-change">-5P</div>
-      <div class="total-points">현재 총 ${currentPoints}P</div>
-    `;
-    popupPoints.style.color = "#dc3545";
-    
+    popupEmoji.textContent = '!';
+    popupResult.textContent = '정답을 알아볼까요?';
+    popupPoints.textContent = beforePoints > 0 ? `−${Math.min(5, beforePoints)} P` : '0 P';
+    popupAnswer.textContent = `정답: ${question.correct}`;
+    popupAnswer.hidden = false;
     try {
       soundWrong.play().catch(() => {});
     } catch (e) {}
   }
 
-  popup.classList.add("show");
+  popupExplanation.textContent = question.explanation || '';
+  popup.hidden = false;
   updatePoints();
+  answerReady = true;
+  document.getElementById('quiz-actions').hidden = false;
+  document.getElementById('next-question').disabled = false;
+  // Keep the page as one natural scroll surface for long explanations and text zoom.
+  requestAnimationFrame(() => {
+    const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    popup.scrollIntoView({ behavior: reducedMotion ? 'auto' : 'smooth', block: 'nearest' });
+  });
+}
 
-  // 3초 후 팝업 닫고 다음 문제로
-  setTimeout(() => {
-    popup.classList.remove("show");
-    currentIndex++;
-    isAnswering = false;
-    showQuestion();
-  }, 3000);
+function nextQuestion() {
+  if (!isAnswering || !answerReady) return;
+  answerReady = false;
+  document.getElementById('next-question').disabled = true;
+  currentIndex++;
+  isAnswering = false;
+  showQuestion();
+  window.scrollTo({ top: 0, behavior: 'instant' });
+  if (currentIndex < questions.length) document.getElementById('question').focus({ preventScroll: true });
 }
 
 function updatePoints() {
