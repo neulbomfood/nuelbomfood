@@ -2353,7 +2353,7 @@
       font-size: 48px !important;
     }
   </style>
-  <link rel="stylesheet" href="css/home.css?v=20261117-install1" />
+  <link rel="stylesheet" href="css/home.css?v=20261117-install-inline2" />
   <link rel="stylesheet" href="css/coupon-requests.css?v=20261102-pending1" />
   <link rel="stylesheet" href="css/health-stories.css?v=20261106-feed1" />
   <link rel="stylesheet" href="css/community.css?v=20261105-answers1" />
@@ -2365,18 +2365,6 @@
   <button id="mute-button" class="mute-button" onclick="toggleMute()" title="효과음 켜기/끄기">
     🔊
   </button>
-  <aside id="install-banner" class="install-banner" hidden style="display:none" aria-label="늘봄 앱 설치 안내">
-    <div class="install-banner-inner">
-      <div class="install-banner-copy">
-        <strong>앱으로 더 편하게 이용해보세요</strong>
-        <p>홈 화면에서 바로 늘봄퀴즈를 시작할 수 있어요.</p>
-      </div>
-      <div class="install-banner-actions">
-        <button type="button" onclick="closeInstallBanner()" aria-label="앱 설치 안내 닫기">닫기</button>
-        <a id="app-install-link" href="https://play.google.com/store/apps/details?id=com.neulbom.neulbomquiz">앱 설치하기</a>
-      </div>
-    </div>
-  </aside>
 
   <div class="container home-container">
     <img src="assets/img/logo.png" alt="늘봄 로고" class="logo">
@@ -2476,6 +2464,17 @@
             <span class="home-menu-description">문제를 풀며<br>건강 상식 배우기</span>
           </a>
         </nav>
+        <aside id="install-banner" class="install-banner" hidden style="display:none" aria-label="늘봄 앱 설치 안내">
+          <div class="install-banner-inner">
+            <div class="install-banner-copy">
+              <strong>늘봄퀴즈가 마음에 드셨나요?</strong>
+              <p>홈 화면에서 바로 늘봄퀴즈를 시작할 수 있어요.</p>
+            </div>
+            <div class="install-banner-actions">
+              <a id="app-install-link" href="https://play.google.com/store/apps/details?id=com.neulbom.neulbomquiz">앱 설치하기</a>
+            </div>
+          </div>
+        </aside>
         <div class="card-grid">
           <div class="info-card">
             <span class="emoji">✨</span>
@@ -5570,7 +5569,7 @@
     console.log('✅ 늘봄 습관살롱 초기화 완료 - 뒤로가기 지원');
     console.log('✅ 이미지 업로드 기능 초기화 완료');
   </script>
-  <script src="script.js?v=20261117-share500-install1" onerror="console.error('script.js 로드 실패')" onload="console.log('script.js 로드 성공')"></script>
+  <script src="script.js?v=20261117-install-inline2" onerror="console.error('script.js 로드 실패')" onload="console.log('script.js 로드 성공')"></script>
   <script src="js/health-stories-data.js?v=20261030-library1"></script>
   <script src="js/health-story-comments.js?v=20261106-feed1"></script>
   <script src="js/health-stories.js?v=20261106-feed1"></script>

@@ -300,9 +300,8 @@ function showInstallBanner() {
   const inApp = isNeulbomAppContext();
   const banner = document.getElementById('install-banner');
   if (!banner) return;
-  let dismissed = false;
-  try { dismissed = localStorage.getItem('installBannerShown') === 'true'; } catch (_) {}
-  banner.hidden = inApp || dismissed;
+  // The inline install card remains available even if the former overlay was dismissed.
+  banner.hidden = inApp;
   banner.style.display = banner.hidden ? 'none' : 'block';
 }
 
