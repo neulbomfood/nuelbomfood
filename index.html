@@ -2353,7 +2353,7 @@
       font-size: 48px !important;
     }
   </style>
-  <link rel="stylesheet" href="css/home.css?v=20261110-coupon-guide1" />
+  <link rel="stylesheet" href="css/home.css?v=20261117-install1" />
   <link rel="stylesheet" href="css/coupon-requests.css?v=20261102-pending1" />
   <link rel="stylesheet" href="css/health-stories.css?v=20261106-feed1" />
   <link rel="stylesheet" href="css/community.css?v=20261105-answers1" />
@@ -2365,20 +2365,18 @@
   <button id="mute-button" class="mute-button" onclick="toggleMute()" title="효과음 켜기/끄기">
     🔊
   </button>
-  <div id="install-banner" style="display:block; position:fixed; bottom:0; left:0; width:100%; background:#ffffff; padding:16px; text-align:center; z-index:9999; box-shadow:0 -2px 10px rgba(0,0,0,0.2); border-top:1px solid #eee;">
-    <div style="max-width:460px; margin:0 auto; display:flex; align-items:center; justify-content:space-between; gap:12px;">
-      <div style="flex:1; text-align:left;">
-        <p style="margin:0; font-size:16px; font-weight:600; color:#356c55;">📱 앱 설치하고 더 편리하게 이용해보세요!</p>
-        <p style="margin:4px 0 0; font-size:14px; color:#666;">설치하면 홈 화면에서 바로 실행할 수 있어요</p>
+  <aside id="install-banner" class="install-banner" hidden style="display:none" aria-label="늘봄 앱 설치 안내">
+    <div class="install-banner-inner">
+      <div class="install-banner-copy">
+        <strong>앱으로 더 편하게 이용해보세요</strong>
+        <p>홈 화면에서 바로 늘봄퀴즈를 시작할 수 있어요.</p>
       </div>
-      <div style="display:flex; gap:8px;">
-        <button onclick="closeInstallBanner()" style="padding:8px 16px; border:none; background:#f0f0f0; border-radius:6px; color:#666; font-size:14px; cursor:pointer; font-weight:500;">닫기</button>
-        <a href="https://play.google.com/store/apps/details?id=com.neulbom.neulbomquiz" target="_blank" style="padding:8px 20px; border:none; background:#356c55; border-radius:6px; color:#fff; font-size:14px; text-decoration:none; font-weight:500;">설치하기</a>
+      <div class="install-banner-actions">
+        <button type="button" onclick="closeInstallBanner()" aria-label="앱 설치 안내 닫기">닫기</button>
+        <a id="app-install-link" href="https://play.google.com/store/apps/details?id=com.neulbom.neulbomquiz">앱 설치하기</a>
       </div>
     </div>
-  </div>
-
-
+  </aside>
 
   <div class="container home-container">
     <img src="assets/img/logo.png" alt="늘봄 로고" class="logo">
@@ -2406,7 +2404,7 @@
           <p id="home-conversion-rule" class="home-conversion-rule">5,000P부터 보유 포인트 전액으로 신청할 수 있어요.<br>신청 내용을 확인한 뒤 할인쿠폰을 지급해드려요.</p>
           <section class="coupon-requests" data-coupon-requests aria-label="진행 중인 쿠폰 신청" hidden></section>
           <button type="button" class="home-share" onclick="shareAppInstall()">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="m8.6 10.5 6.8-4M8.6 13.5l6.8 4"/></svg><span>앱 설치 링크 공유하고 <strong>200P</strong> 받기</span>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="m8.6 10.5 6.8-4M8.6 13.5l6.8 4"/></svg><span>앱 설치 링크 공유하고 <strong>500P</strong> 받기</span>
           </button>
           <details id="home-points-guide" class="home-points-guide">
             <summary>
@@ -2444,7 +2442,7 @@
                 </div>
                 <div>
                   <dt>앱 설치 링크 공유<small>공유 완료 시 적립<br>링크 복사만 한 경우는 제외</small></dt>
-                  <dd>200P</dd>
+                  <dd>500P</dd>
                 </div>
               </dl>
               <p class="home-points-guide-note">글·댓글을 수정할 때는 추가 적립되지 않아요.</p>
@@ -5572,7 +5570,7 @@
     console.log('✅ 늘봄 습관살롱 초기화 완료 - 뒤로가기 지원');
     console.log('✅ 이미지 업로드 기능 초기화 완료');
   </script>
-  <script src="script.js?v=20261106-points1" onerror="console.error('script.js 로드 실패')" onload="console.log('script.js 로드 성공')"></script>
+  <script src="script.js?v=20261117-share500-install1" onerror="console.error('script.js 로드 실패')" onload="console.log('script.js 로드 성공')"></script>
   <script src="js/health-stories-data.js?v=20261030-library1"></script>
   <script src="js/health-story-comments.js?v=20261106-feed1"></script>
   <script src="js/health-stories.js?v=20261106-feed1"></script>

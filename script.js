@@ -1,3 +1,5 @@
+const APP_SHARE_REWARD = 500;
+
 const bgList = [
   "assets/img/background/close-up-white-flowering-plant-against-wall.jpg",
   "assets/img/background/still-life-minimalist-lifestyle.jpg",
@@ -262,78 +264,50 @@ function onPlayerStateChange(event) {
   }
 }
 
-// TWA 감지 함수
-function isTWA() {
-  // TWA 앱의 UserAgent에는 'TWA' 문자열이 포함되어 있음
-  const userAgent = navigator.userAgent.toLowerCase();
-  const isTWA = userAgent.includes('twa') || 
-                userAgent.includes('android') && userAgent.includes('wv') || // Android WebView
-                window.matchMedia('(display-mode: standalone)').matches && // PWA standalone 모드
-                !window.navigator.standalone; // iOS standalone 모드가 아닌 경우
-  
-  console.log('TWA 감지 상세:', {
-    userAgent: userAgent,
-    isTWA: isTWA,
-    isStandalone: window.matchMedia('(display-mode: standalone)').matches,
-    isIOSStandalone: window.navigator.standalone
-  });
-  
-  return isTWA;
-}
+// Installation promotion depends on the current entry context, not on
+// whether a native app happens to be installed elsewhere on the device.
+function isNeulbomAppContext() {
+  const ua = navigator.userAgent || '';
+  // Ad browsers are external visitors even though they also use a WebView.
+  if (/Instagram|FBAN|FBAV|FB_IAB|FBIOS|KAKAOTALK|NAVER|Line\//i.test(ua)) return false;
+  if (navigator.standalone === true ||
+      window.matchMedia?.('(display-mode: standalone)').matches ||
+      window.matchMedia?.('(display-mode: fullscreen)').matches) return true;
+  if (/NeulbomQuizApp\//i.test(ua) ||
+      /^android-app:\/\/(com\.neulbom\.neulbomquiz|io\.github\.neulbomfood\.twa)(?:\/|$)/i.test(document.referrer || '')) return true;
 
-// 배너 닫기 함수
-function closeInstallBanner() {
-  console.log('배너 닫기 실행');
-  const banner = document.getElementById('install-banner');
-  if (banner) {
-    banner.style.display = 'none';
-    try {
-      localStorage.setItem('installBannerShown', 'true');
-      console.log('localStorage 저장 성공');
-    } catch (e) {
-      console.error('localStorage 저장 실패:', e);
-    }
-  }
-}
-
-// 배너 표시 로직
-function showInstallBanner() {
-  const banner = document.getElementById('install-banner');
-  if (!banner) {
-    console.log('배너 엘리먼트가 없음 - 스킵');
-    return;
-  }
-
+  // Existing MainActivity loads the home page with ?t=<currentTimeMillis>.
+  // Remember only this WebView session so home -> quiz -> home stays in-app.
+  // A generic WebView or an ordinary browser must not count as our app.
+  if (!/Android/i.test(ua) || !/\bwv\b/i.test(ua)) return false;
+  const nativeLaunch = /^\d{13}$/.test(new URLSearchParams(window.location.search).get('t') || '');
   try {
-    const isTWAEnv = isTWA();
-    const bannerShown = localStorage.getItem('installBannerShown');
-    
-    console.log('배너 표시 조건:', {
-      isTWA: isTWAEnv,
-      bannerShown: bannerShown,
-      shouldShow: !isTWAEnv && !bannerShown
-    });
-
-    // TWA가 아니고, 아직 배너를 보지 않은 경우에만 표시
-    if (!isTWAEnv && !bannerShown) {
-      banner.style.display = 'block';
-      console.log('배너 표시됨 (PWA 모드)');
-    } else {
-      banner.style.display = 'none';
-      console.log('배너 숨김 처리됨 (TWA 모드 또는 이미 본 경우)');
-    }
-  } catch (e) {
-    console.error('배너 표시 중 오류 발생:', e);
-    // 오류 발생 시 기본적으로 배너를 숨김
-    banner.style.display = 'none';
+    if (nativeLaunch) sessionStorage.setItem('neulbomNativeAppSession', 'true');
+    return nativeLaunch || sessionStorage.getItem('neulbomNativeAppSession') === 'true';
+  } catch (_) {
+    return nativeLaunch;
   }
 }
 
-// 페이지 로드 시 배너 표시
-document.addEventListener('DOMContentLoaded', () => {
-  console.log('페이지 로드됨 - 배너 표시 시도');
-  showInstallBanner();
-});
+function closeInstallBanner() {
+  const banner = document.getElementById('install-banner');
+  if (banner) { banner.hidden = true; banner.style.display = 'none'; }
+  // Dismissal is not evidence of installation. Keep the existing preference.
+  try { localStorage.setItem('installBannerShown', 'true'); } catch (_) {}
+}
+
+function showInstallBanner() {
+  const inApp = isNeulbomAppContext();
+  const banner = document.getElementById('install-banner');
+  if (!banner) return;
+  let dismissed = false;
+  try { dismissed = localStorage.getItem('installBannerShown') === 'true'; } catch (_) {}
+  banner.hidden = inApp || dismissed;
+  banner.style.display = banner.hidden ? 'none' : 'block';
+}
+
+document.addEventListener('DOMContentLoaded', showInstallBanner);
+window.addEventListener('pageshow', showInstallBanner);
 
 document.addEventListener("DOMContentLoaded", async () => {
   // 통합 포인트 시스템 초기화
@@ -370,8 +344,8 @@ document.addEventListener("DOMContentLoaded", async () => {
         },
       ],
       success: function(response) {
-        addPoints(200, 'share');
-        showToast('공유 감사합니다! +200P가 적립되었어요 💚');
+        addPoints(APP_SHARE_REWARD, 'share');
+        showToast(`공유 감사합니다! +${APP_SHARE_REWARD}P가 적립되었어요 💚`);
       },
       fail: function(error) {
         console.log('카카오톡 공유 실패:', error);
@@ -737,8 +711,8 @@ function shareToInstagram() {
   const url = encodeURIComponent(window.location.href);
   const text = encodeURIComponent('나를 위한 작은 습관의 변화, 늘봄과 함께 건강한 습관을 만들어보세요!');
   window.open(`https://www.instagram.com/share?url=${url}&caption=${text}`, 'instagram-share-dialog', 'width=800,height=600');
-  addPoints(200, 'share');
-  showToast('공유 감사합니다! +200P가 적립되었어요 💚');
+  addPoints(APP_SHARE_REWARD, 'share');
+  showToast(`공유 감사합니다! +${APP_SHARE_REWARD}P가 적립되었어요 💚`);
 }
 
 function showToast(message, customClass) {
@@ -757,20 +731,39 @@ function showToast(message, customClass) {
   }, customClass === 'attendance' ? 1800 : 3000);
 }
 
-function shareAppInstall() {
-  const shareUrl = "https://play.google.com/store/apps/details?id=com.neulbom.neulbomquiz";
-  if (navigator.share) {
-    navigator.share({
-      title: "늘봄 건강 퀴즈 풀어봐!",
-      text: "퀴즈 풀고 포인트 받아요 🎁",
-      url: shareUrl
-    }).then(() => {
-      addPoints(200, 'share');
-      showToast('공유 감사합니다! +200P가 적립되었어요 💚');
-    }).catch(() => {});
-  } else {
-    navigator.clipboard.writeText(shareUrl);
-    showToast('링크가 복사되었습니다!');
+let appShareBusy = false;
+async function shareAppInstall() {
+  if (appShareBusy) return;
+  appShareBusy = true;
+  const shareUrl = 'https://play.google.com/store/apps/details?id=com.neulbom.neulbomquiz';
+  try {
+    if (typeof navigator.share === 'function') {
+      try {
+        await navigator.share({
+          title: '늘봄 건강 퀴즈 풀어봐!',
+          text: '퀴즈 풀고 포인트 받아요 🎁',
+          url: shareUrl
+        });
+      } catch (error) {
+        if (error.name !== 'AbortError') showToast('공유하지 못했어요. 잠시 후 다시 시도해주세요.');
+        return;
+      }
+      try {
+        await addPoints(APP_SHARE_REWARD, 'share');
+        showToast(`공유 감사합니다! +${APP_SHARE_REWARD}P가 적립되었어요 💚`);
+      } catch (_) {
+        showToast('공유는 완료됐지만 포인트를 저장하지 못했어요. 저장 공간 설정을 확인해주세요.');
+      }
+    } else {
+      try {
+        await navigator.clipboard.writeText(shareUrl);
+        showToast('링크가 복사되었습니다! 복사만으로는 포인트가 적립되지 않아요.');
+      } catch (_) {
+        showToast('링크를 복사하지 못했어요. 브라우저의 공유 기능을 이용해주세요.');
+      }
+    }
+  } finally {
+    appShareBusy = false;
   }
 }
 
