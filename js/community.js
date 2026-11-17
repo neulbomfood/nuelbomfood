@@ -450,6 +450,7 @@
       event.preventDefault(); openPost(post);
     });
     link.append(el('span', `community-chip community-chip-${post.board}`, boards[post.board]));
+    if (window.CommunityPolls?.isPoll(post)) link.append(el('span', 'community-poll-chip', `건강 토론 ${String(post.debateNumber || '').padStart(2, '0')} · 투표 30P`));
     if (unread) link.append(el('span', 'community-new-comment', '새 댓글'));
     const title = el('h3', '', headlineOf(post));
     link.append(title);
@@ -519,7 +520,9 @@
     const title = el('h1', '', headlineOf(post));
     title.id = 'community-detail-title'; title.tabIndex = -1;
     card.append(title);
-    if (content) card.append(el('p', 'community-post-body', content));
+    if (window.CommunityPolls?.isPoll(post)) {
+      card.append(window.CommunityPolls.body(post), window.CommunityPolls.mount(post));
+    } else if (content) card.append(el('p', 'community-post-body', content));
     const imageUrl = post.imageUrl ? safeImage(post.imageUrl, document.baseURI) : '';
     if (imageUrl) {
       const photo = button('', 'community-photo', () => window.openImageModal(imageUrl));

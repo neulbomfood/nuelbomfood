@@ -2356,7 +2356,7 @@
   <link rel="stylesheet" href="css/home.css?v=20261117-install-inline2" />
   <link rel="stylesheet" href="css/coupon-requests.css?v=20261102-pending1" />
   <link rel="stylesheet" href="css/health-stories.css?v=20261106-feed1" />
-  <link rel="stylesheet" href="css/community.css?v=20261105-answers1" />
+  <link rel="stylesheet" href="css/community.css?v=20261117-polls1" />
 </head>
 <body class="neulbom-home home-active">
   
@@ -2834,6 +2834,7 @@
     import { getFirestore, collection, addDoc, getDocs, getDoc, setDoc, updateDoc, doc, query, where, orderBy, serverTimestamp, deleteDoc, writeBatch, runTransaction, increment, enableNetwork, disableNetwork, connectFirestoreEmulator } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-firestore.js";
     import { getStorage, ref, uploadBytesResumable, getDownloadURL, deleteObject } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-storage.js";
 
+    import { installCommunityPollStore } from "./js/community-poll-store.js?v=20261117-polls1";
     import { installCommunityActions } from "./js/community-actions.js?v=20261030-manage1";
     import { installHealthStoryComments } from "./js/health-story-comment-store.js?v=20261106-comments1";
 
@@ -2848,6 +2849,7 @@
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
     installCommunityActions(window, { db, doc, runTransaction, serverTimestamp });
+    installCommunityPollStore(window, { db, doc, getDoc, runTransaction, serverTimestamp });
     installHealthStoryComments(window, { db, collection, doc, getDocs, query, where, runTransaction, serverTimestamp });
     const storage = getStorage(app);
     
@@ -5574,6 +5576,7 @@
   <script src="js/health-story-comments.js?v=20261106-feed1"></script>
   <script src="js/health-stories.js?v=20261106-feed1"></script>
   <script src="js/home.js?v=20261030-stories1"></script>
-  <script src="js/community.js?v=20261105-answers1"></script>
+  <script src="js/community-polls.js?v=20261117-polls1"></script>
+  <script src="js/community.js?v=20261117-polls1"></script>
 </body>
 </html>
