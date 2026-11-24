@@ -37,32 +37,27 @@ export function installCouponRequests(target, { db, collection, doc, query, wher
       host.replaceChildren();
       host.hidden = !requests.length;
       if (!requests.length) return;
-      requests.forEach(request => {
-        const row = document.createElement('div');
-        row.className = 'coupon-request-row';
-        const title = document.createElement('strong');
-        title.className = 'coupon-request-title';
-        title.textContent = `쿠폰 신청 진행 중 · ${request.points.toLocaleString('ko-KR')}P`;
-        row.append(title);
-        if (request.requestedAtMs) {
-          const date = document.createElement('span');
-          date.className = 'coupon-request-date';
-          date.textContent = `${new Date(request.requestedAtMs).toLocaleDateString('ko-KR')} 신청`;
-          row.append(date);
-        }
-        const link = document.createElement('a');
-        link.className = 'coupon-request-reopen';
-        link.href = COUPON_FORM_URL;
-        link.target = '_blank';
-        link.rel = 'noopener noreferrer';
-        link.textContent = '신청서 다시 열기 ↗';
-        link.setAttribute('aria-label', `${request.points.toLocaleString('ko-KR')}P 쿠폰 신청서 다시 열기 (새 창)`);
-        row.append(link);
-        host.append(row);
-      });
+      const latest = requests[0];
+      const title = document.createElement('strong');
+      title.className = 'coupon-request-title';
+      title.textContent = `신청 포인트 · ${latest.points.toLocaleString('ko-KR')}P`;
+      host.append(title);
+      if (latest.requestedAtMs) {
+        const date = document.createElement('span');
+        date.className = 'coupon-request-date';
+        date.textContent = `${new Date(latest.requestedAtMs).toLocaleDateString('ko-KR')} 신청`;
+        host.append(date);
+      }
+      const link = document.createElement('a');
+      link.className = 'coupon-request-reopen';
+      link.href = COUPON_FORM_URL;
+      link.target = '_blank';
+      link.rel = 'noopener noreferrer';
+      link.textContent = '신청서 다시 열기 ↗';
+      host.append(link);
       const help = document.createElement('p');
       help.className = 'coupon-request-help';
-      help.textContent = '구글폼의 포인트 입력란에는 위 신청 내역의 금액을 적어주세요. 이미 제출했다면 다시 작성하지 않아도 돼요. 확인 후 할인쿠폰을 지급해드려요.';
+      help.textContent = '작성 중에 닫았다면 여기서 다시 열 수 있어요. 이미 제출했다면 추가로 할 일은 없어요.';
       host.append(help);
       if (cached) {
         const notice = document.createElement('p');
@@ -132,7 +127,7 @@ export function installCouponRequests(target, { db, collection, doc, query, wher
       try {
         formWindow = target.open('about:blank', '_blank');
         if (formWindow) formWindow.opener = null;
-      } catch { /* The request card also provides the form link. */ }
+      } catch { /* Fall back to this tab after saving. */ }
       if (target.pointsManager?.flushPending && !await target.pointsManager.flushPending()) {
         throw new Error('Point synchronization is still pending');
       }
@@ -164,9 +159,16 @@ export function installCouponRequests(target, { db, collection, doc, query, wher
     saveCache();
     updateLocalBalance(points);
     render();
-    // Popup failure after a successful save must never be reported as a failed request.
-    try { if (formWindow && !formWindow.closed) formWindow.location.replace(COUPON_FORM_URL); } catch { /* Use the reopen link. */ }
-    notify('신청 포인트를 보관했어요. 구글폼 제출까지 완료해주세요.', 'success');
+    const guide = document.getElementById('home-points-guide');
+    if (guide) guide.open = false;
+    notify('쿠폰 신청을 저장했어요. 열린 신청서를 작성해주세요.', 'success');
+    try {
+      if (formWindow && !formWindow.closed) {
+        formWindow.location.replace(COUPON_FORM_URL);
+        return;
+      }
+    } catch { /* The browser may have closed or detached the popup. */ }
+    target.location.assign(COUPON_FORM_URL);
   }
   target.requestExchange = async () => {
     if (busy) return;

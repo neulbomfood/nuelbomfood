@@ -2390,7 +2390,6 @@
             </button>
           </div>
           <p id="home-conversion-rule" class="home-conversion-rule">5,000P부터 보유 포인트 전액으로 신청할 수 있어요.<br>신청 내용을 확인한 뒤 할인쿠폰을 지급해드려요.</p>
-          <section class="coupon-requests" data-coupon-requests aria-label="진행 중인 쿠폰 신청" hidden></section>
           <button type="button" class="home-share" onclick="shareAppInstall()">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="m8.6 10.5 6.8-4M8.6 13.5l6.8 4"/></svg><span>앱 설치 링크 공유하고 <strong>500P</strong> 받기</span>
           </button>
@@ -2438,6 +2437,7 @@
                 <strong>5,000P = 5,000원 할인쿠폰</strong>
                 <p>늘봄에서 판매하는 상품에 사용할 수 있어요.</p>
               </div>
+              <section class="coupon-requests" data-coupon-requests aria-label="쿠폰 신청서" hidden></section>
             </div>
           </details>
         </section>
@@ -2589,7 +2589,6 @@
           <div><span>내 포인트</span> <strong><span id="habit-salon-my-point">0</span>P</strong><small>5,000P부터 보유 포인트 전액으로 신청할 수 있어요.<br>신청 내용을 확인한 뒤 할인쿠폰을 지급해드려요.</small></div>
           <button type="button" id="community-exchange" disabled>할인쿠폰 신청</button>
         </div>
-        <section class="coupon-requests" data-coupon-requests aria-label="진행 중인 쿠폰 신청" hidden></section>
         <div class="community-feed-heading">
           <h2 id="community-feed-title">전체 이야기</h2>
           <label class="community-sr-only" for="community-sort">게시글 정렬</label>
@@ -2840,7 +2839,7 @@
 
     import { firebaseConfig } from "./js/firebase-config.js?v=20261106-points1";
     import { installPointPersistence } from "./js/point-persistence.js?v=20261106-points1";
-    import { installCouponRequests } from "./js/coupon-requests.js?v=20261106-points1";
+    import { installCouponRequests } from "./js/coupon-requests.js?v=20261124-reset1";
 
     // The quiz uses the same Firebase project.
 
