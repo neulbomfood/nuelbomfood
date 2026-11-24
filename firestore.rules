@@ -13,7 +13,13 @@ service cloud.firestore {
     
     match /users/{userId} {
       allow read: if isAuthenticated();
-      allow write: if isAuthenticated() && request.auth.uid == userId;
+      allow create: if isAuthenticated() && request.auth.uid == userId
+        && !('kakaoShareRewardCount' in request.resource.data);
+      allow update: if isAuthenticated() && request.auth.uid == userId
+        && !request.resource.data.diff(resource.data).affectedKeys().hasAny(['kakaoShareRewardCount'])
+        && (!('kakaoShareProofHash' in resource.data)
+          || !request.resource.data.diff(resource.data).affectedKeys().hasAny(['kakaoShareProofHash']));
+      allow delete: if isAuthenticated() && request.auth.uid == userId;
     }
     
     match /posts/{postId} {
@@ -51,9 +57,9 @@ service cloud.firestore {
     }
 
     // 댓글에 대한 규칙들
-    match /{collection}_comments/{commentId} {
-      allow read: if true;  // 모든 사용자가 읽기 가능
-      allow write: if isAuthenticated();  // 인증된 사용자만 쓰기 가능
+    match /{commentCollection}/{commentId} {
+      allow read: if commentCollection.matches('.+_comments');
+      allow write: if commentCollection.matches('.+_comments') && isAuthenticated();
     }
 
     // 좋아요에 대한 규칙
@@ -65,7 +71,7 @@ service cloud.firestore {
     // 포인트 히스토리에 대한 규칙
     match /pointsHistory/{historyId} {
       allow read: if isAuthenticated();
-      allow write: if isAuthenticated();
+      allow write: if isAuthenticated() && !historyId.matches('kakao_.*');
     }
 
     // 포인트 교환 요청에 대한 규칙

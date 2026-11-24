@@ -7,7 +7,8 @@
   <link rel="stylesheet" href="style.css" />
   <link rel="stylesheet" href="css/nickname.css" />
   <link rel="manifest" href="manifest.json" />
-  <script src="https://developers.kakao.com/sdk/js/kakao.min.js"></script>
+  <meta name="kakao-javascript-key" content="4dee1ae3ff714243d2c157817c448a11">
+  <meta name="kakao-share-template-id" content="139276">
   <style>
     .link-copy-btn {
       display: flex;
@@ -2390,9 +2391,11 @@
             </button>
           </div>
           <p id="home-conversion-rule" class="home-conversion-rule">5,000P부터 보유 포인트 전액으로 신청할 수 있어요.<br>신청 내용을 확인한 뒤 할인쿠폰을 지급해드려요.</p>
-          <button type="button" class="home-share" onclick="shareAppInstall()">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="m8.6 10.5 6.8-4M8.6 13.5l6.8 4"/></svg><span>앱 설치 링크 공유하고 <strong>500P</strong> 받기</span>
+          <button type="button" class="home-share" id="rewarded-kakao-share" hidden disabled>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="m8.6 10.5 6.8-4M8.6 13.5l6.8 4"/></svg><span>새 채팅방에 카카오톡으로 공유하고 <strong>500P</strong> 받기</span>
           </button>
+          <button type="button" class="home-share" onclick="copyInstallLink()">앱 설치 링크 복사</button>
+          <p id="kakao-share-status" class="home-conversion-rule" role="status" hidden></p>
           <details id="home-points-guide" class="home-points-guide">
             <summary>
               <span class="home-points-guide-heading">
@@ -2427,8 +2430,8 @@
                   <dt>댓글 작성<small>댓글을 등록하면 적립</small></dt>
                   <dd>30P</dd>
                 </div>
-                <div>
-                  <dt>앱 설치 링크 공유<small>공유 완료 시 적립<br>링크 복사만 한 경우는 제외</small></dt>
+                <div id="kakao-share-guide" hidden>
+                  <dt>카카오톡 공유<small>채팅방마다 첫 전송이 확인되면 적립<br>같은 방 재전송 · 나와의 채팅 · 링크 복사 제외</small></dt>
                   <dd>500P</dd>
                 </div>
               </dl>
@@ -2830,7 +2833,7 @@
   </dialog>
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-app.js";
-    import { getFirestore, collection, addDoc, getDocs, getDoc, setDoc, updateDoc, doc, query, where, orderBy, serverTimestamp, deleteDoc, writeBatch, runTransaction, increment, enableNetwork, disableNetwork, connectFirestoreEmulator } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-firestore.js";
+    import { getFirestore, collection, addDoc, getDocs, getDoc, getDocFromServer, onSnapshot, setDoc, updateDoc, doc, query, where, orderBy, serverTimestamp, deleteDoc, writeBatch, runTransaction, increment, enableNetwork, disableNetwork, connectFirestoreEmulator } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-firestore.js";
     import { getStorage, ref, uploadBytesResumable, getDownloadURL, deleteObject } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-storage.js";
 
     import { installCommunityPollStore } from "./js/community-poll-store.js?v=20261117-polls1";
@@ -2838,6 +2841,7 @@
     import { installHealthStoryComments } from "./js/health-story-comment-store.js?v=20261106-comments1";
 
     import { firebaseConfig } from "./js/firebase-config.js?v=20261106-points1";
+    import { installKakaoShare } from "./js/kakao-share.js?v=20261124";
     import { installPointPersistence } from "./js/point-persistence.js?v=20261106-points1";
     import { installCouponRequests } from "./js/coupon-requests.js?v=20261124-reset1";
 
@@ -3012,6 +3016,7 @@
 
     // Presentation reads local balance; persistence writes directly to Firebase.
     installPointPersistence(window, { db, doc, runTransaction, serverTimestamp });
+    installKakaoShare(window, { db, doc, runTransaction, getDocFromServer, onSnapshot });
     window.getUserPoints = async function() {
       return window.pointsManager.getPoints();
     };
@@ -5570,7 +5575,7 @@
     console.log('✅ 늘봄 습관살롱 초기화 완료 - 뒤로가기 지원');
     console.log('✅ 이미지 업로드 기능 초기화 완료');
   </script>
-  <script src="script.js?v=20261117-install-inline2" onerror="console.error('script.js 로드 실패')" onload="console.log('script.js 로드 성공')"></script>
+  <script src="script.js?v=20261124-verified-share" onerror="console.error('script.js 로드 실패')" onload="console.log('script.js 로드 성공')"></script>
   <script src="js/health-stories-data.js?v=20261030-library1"></script>
   <script src="js/health-story-comments.js?v=20261106-feed1"></script>
   <script src="js/health-stories.js?v=20261106-feed1"></script>

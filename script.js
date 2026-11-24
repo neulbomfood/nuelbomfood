@@ -1,5 +1,3 @@
-const APP_SHARE_REWARD = 500;
-
 const bgList = [
   "assets/img/background/close-up-white-flowering-plant-against-wall.jpg",
   "assets/img/background/still-life-minimalist-lifestyle.jpg",
@@ -314,43 +312,8 @@ document.addEventListener("DOMContentLoaded", async () => {
   
   // 방문 포인트 지급
   giveDailyVisitPoints();
-  // 초대 리워드 지급
-  handleReferralReward();
   // 맞춤 퀴즈 리마인드 메시지
   showDailyQuizReminder();
-
-  // 카카오톡 공유 버튼 초기화
-  if (window.Kakao?.Link?.createDefaultButton && document.getElementById('kakao-share-btn')) {
-    Kakao.Link.createDefaultButton({
-      container: '#kakao-share-btn',
-      objectType: 'feed',
-      content: {
-        title: '늘봄 건강 퀴즈',
-        description: '나를 위한 작은 습관의 변화, 늘봄과 함께 건강한 습관을 만들어보세요!',
-        imageUrl: 'http://localhost:8000/assets/img/share-preview.jpg',
-        link: {
-          mobileWebUrl: 'http://localhost:8000',
-          webUrl: 'http://localhost:8000',
-        },
-      },
-      buttons: [
-        {
-          title: '퀴즈 풀러가기',
-          link: {
-            mobileWebUrl: 'http://localhost:8000',
-            webUrl: 'http://localhost:8000',
-          },
-        },
-      ],
-      success: function(response) {
-        addPoints(APP_SHARE_REWARD, 'share');
-        showToast(`공유 감사합니다! +${APP_SHARE_REWARD}P가 적립되었어요 💚`);
-      },
-      fail: function(error) {
-        console.log('카카오톡 공유 실패:', error);
-      }
-    });
-  }
 
   // 현재 페이지가 quiz.html인 경우에만 퀴즈 관련 코드 실행
   if (window.location.pathname.includes('quiz.html')) {
@@ -684,36 +647,6 @@ function goHome() {
   window.location.href = 'index.html';
 }
 
-// 공유 관련 함수들
-function shareApp() {
-  if (navigator.share) {
-    navigator.share({
-      title: '늘봄 건강 퀴즈',
-      text: '나를 위한 작은 습관의 변화, 늘봄과 함께 건강한 습관을 만들어보세요!',
-      url: window.location.href
-    })
-    .then(() => {
-      // 공유 성공 시 포인트 지급
-      addPoints(50, 'video');
-      showToast('공유 감사합니다! +50P가 적립되었어요 💚');
-    })
-    .catch((error) => {
-      console.log('공유 실패:', error);
-    });
-  } else {
-    // Web Share API를 지원하지 않는 경우 기존 복사 기능 사용
-    copyLink();
-  }
-}
-
-function shareToInstagram() {
-  const url = encodeURIComponent(window.location.href);
-  const text = encodeURIComponent('나를 위한 작은 습관의 변화, 늘봄과 함께 건강한 습관을 만들어보세요!');
-  window.open(`https://www.instagram.com/share?url=${url}&caption=${text}`, 'instagram-share-dialog', 'width=800,height=600');
-  addPoints(APP_SHARE_REWARD, 'share');
-  showToast(`공유 감사합니다! +${APP_SHARE_REWARD}P가 적립되었어요 💚`);
-}
-
 function showToast(message, customClass) {
   const toast = document.createElement('div');
   toast.className = 'toast-message' + (customClass ? ' ' + customClass : '');
@@ -730,53 +663,13 @@ function showToast(message, customClass) {
   }, customClass === 'attendance' ? 1800 : 3000);
 }
 
-let appShareBusy = false;
-async function shareAppInstall() {
-  if (appShareBusy) return;
-  appShareBusy = true;
-  const shareUrl = 'https://play.google.com/store/apps/details?id=com.neulbom.neulbomquiz';
+async function copyInstallLink() {
+  const url = document.getElementById('app-install-link').href;
   try {
-    if (typeof navigator.share === 'function') {
-      try {
-        await navigator.share({
-          title: '늘봄 건강 퀴즈 풀어봐!',
-          text: '퀴즈 풀고 포인트 받아요 🎁',
-          url: shareUrl
-        });
-      } catch (error) {
-        if (error.name !== 'AbortError') showToast('공유하지 못했어요. 잠시 후 다시 시도해주세요.');
-        return;
-      }
-      try {
-        await addPoints(APP_SHARE_REWARD, 'share');
-        showToast(`공유 감사합니다! +${APP_SHARE_REWARD}P가 적립되었어요 💚`);
-      } catch (_) {
-        showToast('공유는 완료됐지만 포인트를 저장하지 못했어요. 저장 공간 설정을 확인해주세요.');
-      }
-    } else {
-      try {
-        await navigator.clipboard.writeText(shareUrl);
-        showToast('링크가 복사되었습니다! 복사만으로는 포인트가 적립되지 않아요.');
-      } catch (_) {
-        showToast('링크를 복사하지 못했어요. 브라우저의 공유 기능을 이용해주세요.');
-      }
-    }
-  } finally {
-    appShareBusy = false;
-  }
-}
-
-function handleReferralReward() {
-  const urlParams = new URLSearchParams(window.location.search);
-  const ref = urlParams.get('ref');
-  if (!ref) return;
-  // 이미 이 ref로 리워드를 받은 적이 있는지 확인
-  const rewardedRefs = JSON.parse(localStorage.getItem('rewardedRefs') || '[]');
-  if (!rewardedRefs.includes(ref)) {
-    addPoints(200, 'share');
-    showToast('초대 링크로 방문! +200P가 적립되었어요 💚');
-    rewardedRefs.push(ref);
-    localStorage.setItem('rewardedRefs', JSON.stringify(rewardedRefs));
+    await navigator.clipboard.writeText(url);
+    showToast('설치 링크를 복사했어요. 링크 복사는 적립 대상에서 제외돼요.');
+  } catch {
+    window.prompt('설치 링크를 복사해주세요.', url);
   }
 }
 

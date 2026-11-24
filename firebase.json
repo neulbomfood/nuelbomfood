@@ -1,0 +1,7 @@
+{
+  "functions": [{
+    "source": "_kakao-share",
+    "codebase": "neulbom-share",
+    "ignore": ["node_modules", ".git", ".env*", "test", "README.md"]
+  }]
+}
