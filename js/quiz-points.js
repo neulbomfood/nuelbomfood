@@ -2,7 +2,7 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/11.8.1/firebas
 import { getFirestore, doc, runTransaction, serverTimestamp, onSnapshot, getDocFromServer } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-firestore.js";
 import { firebaseConfig } from "./firebase-config.js?v=20261106-points1";
 import { installPointPersistence } from "./point-persistence.js?v=20261106-points1";
-import { watchShareBalance } from "./kakao-share.js?v=20261124";
+import { watchShareBalance } from "./kakao-share.js?v=20261124-resume";
 const db = getFirestore(initializeApp(firebaseConfig));
 installPointPersistence(window, { db, doc, runTransaction, serverTimestamp });
 const wallet = window.pointsManager.userId();

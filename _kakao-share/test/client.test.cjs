@@ -12,7 +12,10 @@ test('unconfigured home keeps link copy, hides the reward button and does not lo
   const { installKakaoShare } = await loadClient();
   assert.match(html, /id="rewarded-kakao-share" hidden disabled/);
   assert.match(html, /id="kakao-share-guide" hidden/);
-  assert.match(html, /onclick="copyInstallLink\(\)"/);
+  assert.match(html, /카톡 공유하고 <strong>500P<\/strong> 받기/);
+  const guide = html.match(/<details id="home-points-guide"[\s\S]*?<\/details>/)[0];
+  assert.match(guide, /onclick="copyInstallLink\(\)"/);
+  assert.doesNotMatch(html.replace(guide, ''), /onclick="copyInstallLink\(\)"/);
   installKakaoShare({ document: { querySelector: () => ({ content: '' }) } }, {});
 });
 test('copy only writes the existing install link, including manual fallback', async () => {
@@ -33,7 +36,7 @@ test('share picker receives the registered wallet and template without awarding 
   const walletId = 'user_1234567890123_abc';
   const button = { hidden: true, disabled: true, addEventListener: (name,fn) => events[name] = fn };
   const guide = { hidden: true }, status = {};
-  const target = { crypto: require('node:crypto').webcrypto, navigator: {}, addEventListener() {},
+  const target = { crypto: require('node:crypto').webcrypto, navigator: {}, addEventListener() {}, clearTimeout() {}, setTimeout() {},
     localStorage: { getItem: key => bag.get(key), setItem: (key,value) => bag.set(key,value) },
     pointsManager: { userId: () => walletId, flushPending: async () => true },
     document: { readyState: 'complete', querySelector: name => ({ content: name.includes('javascript') ? 'a'.repeat(32) : '501' }),
@@ -62,7 +65,7 @@ test('server credit is adopted once without a second local earn operation', asyn
     clearTimeout, setTimeout, pointsManager: { userId: () => 'wallet', readBalance: () => Number(bag.get('points')),
       readQueue: () => [], refreshFromStorage: () => updates++ } };
   const row = { points: 600, kakaoShareRewardCount: 1 };
-  watchShareBalance(target, { doc: () => 'wallet', onSnapshot: (_, fn) => { notify = fn; },
+  watchShareBalance(target, { doc: () => 'wallet', onSnapshot: (_, options, fn) => { notify = fn; },
     getDocFromServer: async () => { readCount++;return { data: () => row }; } }, 'wallet');
   const snap = { metadata: { fromCache:false, hasPendingWrites:false }, data: () => row };
   notify(snap);
@@ -72,4 +75,43 @@ test('server credit is adopted once without a second local earn operation', asyn
   assert.equal(bag.get('points'), '600');
   assert.equal(readCount, 1);
   assert.equal(updates, 1);
+});
+
+test('returning from Kakao refreshes even when the live listener misses a delayed credit', async () => {
+  const { watchShareBalance } = await loadClient();
+  const bag = new Map([['points','100']]);
+  const events = {};
+  let timer, count = 0, reads = 0;
+  const target = {
+    localStorage: { getItem: key => bag.get(key), setItem: (key, value) => bag.set(key, value) },
+    navigator: { onLine: true },
+    document: { hidden: false, addEventListener(name, fn) { events[name] = fn; } },
+    addEventListener(name, fn) { events[name] = fn; },
+    setTimeout(fn) { timer = fn; return 1; }, clearTimeout() { timer = undefined; },
+    pointsManager: { userId: () => 'wallet', readBalance: () => Number(bag.get('points')),
+      readQueue: () => [], refreshFromStorage() {} }
+  };
+  const startChecking = watchShareBalance(target, { doc: () => 'wallet', onSnapshot() {},
+    getDocFromServer: async () => {
+      reads++;
+      return { data: () => ({ points: 100 + 500 * count, kakaoShareRewardCount: count }) };
+    } }, 'wallet');
+  startChecking();
+  target.document.hidden = true;
+  await timer();
+  assert.equal(reads, 0);
+  target.document.hidden = false;
+  events.visibilitychange();
+  events.focus();
+  await timer();
+  assert.equal(bag.get('points'), '100');
+  count = 1;
+  await timer();
+  assert.equal(bag.get('points'), '600');
+  assert.equal(timer, undefined);
+  count = 2;
+  events.pageshow();
+  await timer();
+  assert.equal(bag.get('points'), '1100');
+  assert.equal(reads, 3);
 });

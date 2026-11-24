@@ -44,28 +44,33 @@ export function watchShareBalance(target, { db, doc, onSnapshot, getDocFromServe
   const manager = target.pointsManager;
   const wallet = doc(db, 'users', userId);
   const marker = 'neulbom_kakao_count_' + userId;
-  let timer, running = false, observed = 0;
+  let timer, running = false, observed = 0, remainingChecks = 0;
+  let waitingForReturn = false;
   const seen = () => Number(target.localStorage.getItem(marker)) || 0;
   const idle = () => !target.couponRequestBusy && !manager.readQueue().length;
   const schedule = (delay = 0) => {
     target.clearTimeout(timer);
-    if (observed > seen() && !target.document.hidden && target.navigator.onLine !== false) {
+    if (!running && (remainingChecks > 0 || observed > seen()) && !target.document.hidden && target.navigator.onLine !== false) {
       timer = target.setTimeout(reconcile, delay);
     }
   };
   async function reconcile() {
-    if (running || observed <= seen()) return;
+    if (running || target.document.hidden || target.navigator.onLine === false) return;
     if (!idle()) { schedule(2500); return; }
     const before = manager.readBalance();
     running = true;
+    remainingChecks = Math.max(0, remainingChecks - 1);
     try {
       const data = (await getDocFromServer(wallet)).data();
       const count = Number(data?.kakaoShareRewardCount) || 0;
+      observed = Math.max(observed, count);
       if (count <= seen() || !Number.isSafeInteger(data.points) || data.points < 0) return;
       const apply = () => {
         if (!idle() || manager.userId() !== userId || manager.readBalance() !== before || count <= seen()) return;
         target.localStorage.setItem('points', String(data.points));
         target.localStorage.setItem(marker, String(count));
+        remainingChecks = 0;
+        waitingForReturn = false;
         manager.refreshFromStorage();
         onCredit?.();
       };
@@ -74,13 +79,26 @@ export function watchShareBalance(target, { db, doc, onSnapshot, getDocFromServe
     } catch { /* Retry when connectivity or the foreground state changes. */ }
     finally { running = false; schedule(4000); }
   }
-  onSnapshot(wallet, snapshot => {
+  onSnapshot(wallet, { includeMetadataChanges: true }, snapshot => {
     if (snapshot.metadata.fromCache || snapshot.metadata.hasPendingWrites) return;
-    observed = Number(snapshot.data()?.kakaoShareRewardCount) || 0;
-    schedule();
+    observed = Math.max(observed, Number(snapshot.data()?.kakaoShareRewardCount) || 0);
+    if (observed > seen()) schedule();
   }, () => {});
-  target.document.addEventListener('visibilitychange', () => schedule());
-  target.addEventListener('online', () => schedule());
+  const onReturn = () => {
+    if (target.document.hidden) return;
+    remainingChecks = Math.max(remainingChecks, waitingForReturn ? 5 : 1);
+    waitingForReturn = false;
+    schedule();
+  };
+  target.document.addEventListener('visibilitychange', onReturn);
+  for (const event of ['pageshow', 'focus', 'online']) target.addEventListener(event, onReturn);
+
+  // Kakao can return before the server has credited the wallet.
+  return () => {
+    waitingForReturn = true;
+    remainingChecks = 5;
+    schedule(1500);
+  };
 }
 
 export function installKakaoShare(target, services) {
@@ -93,12 +111,12 @@ export function installKakaoShare(target, services) {
   const guide = document.getElementById('kakao-share-guide');
   const status = document.getElementById('kakao-share-status');
   const report = message => { status.hidden = false; status.textContent = message; };
-  let sdk, args, preparing = false, watching = false;
+  let sdk, args, preparing = false, checkAfterShare;
 
   function watch() {
-    if (watching) return;
-    watching = true;
-    watchShareBalance(target, services, target.pointsManager.userId(), () => report('카카오톡 공유 보상이 포인트에 반영됐어요.'));
+    if (!checkAfterShare) {
+      checkAfterShare = watchShareBalance(target, services, target.pointsManager.userId(), () => report('공유 포인트가 적립됐어요.'));
+    }
   }
   async function prepare() {
     if (preparing || args) return;
@@ -121,8 +139,9 @@ export function installKakaoShare(target, services) {
     try {
       target.localStorage.setItem('neulbom_kakao_sent_' + args.wallet_id, '1');
       watch();
-      report('채팅방에 처음 전송하면 확인 후 500P가 적립돼요. 같은 방 재전송과 나와의 채팅은 제외돼요.');
+      status.hidden = true;
       const result = sdk.Share.sendCustom({ templateId, serverCallbackArgs: args, pickerSettings: { showSendToMe: false } });
+      checkAfterShare();
       result?.catch?.(failure);
     } catch { failure(); }
   });

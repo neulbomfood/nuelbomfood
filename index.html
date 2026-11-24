@@ -2354,7 +2354,7 @@
       font-size: 48px !important;
     }
   </style>
-  <link rel="stylesheet" href="css/home.css?v=20261117-install-inline2" />
+  <link rel="stylesheet" href="css/home.css?v=20261124-share" />
   <link rel="stylesheet" href="css/coupon-requests.css?v=20261102-pending1" />
   <link rel="stylesheet" href="css/health-stories.css?v=20261106-feed1" />
   <link rel="stylesheet" href="css/community.css?v=20261117-polls1" />
@@ -2392,9 +2392,8 @@
           </div>
           <p id="home-conversion-rule" class="home-conversion-rule">5,000P부터 보유 포인트 전액으로 신청할 수 있어요.<br>신청 내용을 확인한 뒤 할인쿠폰을 지급해드려요.</p>
           <button type="button" class="home-share" id="rewarded-kakao-share" hidden disabled>
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="m8.6 10.5 6.8-4M8.6 13.5l6.8 4"/></svg><span>새 채팅방에 카카오톡으로 공유하고 <strong>500P</strong> 받기</span>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="m8.6 10.5 6.8-4M8.6 13.5l6.8 4"/></svg><span>카톡 공유하고 <strong>500P</strong> 받기</span>
           </button>
-          <button type="button" class="home-share" onclick="copyInstallLink()">앱 설치 링크 복사</button>
           <p id="kakao-share-status" class="home-conversion-rule" role="status" hidden></p>
           <details id="home-points-guide" class="home-points-guide">
             <summary>
@@ -2436,6 +2435,7 @@
                 </div>
               </dl>
               <p class="home-points-guide-note">글·댓글을 수정할 때는 추가 적립되지 않아요.</p>
+              <button type="button" class="home-copy-link" onclick="copyInstallLink()">앱 설치 링크 복사</button>
               <div class="home-points-guide-coupon">
                 <strong>5,000P = 5,000원 할인쿠폰</strong>
                 <p>늘봄에서 판매하는 상품에 사용할 수 있어요.</p>
@@ -2841,7 +2841,7 @@
     import { installHealthStoryComments } from "./js/health-story-comment-store.js?v=20261106-comments1";
 
     import { firebaseConfig } from "./js/firebase-config.js?v=20261106-points1";
-    import { installKakaoShare } from "./js/kakao-share.js?v=20261124";
+    import { installKakaoShare } from "./js/kakao-share.js?v=20261124-resume";
     import { installPointPersistence } from "./js/point-persistence.js?v=20261106-points1";
     import { installCouponRequests } from "./js/coupon-requests.js?v=20261124-reset1";
 
